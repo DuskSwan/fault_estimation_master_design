@@ -12,6 +12,6 @@
 
 本项目旨在实现根据轴承振动信号识别故障以及判断故障程度，识别故障的思路流程图如下
 
-![flowchart](img/flowchart.png)
+![flowchart](.\resource\img\flowchart.png)
 
 详细思路见我的[论文](.\resource\doc\paper.docx)。之后我也会在这里补充项目简介。
