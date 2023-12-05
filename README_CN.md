@@ -38,7 +38,7 @@
 |       该目录存放数据集，理想状态下，其中没有其他脚本。
 │    └── transforms  - here's the data preprocess folder that is responsible for all data augmentation.
 |       一个目的是给出transform函数的包，我认为可以化简，待议。
-│    └── build.py  		   - here's the file to make dataloader.
+│    └── build.py           - here's the file to make dataloader.
 │    └── collate_batch.py   - here's the file that is responsible for merges a list of samples to form a mini-batch.
 |       这两个文件分别返回dataloader和mini-batch，我认为放到一个文件里就好了。
 │
