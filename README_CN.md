@@ -57,13 +57,13 @@
 │   └── example_model.py
 |       这两个文件分别定制模型和层，我认为也应该放到一个文件里。
 │
-├── solver             - this folder contains optimizer of your project.
+├── solver              - this folder contains optimizer of your project.
 │   └── build.py
 │   └── lr_scheduler.py
 |       定制求解器，包括优化器、学习率变化器等。
 │ 
-├──  tools                - here's the train/test model of your project.
-│    └── train_net.py  - here's an example of train model that is responsible for the whole pipeline.
+├──  tools              - here's the train/test model of your project.
+│    └── train_net.py   - here's an example of train model that is responsible for the whole pipeline.
 |       这个工具是项目层面的，实际训练和测试网络的脚本写在这里。但我在想，这部分好像也可以直接挪去主目录下。或者为了容易看懂改名为start。
 │ 
 └── utils
@@ -71,7 +71,58 @@
 │    └── any_other_utils_you_need
 |       算法层面的实用工具，里面装了很多过程中需要的函数。
 │ 
-└── tests					- this foler contains unit test of your project.
+└── tests               - this foler contains unit test of your project.
+     ├── test_data_sampler.py
+     |   测试其他文件的debug文件。可以用于流程单元的测试。
+```
+
+经过我修改的结构如下
+
+```text
+├──  config
+│    └── __init__.py
+│    └── default.py
+|       通用的参数配置，最终使用的是defaults.py中的类cfg
+│    └── spetical.yaml
+|       实验中需要更改的配置选项
+│ 
+│
+├──  data  
+│    └── datasets  - here's the datasets folder that is responsible for all data handling.
+|       该目录存放数据集，理想状态下，其中没有其他脚本。
+│    └── transforms  - here's the data preprocess folder that is responsible for all data augmentation.
+|       一个目的是给出transform函数的包，我认为可以化简，待议。
+│    └── build.py           - here's the file to make dataloader.
+│    └── collate_batch.py   - here's the file that is responsible for merges a list of samples to form a mini-batch.
+|       这两个文件分别返回dataloader和mini-batch，我认为放到一个文件里就好了。
+│
+│
+├──  engine
+│   ├── trainer.py     - this file contains the train loops.
+│   └── inference.py   - this file contains the inference process.
+|       给出训练与测试的函数
+│
+│
+├── modeling            - this folder contains any model of your project.
+│   └── conv_layer.py
+│   └── example_model.py
+|       给出模型和定制的层
+│
+├── solver             - this folder contains optimizer of your project.
+│   └── build.py
+│   └── lr_scheduler.py
+|       定制求解器，包括优化器、学习率变化器等。
+│ 
+├──  run
+│    └── train_net.py  
+|       会实际运行的脚本放在这里
+│ 
+└── utils
+│    ├── logger.py
+│    └── any_other_utils_you_need
+|       算法层面的实用工具，里面装了很多过程中需要的函数。
+│ 
+└── debug
      ├── test_data_sampler.py
      |   测试其他文件的debug文件。可以用于流程单元的测试。
 ```
