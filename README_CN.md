@@ -22,7 +22,7 @@
 
 原本的模板结构如下
 
-```
+```text
 ├──  config
 │    └── defaults.py  - here's the default config file.
 |       这部分是通用的参数配置（不管换成什么网络和数据集，都有这些参数）。最终使用的是defaults.py中的类cfg
