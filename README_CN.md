@@ -88,41 +88,40 @@
 │ 
 │
 ├──  data  
-│    └── datasets  - here's the datasets folder that is responsible for all data handling.
+│    └── datasets
 |       该目录存放数据集，理想状态下，其中没有其他脚本。
-│    └── transforms  - here's the data preprocess folder that is responsible for all data augmentation.
+│    └── transforms
 |       一个目的是给出transform函数的包，我认为可以化简，待议。
-│    └── build.py           - here's the file to make dataloader.
-│    └── collate_batch.py   - here's the file that is responsible for merges a list of samples to form a mini-batch.
-|       这两个文件分别返回dataloader和mini-batch，我认为放到一个文件里就好了。
+│    └── build.py
+|       给出dataloader和mini-batch
 │
 │
 ├──  engine
-│   ├── trainer.py     - this file contains the train loops.
-│   └── inference.py   - this file contains the inference process.
+│    ├── trainer.py     - this file contains the train loops.
+│    └── inference.py   - this file contains the inference process.
 |       给出训练与测试的函数
 │
 │
-├── modeling            - this folder contains any model of your project.
-│   └── conv_layer.py
-│   └── example_model.py
+├──  modeling
+│    └── conv_layer.py
+│    └── example_model.py
 |       给出模型和定制的层
 │
-├── solver             - this folder contains optimizer of your project.
-│   └── build.py
-│   └── lr_scheduler.py
+├──  solver
+│    └── build.py
+│    └── lr_scheduler.py
 |       定制求解器，包括优化器、学习率变化器等。
 │ 
 ├──  run
 │    └── train_net.py  
 |       会实际运行的脚本放在这里
 │ 
-└── utils
+└──  utils
 │    ├── logger.py
-│    └── any_other_utils_you_need
-|       算法层面的实用工具，里面装了很多过程中需要的函数。
+│    └── feature.py
+|       实用工具。在本项目中，需要特征提取相关的函数。
 │ 
-└── debug
-     ├── test_data_sampler.py
-     |   测试其他文件的debug文件。可以用于流程单元的测试。
+└──  debug
+     └── test_data_sampler.py
+         测试其他文件的debug文件。可以用于流程单元的测试。
 ```
