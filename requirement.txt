@@ -1,5 +1,0 @@
-yacs
-pytorch
-
-numpy
-pandas
