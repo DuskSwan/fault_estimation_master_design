@@ -6,19 +6,45 @@ import sys
 from pathlib import Path
 from loguru import logger
 import time
-import random
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
+# import pandas as pd
+# import numpy as np
+# import matplotlib.pyplot as plt
+
+import torch.nn.functional as F
 
 sys.path.append('.')
 
 from config import cfg
 from utils import set_random_seed
+from data import make_data_loader
+from engine.example_trainer import do_train
+from modeling import build_model
+from solver import make_optimizer
 
 set_random_seed(0)
+
+def train(cfg):
+    model = build_model(cfg)
+    device = cfg.MODEL.DEVICE
+
+    optimizer = make_optimizer(cfg, model)
+    scheduler = None
+
+    arguments = {}
+
+    train_loader = make_data_loader(cfg, is_train=True)
+    val_loader = make_data_loader(cfg, is_train=False)
+
+    do_train(
+        cfg,
+        model,
+        train_loader,
+        val_loader,
+        optimizer,
+        None,
+        F.cross_entropy,
+    )
 
 def main(priv_cfg_path):
     cfg.merge_from_file(priv_cfg_path)
@@ -33,11 +59,7 @@ def main(priv_cfg_path):
 
     logger.info("Running with config:\n{}".format(cfg))
 
-    model = build_model(cfg)
-    model.load_state_dict(torch.load(cfg.TEST.WEIGHT))
-    val_loader = make_data_loader(cfg, is_train=False)
-
-    inference(cfg, model, val_loader)
+    train(cfg)
 
 
 if __name__ == '__main__':
