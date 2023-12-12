@@ -18,35 +18,31 @@ _C = CN()
 
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
-_C.MODEL.NUM_CLASSES = 10
 
 # -----------------------------------------------------------------------------
-# INPUT
+# DESIGN
 # -----------------------------------------------------------------------------
-_C.INPUT = CN()
-# Size of the image during training
-_C.INPUT.SIZE_TRAIN = 32
-# Size of the image during test
-_C.INPUT.SIZE_TEST = 32
-# Minimum scale for the image during training
-_C.INPUT.MIN_SCALE_TRAIN = 0.5
-# Maximum scale for the image during test
-_C.INPUT.MAX_SCALE_TRAIN = 1.2
-# Random probability for image horizontal flip
-_C.INPUT.PROB = 0.5
-# Values to be used for image normalization
-_C.INPUT.PIXEL_MEAN = [0.1307, ]
-# Values to be used for image normalization
-_C.INPUT.PIXEL_STD = [0.3081, ]
+_C.DESIGN = CN()
+_C.DESIGN.SUBLEN = 2048 # size of the raw signal's piece
+_C.DESIGN.PIECE = 256 # num of pieces drawed from raw signal
+_C.DESIGN.M = 50
+_C.DESIGN.P = 5
+_C.DESIGN.FPIECE = 100
+_C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
+
+# -----------------------------------------------------------------------------
+# TRAIN
+# -----------------------------------------------------------------------------
+_C.TRAIN = CN()
+_C.TRAIN.BATCH_SIZE = 32
+
 
 # -----------------------------------------------------------------------------
 # Dataset
 # -----------------------------------------------------------------------------
 _C.DATASETS = CN()
-# List of the dataset names for training, as present in paths_catalog.py
-_C.DATASETS.TRAIN = ()
-# List of the dataset names for testing, as present in paths_catalog.py
-_C.DATASETS.TEST = ()
+_C.DATASETS.NORMAL_PATH = ''
+_C.DATASETS.FAULT_PATH = ''
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -61,7 +57,7 @@ _C.DATALOADER.NUM_WORKERS = 8
 _C.SOLVER = CN()
 _C.SOLVER.OPTIMIZER_NAME = "SGD"
 
-_C.SOLVER.MAX_EPOCHS = 50
+_C.SOLVER.MAX_EPOCHS = 100
 
 _C.SOLVER.BASE_LR = 0.001
 _C.SOLVER.BIAS_LR_FACTOR = 2
@@ -92,9 +88,9 @@ _C.TEST = CN()
 _C.TEST.IMS_PER_BATCH = 8
 _C.TEST.WEIGHT = ""
 
-# ---------------------------------------------------------------------------- #
-# Misc options
-# ---------------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------
+# OUTPUT
+# ----------------------------------------------------------------------------
 _C.OUTPUT_DIR = ""
 
 # -----------------------------------------------------------------------------
