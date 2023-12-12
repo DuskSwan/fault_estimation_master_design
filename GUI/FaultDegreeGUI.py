@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'D:\Program\python\课题工作\23.9.4故障程度检测做GUI\FaultDegreeGUI2.ui'
-#
 # Created by: PyQt5 UI code generator 5.15.7
 #
 # WARNING: Any manual changes made to this file will be lost when pyuic5 is
