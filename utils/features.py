@@ -237,7 +237,7 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
     elif(output_type=='np'): return feature_df.values
     else: raise ValueError('unknown output_type '+output_type)
 
-def draw_features(signal, prefix='', feat_func_name_list = None):
+def extract_features(signal, prefix='', feat_func_name_list = None):
     '''
     该函数针对一段信号，提取出全部的特征，返回特征构成的(特征名，特征值)字典
     prefix是保存名字时的前缀

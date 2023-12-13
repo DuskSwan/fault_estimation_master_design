@@ -35,6 +35,7 @@ _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 # -----------------------------------------------------------------------------
 _C.FEATURE = CN()
 _C.FEATURE.MAX_LENGTH = 1024000 # max length of the raw signal used to calcuate features
+_C.FEATURE.USED_F = ['Mean']
 
 # -----------------------------------------------------------------------------
 # TRAIN
