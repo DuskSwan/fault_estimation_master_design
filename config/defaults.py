@@ -15,9 +15,16 @@ from yacs.config import CfgNode as CN
 # -----------------------------------------------------------------------------
 
 _C = CN()
+_C.DEVICE = "cuda"
 
+# -----------------------------------------------------------------------------
+# MODEL
+# -----------------------------------------------------------------------------
 _C.MODEL = CN()
-_C.MODEL.DEVICE = "cuda"
+_C.MODEL.LSTM_HIDDEN = 10
+_C.MODEL.LINE_HIDDEN = 16
+_C.MODEL.USED_LAYERS = 1
+
 
 # -----------------------------------------------------------------------------
 # DESIGN
@@ -28,7 +35,9 @@ _C.DESIGN.PIECE = 256 # num of pieces drawed from raw signal
 _C.DESIGN.M = 50
 _C.DESIGN.P = 5
 _C.DESIGN.FPIECE = 100
+_C.DESIGN.FSUBLEN = _C.DESIGN.M + _C.DESIGN.P
 _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
+
 
 # -----------------------------------------------------------------------------
 # FEATURE
