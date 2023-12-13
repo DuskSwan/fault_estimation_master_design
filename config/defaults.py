@@ -52,13 +52,19 @@ _C.FEATURE.USED_F = ['Mean']
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
 
+# -----------------------------------------------------------------------------
+# INFERENCE
+# -----------------------------------------------------------------------------
+_C.INFERENCE = CN()
+_C.INFERENCE.BATCH_SIZE = 32
+
 
 # -----------------------------------------------------------------------------
 # Dataset
 # -----------------------------------------------------------------------------
 _C.DATASETS = CN()
-_C.DATASETS.NORMAL_PATH = ''
-_C.DATASETS.FAULT_PATH = ''
+_C.DATASETS.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
+_C.DATASETS.FAULT_PATH = r'data\datasets\CWRU\122.csv'
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -91,18 +97,6 @@ _C.SOLVER.WARMUP_ITERS = 500
 _C.SOLVER.WARMUP_METHOD = "linear"
 
 _C.SOLVER.CHECKPOINT_PERIOD = 10
-_C.SOLVER.LOG_PERIOD = 100
-
-# Number of images per batch
-# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
-# see 2 images per batch
-_C.SOLVER.IMS_PER_BATCH = 16
-
-# This is global, so if we have 8 GPUs and IMS_PER_BATCH = 16, each GPU will
-# see 2 images per batch
-_C.TEST = CN()
-_C.TEST.IMS_PER_BATCH = 8
-_C.TEST.WEIGHT = ""
 
 # ----------------------------------------------------------------------------
 # OUTPUT
@@ -112,4 +106,6 @@ _C.OUTPUT_DIR = ""
 # -----------------------------------------------------------------------------
 # LOG
 # -----------------------------------------------------------------------------
-_C.LOG_DIR = "./log"
+_C.LOG = CN()
+_C.LOG.DIR = "./log"
+_C.LOG.PERIOD = 100

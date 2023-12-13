@@ -1,4 +1,6 @@
-class LSTM_net(nn.Module): #继承了父类nn.Module，通用模型
+from torch.nn import Module
+
+class LSTM_net(Module): #继承了父类Module，通用模型
     """
         Parameters：
         - input_len: 每个输入样本的序列长度

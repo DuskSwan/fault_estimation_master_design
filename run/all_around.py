@@ -7,12 +7,15 @@ import time
 from pathlib import Path
 from loguru import logger
 
+import pandas as pd
+import torch.nn as nn
+
 sys.path.append('.')
 from config import cfg
 from utils import set_random_seed, sheet_cut
 from utils.features import view_features_DTW, signal_to_features_tf
 
-from engine.example_trainer import do_train
+from engine.trainer import do_train
 from modeling import build_model
 from solver import make_optimizer
 
@@ -64,7 +67,7 @@ def train(cfg):
     logger.info('Get model with params:',net_params)
 
     # 读取设置
-    device = cfg.MODEL.DEVICE
+    device = cfg.DEVICE
     optimizer = make_optimizer(cfg, model)
     scheduler = None
 
@@ -78,29 +81,31 @@ def train(cfg):
         val_loader,
         optimizer,
         scheduler,
-        F.cross_entropy,
+        nn.MSELoss(reduction='mean'),
     )
 
-def main(priv_cfg_path):
+def main(extra_cfg_path = ''):
     set_random_seed(0)
-    cfg.merge_from_file(priv_cfg_path)
-    cfg.freeze()
-
     cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-    logger.add(str(cfg.LOG_DIR / f'{cur_time}.log'), rotation='1 day', encoding='utf-8')
+    logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
+
+    extra_cfg = Path(extra_cfg_path)
+    if extra_cfg.exists() and extra_cfg.suffix == '.yaml':
+        cfg.merge_from_file(extra_cfg)
+    cfg.freeze()
 
     output_dir = Path(cfg.OUTPUT_DIR)
     if not output_dir.exists: output_dir.mkdir()
 
-    logger.info("In device {}".format(cfg.MODEL.DEVICE))
+    logger.info("In device {}".format(cfg.DEVICE))
     logger.info("Running with config:\n{}".format(cfg))
 
     # calculate features and rank
     feat_dict = view_features_DTW(cfg)
-    logger.info(feat_dict)
+    logger.info("features ranked:", feat_dict) # 列表输出不出来，要转化成字符串
 
     # train
-    logger.info("feature(s) used:",cfg.FEATURE.USED_F)
+    logger.info("feature(s) used:",cfg.FEATURE.USED_F) # 列表输出不出来，要转化成字符串
     train(cfg)
 
 

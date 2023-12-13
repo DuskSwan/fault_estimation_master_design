@@ -1,0 +1,50 @@
+2023-12-13 17:17:19.640 | INFO     | __main__:main:100 - In device cuda
+2023-12-13 17:17:19.640 | INFO     | __main__:main:101 - Running with config:
+DATALOADER:
+  NUM_WORKERS: 8
+DATASETS:
+  FAULT_PATH: data\datasets\CWRU\122.csv
+  NORMAL_PATH: data\datasets\CWRU\97.csv
+DESIGN:
+  FPIECE: 100
+  FSUBLEN: 55
+  M: 50
+  P: 5
+  PIECE: 5500
+  SUBLEN: 2048
+DEVICE: cuda
+FEATURE:
+  MAX_LENGTH: 1024000
+  USED_F: ['Mean']
+INFERENCE:
+  BATCH_SIZE: 32
+LOG:
+  DIR: ./log
+  PERIOD: 100
+MODEL:
+  LINE_HIDDEN: 16
+  LSTM_HIDDEN: 10
+  USED_LAYERS: 1
+OUTPUT_DIR: 
+SOLVER:
+  BASE_LR: 0.001
+  BIAS_LR_FACTOR: 2
+  CHECKPOINT_PERIOD: 10
+  GAMMA: 0.1
+  MAX_EPOCHS: 100
+  MOMENTUM: 0.9
+  OPTIMIZER_NAME: SGD
+  STEPS: (30000,)
+  WARMUP_FACTOR: 0.3333333333333333
+  WARMUP_ITERS: 500
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0005
+  WEIGHT_DECAY_BIAS: 0
+TRAIN:
+  BATCH_SIZE: 32
+2023-12-13 17:17:21.571 | INFO     | __main__:main:105 - features ranked:
+2023-12-13 17:17:21.571 | INFO     | __main__:main:108 - feature(s) used:
+2023-12-13 17:17:21.639 | INFO     | __main__:train:33 - start to extract features...
+2023-12-13 17:17:22.637 | INFO     | __main__:train:41 - feature extraction finished with time 0.941897s.
+2023-12-13 17:17:22.653 | INFO     | __main__:train:42 - features shape: (5500, 2)
+2023-12-13 17:17:22.653 | INFO     | __main__:train:49 - start to make X and Y...

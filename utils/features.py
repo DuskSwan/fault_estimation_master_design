@@ -188,7 +188,7 @@ RVF = Rvf
 
 def view_features_DTW(cfg):
     # 计算特征
-    tpaths = [cfg.NORMAL_PATH, cfg.FAULT_PATH]
+    tpaths = [cfg.DATASETS.NORMAL_PATH, cfg.DATASETS.FAULT_PATH]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
     for i in range(len(tpaths)): #每个类别
         data_path = tpaths[i]
@@ -206,15 +206,16 @@ def view_features_DTW(cfg):
         arr1 = feat_with_classes[0][col]
         arr2 = feat_with_classes[1][col]
         dtws = TimeSeriesSimilarity(arr1, arr2)
-        txt = '{:20}: dtw= {:.6f} '.format(col,dtws)
-        print(txt)
+        # txt = '{:20}: dtw= {:.6f} '.format(col,dtws)
+        # print(txt)
         feat_mark[col] = dtws
     d_order=sorted(feat_mark.items(),key=lambda x:x[1])[::-1]
-    print(d_order)
+    for k,v in d_order: print('{:20}: dtw= {:.6f} '.format(k,v))
+    return d_order
 
 def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = None):
     """
-    XY是时间序列切片得到的样本集，是三维数组（单个样本是二维数组），每个样本计算一个向量作为特征
+    sample_list是时间序列切片得到的样本集，是三维数组（单个样本是二维数组），每个样本计算一个向量作为特征
     output_type指定输出类型的数组（np）还是数据表（pd）
     输出特征组成的时间序列，是二维数组
     """
@@ -224,7 +225,7 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
         feature_dict = {}
         for i in range(n_tun):
             tun_signal = sample[:,i] #选第i通道
-            i_dict = draw_features(tun_signal, 'tun'+str(i), feat_func_name_list)
+            i_dict = extract_features(tun_signal, 'tun'+str(i), feat_func_name_list)
             feature_dict.update(i_dict)
         # feature_df = feature_df.append(feature_dict, ignore_index=True)
             # ==warning:The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
