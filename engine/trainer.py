@@ -18,8 +18,6 @@ def do_train(
         loss_fn,
 ):
     log_period = cfg.LOG.ITER_INTERVAL
-    checkpoint_period = cfg.TRAIN.CHECKPOINT_PERIOD
-    output_dir = cfg.OUTPUT_DIR
     device = cfg.DEVICE
     epochs = cfg.SOLVER.MAX_EPOCHS
     eval_metrics = {'RegLoss': Loss(loss_fn)}
@@ -31,12 +29,14 @@ def do_train(
 
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics, device=device)
-    checkpointer = ModelCheckpoint(output_dir, "checkpoint", n_saved=10, require_empty=False)
-    timer = Timer(average=True)
 
-    trainer.add_event_handler(Events.ITERATION_STARTED(every=checkpoint_period), checkpointer, {'model': model})
-    # trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model.state_dict(),
-    #                                                                  'optimizer': optimizer.state_dict()})
+    if(cfg.TRAIN.NEED_CHRCKPOINT):
+        output_dir = cfg.OUTPUT.MODEL_DIR
+        checkpoint_period = cfg.TRAIN.CHECKPOINT_PERIOD
+        checkpointer = ModelCheckpoint(output_dir, "checkpoint", n_saved=5, require_empty=False)
+        trainer.add_event_handler(Events.ITERATION_STARTED(every=checkpoint_period), checkpointer, {'model': model})
+    
+    timer = Timer(average=True)
     timer.attach(trainer, start=Events.EPOCH_STARTED, resume=Events.ITERATION_STARTED,
                  pause=Events.ITERATION_COMPLETED, step=Events.ITERATION_COMPLETED)
 

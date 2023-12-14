@@ -7,9 +7,8 @@ import time
 from pathlib import Path
 from loguru import logger
 
-import pandas as pd
-import numpy as np
 import torch.nn as nn
+from torch import save as tsave
 
 sys.path.append('.')
 from config import cfg
@@ -23,7 +22,6 @@ from modeling import build_model
 from solver import make_optimizer
 
 from engine.trainer import do_train
-from engine.inference import do_inference
 
 def train(cfg):
     # get data
@@ -53,6 +51,11 @@ def train(cfg):
         nn.MSELoss(reduction='mean'),
     )
 
+    save_cont = Path(cfg.OUTPUT.MODEL_DIR)
+    if not save_cont.exists(): save_cont.mkdir()
+    save_path = save_cont / cfg.OUTPUT.MODEL_NAME
+    tsave(model, save_path)
+
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
 
@@ -65,9 +68,6 @@ def main(extra_cfg_path = ''):
     if(cfg.LOG.OUTPUT_TO_FILE): 
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
-
-    output_dir = Path(cfg.OUTPUT_DIR)
-    if not output_dir.exists: output_dir.mkdir()
 
     logger.info("In device {}".format(cfg.DEVICE))
     logger.info("Running with config:\n{}".format(cfg))

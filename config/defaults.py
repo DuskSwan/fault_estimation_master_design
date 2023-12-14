@@ -18,7 +18,13 @@ _C = CN()
 _C.DEVICE = "cuda"
 _C.SEED = 0
 _C.DATA_TYPE = 'float'  # or double
-_C.OUTPUT_DIR = ""
+
+# -----------------------------------------------------------------------------
+# OUTPUT
+# -----------------------------------------------------------------------------
+_C.OUTPUT = CN()
+_C.OUTPUT.MODEL_DIR = "output/models"
+_C.OUTPUT.MODEL_NAME = "model.pth"
 
 # -----------------------------------------------------------------------------
 # MODEL
@@ -57,6 +63,7 @@ _C.TRAIN.BATCH_SIZE = 32
 _C.TRAIN.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
 _C.TRAIN.FAULT_PATH = r'data\datasets\CWRU\122.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
+_C.TRAIN.NEED_CHRCKPOINT = False
 
 # -----------------------------------------------------------------------------
 # INFERENCE
@@ -64,6 +71,7 @@ _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 32
 _C.INFERENCE.UNKWON_PATH = r'data\datasets\CWRU\122.csv'
+_C.INFERENCE.MODEL_PATH = r'output\models\model.pth'
 
 
 # -----------------------------------------------------------------------------
