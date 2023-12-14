@@ -69,7 +69,7 @@ _C.TRAIN.NEED_CHRCKPOINT = False
 # INFERENCE
 # -----------------------------------------------------------------------------
 _C.INFERENCE = CN()
-_C.INFERENCE.BATCH_SIZE = 32
+_C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = r'data\datasets\CWRU\122.csv'
 _C.INFERENCE.MODEL_PATH = r'output\models\model.pth'
 

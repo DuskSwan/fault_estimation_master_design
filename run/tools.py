@@ -30,7 +30,7 @@ def feature_cuts_to_XY(cfg, feature_cuts):
 #                   signal_to_XY
 def signal_to_XY(cfg, is_train=True):
     if(is_train): data_path = cfg.TRAIN.NORMAL_PATH
-    else: data_path = cfg.INFERENCE.INFERENCE.UNKWON_PATH
+    else: data_path = cfg.INFERENCE.UNKWON_PATH
 
     signal = pd.read_csv(data_path).values #读成numpy数组
     n,_ = signal.shape # 1958912
