@@ -63,6 +63,7 @@ _C.TRAIN.CHECKPOINT_PERIOD = 10
 # -----------------------------------------------------------------------------
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 32
+_C.INFERENCE.UNKWON_PATH = r'data\datasets\CWRU\122.csv'
 
 
 # -----------------------------------------------------------------------------
