@@ -41,9 +41,9 @@ _C.MODEL.USED_LAYERS = 1
 _C.DESIGN = CN()
 _C.DESIGN.SUBLEN = 2048 # size of the raw signal's piece
 _C.DESIGN.PIECE = 256 # num of pieces drawed from raw signal
-_C.DESIGN.M = 50
-_C.DESIGN.P = 5
-_C.DESIGN.FPIECE = 100
+_C.DESIGN.M = 100
+_C.DESIGN.P = 10
+_C.DESIGN.FPIECE = 200
 _C.DESIGN.FSUBLEN = _C.DESIGN.M + _C.DESIGN.P
 _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 
@@ -114,3 +114,4 @@ _C.LOG.DIR = "./log"
 _C.LOG.ITER_INTERVAL = 1
 _C.LOG.EPOCH_INTERVAL = 10
 _C.LOG.OUTPUT_TO_FILE = True # 是否输出到文件，默认输出到控制台
+_C.LOG.PREFIX = "" # 输出到文件的命名前缀

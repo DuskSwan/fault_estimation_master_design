@@ -4,6 +4,7 @@
 @contact: sherlockliao01@gmail.com
 """
 import sys
+import time
 from pathlib import Path
 from loguru import logger
 
@@ -27,6 +28,10 @@ def main(extra_cfg_path = ''):
     if extra_cfg.exists() and extra_cfg.suffix == '.yml':
         cfg.merge_from_file(extra_cfg)
     cfg.freeze()
+
+    if(cfg.LOG.OUTPUT_TO_FILE): 
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
 
     logger.info('Start inference')
 
@@ -65,4 +70,4 @@ def main(extra_cfg_path = ''):
 
 
 if __name__ == '__main__':
-    main()
+    main('./config/CWRU_test.yml')

@@ -67,7 +67,7 @@ def main(extra_cfg_path = ''):
 
     if(cfg.LOG.OUTPUT_TO_FILE): 
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-        logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
+        logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
 
     logger.info("In device {}".format(cfg.DEVICE))
     logger.info("Running with config:\n{}".format(cfg))
@@ -81,4 +81,4 @@ def main(extra_cfg_path = ''):
     train(cfg)
 
 if __name__ == '__main__':
-    main('./config/debug.yml')
+    main('./config/CWRU_train.yml')
