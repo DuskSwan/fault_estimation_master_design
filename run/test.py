@@ -17,7 +17,6 @@ from run.tools import signal_to_XY
 from utils import set_random_seed
 from data import make_data_loader
 from engine.inference import inference
-# from modeling import build_model
 
 
 def main(extra_cfg_path = ''):
