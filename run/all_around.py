@@ -20,6 +20,7 @@ from engine.trainer import do_train
 from modeling import build_model
 from solver import make_optimizer
 
+
 def train(cfg):
     # 设置参数
     normal_data = pd.read_csv(cfg.TRAIN.NORMAL_PATH).values #读成numpy数组
@@ -110,6 +111,8 @@ def main(extra_cfg_path = ''):
     # train
     logger.info("feature(s) used:{}".format(', '.join(cfg.FEATURE.USED_F)))
     train(cfg)
+
+    # calc threshold
 
 
 if __name__ == '__main__':
