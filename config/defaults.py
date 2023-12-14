@@ -109,3 +109,4 @@ _C.OUTPUT_DIR = ""
 _C.LOG = CN()
 _C.LOG.DIR = "./log"
 _C.LOG.PERIOD = 100
+_C.LOG.OUTPUT_TO_FILE = False # 是否输出到文件，默认输出到控制台

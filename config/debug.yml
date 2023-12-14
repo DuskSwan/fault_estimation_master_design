@@ -1,0 +1,4 @@
+LOG:
+  OUTPUT_TO_FILE: False
+
+OUTPUT_DIR: "/debug/res"

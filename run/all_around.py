@@ -8,13 +8,14 @@ from pathlib import Path
 from loguru import logger
 
 import pandas as pd
+import numpy as np
 import torch.nn as nn
 
 sys.path.append('.')
 from config import cfg
 from utils import set_random_seed, sheet_cut
 from utils.features import view_features_DTW, signal_to_features_tf
-
+from data import make_data_loader
 from engine.trainer import do_train
 from modeling import build_model
 from solver import make_optimizer
@@ -54,25 +55,25 @@ def train(cfg):
         X.append(signal[:m,:][:])
         Y.append(signal[m:,:][:])
     X,Y = map(np.array,(X,Y))
-    logger.info('X:',X.shape, 'Y',Y.shape)
+    logger.info('X:{} Y:{}'.format(X.shape,Y.shape))
 
     # GET MODEL
-    n_sample, in_len, in_tunnel = X.shape
+    _, in_len, in_tunnel = X.shape
     _, out_len, out_tunnel = Y.shape
     net_params = {'input_len':in_len,
                 'output_len':out_len,
                 'input_dim':in_tunnel,
                 'output_dim':out_tunnel,}
-    model = build_model(cfg,**net_params)
-    logger.info('Get model with params:',net_params)
+    model = build_model(cfg, net_params)
+    logger.info('Get model with params: {}'.format(net_params))
 
     # 读取设置
     device = cfg.DEVICE
     optimizer = make_optimizer(cfg, model)
     scheduler = None
 
-    train_loader = make_data_loader(cfg, is_train=True)
-    val_loader = make_data_loader(cfg, is_train=False)
+    train_loader = make_data_loader(cfg, X,Y, is_train=True)
+    val_loader = make_data_loader(cfg, X,Y, is_train=False)
 
     do_train(
         cfg,
@@ -86,11 +87,14 @@ def train(cfg):
 
 def main(extra_cfg_path = ''):
     set_random_seed(0)
-    cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-    logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
 
+    if(cfg.LOG.OUTPUT_TO_FILE): 
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
+
+    if(extra_cfg_path): logger.info("try to merge from " + extra_cfg_path)
     extra_cfg = Path(extra_cfg_path)
-    if extra_cfg.exists() and extra_cfg.suffix == '.yaml':
+    if extra_cfg.exists() and extra_cfg.suffix == '.yml':
         cfg.merge_from_file(extra_cfg)
     cfg.freeze()
 
@@ -101,13 +105,13 @@ def main(extra_cfg_path = ''):
     logger.info("Running with config:\n{}".format(cfg))
 
     # calculate features and rank
-    feat_dict = view_features_DTW(cfg)
-    logger.info("features ranked:", feat_dict) # 列表输出不出来，要转化成字符串
+    ranked_feat = view_features_DTW(cfg)
+    logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
     # train
-    logger.info("feature(s) used:",cfg.FEATURE.USED_F) # 列表输出不出来，要转化成字符串
+    logger.info("feature(s) used:{}".format(', '.join(cfg.FEATURE.USED_F)))
     train(cfg)
 
 
 if __name__ == '__main__':
-    main()
+    main('./config/debug.yml')

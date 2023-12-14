@@ -209,9 +209,9 @@ def view_features_DTW(cfg):
         # txt = '{:20}: dtw= {:.6f} '.format(col,dtws)
         # print(txt)
         feat_mark[col] = dtws
-    d_order=sorted(feat_mark.items(),key=lambda x:x[1])[::-1]
-    for k,v in d_order: print('{:20}: dtw= {:.6f} '.format(k,v))
-    return d_order
+    ranked_feat=sorted(feat_mark.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
+    for k,v in ranked_feat: print('{:20}: dtw= {:.6f} '.format(k,v))
+    return ranked_feat
 
 def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = None):
     """

@@ -2,7 +2,7 @@
 
 from loguru import logger
 
-from ignite.engine.events import Events
+from ignite.engine import Events
 from ignite.engine import create_supervised_trainer, create_supervised_evaluator
 from ignite.handlers import ModelCheckpoint, Timer
 from ignite.metrics import Loss, RunningAverage
@@ -27,11 +27,12 @@ def do_train(
     logger.info("Start training")
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics, device=device)
-    checkpointer = ModelCheckpoint(output_dir, "checkpoint", checkpoint_period, n_saved=10, require_empty=False)
+    # checkpointer = ModelCheckpoint(output_dir, "checkpoint", n_saved=10, require_empty=False)
     timer = Timer(average=True)
 
-    trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model.state_dict(),
-                                                                     'optimizer': optimizer.state_dict()})
+    # trainer.add_event_handler(Events.ITERATION_STARTED(every=checkpoint_period), checkpointer, {'mymodel': model})
+    # trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model.state_dict(),
+    #                                                                  'optimizer': optimizer.state_dict()})
     timer.attach(trainer, start=Events.EPOCH_STARTED, resume=Events.ITERATION_STARTED,
                  pause=Events.ITERATION_COMPLETED, step=Events.ITERATION_COMPLETED)
 
