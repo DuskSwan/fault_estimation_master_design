@@ -188,7 +188,7 @@ RVF = Rvf
 
 def view_features_DTW(cfg):
     # 计算特征
-    tpaths = [cfg.DATASETS.NORMAL_PATH, cfg.DATASETS.FAULT_PATH]
+    tpaths = [cfg.TRAIN.NORMAL_PATH, cfg.TRAIN.FAULT_PATH]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
     for i in range(len(tpaths)): #每个类别
         data_path = tpaths[i]

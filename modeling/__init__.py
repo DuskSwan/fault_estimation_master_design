@@ -15,4 +15,8 @@ def build_model(cfg, kwargs):
                      lstm_hidden_dim = cfg.MODEL.LSTM_HIDDEN, 
                      line_hidden_dim = cfg.MODEL.LINE_HIDDEN, 
                      used_layers = cfg.MODEL.USED_LAYERS) 
-    return model
+    if cfg.DATA_TYPE == 'float':
+        model = model.float()
+    elif cfg.DATA_TYPE == 'double':
+        model = model.double()
+    return model.to(cfg.DEVICE)

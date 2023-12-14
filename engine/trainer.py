@@ -2,6 +2,7 @@
 
 from loguru import logger
 
+import torch
 from ignite.engine import Events
 from ignite.engine import create_supervised_trainer, create_supervised_evaluator
 from ignite.handlers import ModelCheckpoint, Timer
@@ -18,7 +19,7 @@ def do_train(
         loss_fn,
 ):
     log_period = cfg.LOG.PERIOD
-    checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
+    checkpoint_period = cfg.TRAIN.CHECKPOINT_PERIOD
     output_dir = cfg.OUTPUT_DIR
     device = cfg.DEVICE
     epochs = cfg.SOLVER.MAX_EPOCHS
@@ -27,10 +28,10 @@ def do_train(
     logger.info("Start training")
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics, device=device)
-    # checkpointer = ModelCheckpoint(output_dir, "checkpoint", n_saved=10, require_empty=False)
+    checkpointer = ModelCheckpoint(output_dir, "checkpoint", n_saved=10, require_empty=False)
     timer = Timer(average=True)
 
-    # trainer.add_event_handler(Events.ITERATION_STARTED(every=checkpoint_period), checkpointer, {'mymodel': model})
+    trainer.add_event_handler(Events.ITERATION_STARTED(every=checkpoint_period), checkpointer, {'model': model})
     # trainer.add_event_handler(Events.EPOCH_COMPLETED, checkpointer, {'model': model.state_dict(),
     #                                                                  'optimizer': optimizer.state_dict()})
     timer.attach(trainer, start=Events.EPOCH_STARTED, resume=Events.ITERATION_STARTED,
@@ -71,5 +72,10 @@ def do_train(
                     .format(engine.state.epoch, timer.value() * timer.step_count,
                             train_loader.batch_size / timer.value()))
         timer.reset()
+    
+    # clear cuda cache
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def clear_cuda_cache(engine):
+        torch.cuda.empty_cache()
 
     trainer.run(train_loader, max_epochs=epochs)

@@ -22,7 +22,7 @@ from solver import make_optimizer
 
 def train(cfg):
     # 设置参数
-    normal_data = pd.read_csv(cfg.DATASETS.NORMAL_PATH).values #读成numpy数组
+    normal_data = pd.read_csv(cfg.TRAIN.NORMAL_PATH).values #读成numpy数组
     n,_ = normal_data.shape # 1958912
     piece = cfg.DESIGN.PIECE
     subl = cfg.DESIGN.SUBLEN
@@ -68,7 +68,6 @@ def train(cfg):
     logger.info('Get model with params: {}'.format(net_params))
 
     # 读取设置
-    device = cfg.DEVICE
     optimizer = make_optimizer(cfg, model)
     scheduler = None
 
@@ -86,7 +85,7 @@ def train(cfg):
     )
 
 def main(extra_cfg_path = ''):
-    set_random_seed(0)
+    set_random_seed(cfg.SEED)
 
     if(cfg.LOG.OUTPUT_TO_FILE): 
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())

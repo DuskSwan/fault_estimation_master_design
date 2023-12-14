@@ -16,6 +16,9 @@ from yacs.config import CfgNode as CN
 
 _C = CN()
 _C.DEVICE = "cuda"
+_C.SEED = 0
+_C.DATA_TYPE = 'float'  # or double
+_C.OUTPUT_DIR = ""
 
 # -----------------------------------------------------------------------------
 # MODEL
@@ -51,6 +54,9 @@ _C.FEATURE.USED_F = ['Mean']
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
+_C.TRAIN.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
+_C.TRAIN.FAULT_PATH = r'data\datasets\CWRU\122.csv'
+_C.TRAIN.CHECKPOINT_PERIOD = 10
 
 # -----------------------------------------------------------------------------
 # INFERENCE
@@ -60,18 +66,11 @@ _C.INFERENCE.BATCH_SIZE = 32
 
 
 # -----------------------------------------------------------------------------
-# Dataset
-# -----------------------------------------------------------------------------
-_C.DATASETS = CN()
-_C.DATASETS.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
-_C.DATASETS.FAULT_PATH = r'data\datasets\CWRU\122.csv'
-
-# -----------------------------------------------------------------------------
 # DataLoader
 # -----------------------------------------------------------------------------
 _C.DATALOADER = CN()
 # Number of data loading threads
-_C.DATALOADER.NUM_WORKERS = 8
+_C.DATALOADER.NUM_WORKERS = 1
 
 # ---------------------------------------------------------------------------- #
 # Solver
@@ -96,12 +95,7 @@ _C.SOLVER.WARMUP_FACTOR = 1.0 / 3
 _C.SOLVER.WARMUP_ITERS = 500
 _C.SOLVER.WARMUP_METHOD = "linear"
 
-_C.SOLVER.CHECKPOINT_PERIOD = 10
 
-# ----------------------------------------------------------------------------
-# OUTPUT
-# ----------------------------------------------------------------------------
-_C.OUTPUT_DIR = ""
 
 # -----------------------------------------------------------------------------
 # LOG
@@ -109,4 +103,4 @@ _C.OUTPUT_DIR = ""
 _C.LOG = CN()
 _C.LOG.DIR = "./log"
 _C.LOG.PERIOD = 100
-_C.LOG.OUTPUT_TO_FILE = False # 是否输出到文件，默认输出到控制台
+_C.LOG.OUTPUT_TO_FILE = True # 是否输出到文件，默认输出到控制台
