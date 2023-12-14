@@ -15,7 +15,6 @@ def do_train(
         train_loader,
         val_loader,
         optimizer,
-        scheduler,
         loss_fn,
 ):
     log_period = cfg.LOG.ITER_INTERVAL
@@ -27,8 +26,7 @@ def do_train(
 
     logger.info(f"Start training with parameters:\n"
                 f"max epochs:{epochs}\n"
-                f"train batchs:{len(train_loader)}\n"
-                f"val batchs:{len(val_loader)}")
+                f"train batchs:{len(train_loader)}\n")
 
 
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
