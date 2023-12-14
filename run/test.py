@@ -6,8 +6,8 @@
 import sys
 from pathlib import Path
 from loguru import logger
-from torch import load as tload
 
+import torch
 import numpy as np
 
 sys.path.append('.')
@@ -32,21 +32,37 @@ def main(extra_cfg_path = ''):
     logger.info('Start inference')
 
     # get model
-    model = tload(cfg.INFERENCE.MODEL_PATH)
+    model = torch.load(cfg.INFERENCE.MODEL_PATH)
     model.to(cfg.DEVICE)
     logger.info('Change model to {}'.format(cfg.DEVICE))
 
     # calculate threshold
+    logger.info('Start to calculate threshold...')
     X,Y = signal_to_XY(cfg, is_train=True)
+    normal_loader = make_data_loader(cfg, X,Y, is_train=False)
+    error_list = inference(cfg, model, normal_loader)
+    errors = torch.stack(error_list)
+    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+    logger.info('Max error {:.6f} , Min error {:.6f}'.format(errors.max().item(), errors.min().item()))
+    threshold = errors.mean() + 3 * errors.std()
+
+    # calculate unknown signal MAE
+    logger.info('Start to calculate unknown signal MAE...')
+    X,Y = signal_to_XY(cfg, is_train=False)
     test_loader = make_data_loader(cfg, X,Y, is_train=False)
     error_list = inference(cfg, model, test_loader)
-    print(error_list[0].shape)
-    errors = [tensor.mean().item() for tensor in error_list]
-    errors = np.array(errors)
-    logger.info('errors: {}'.format(errors))
+    errors = torch.stack(error_list)
+    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+    logger.info('Max error {:.6f} , Min error {:.6f}, Mean error {}'
+                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+    indicator = errors.mean()
 
-    # calculate MAE
-    # error = inference(cfg, model, val_loader)
+    # result
+    logger.info('Threshold is {:.6f}'.format(threshold))
+    logger.info('Indicator is {:.6f}'.format(indicator))
+    if(indicator > threshold): logger.info('Unknown signal is FAULTY.')
+    else: logger.info('Unknown signal is NORMAL.')
+    
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ from ignite.engine import Events
 from ignite.engine import create_supervised_evaluator
 from ignite.metrics import MeanAbsoluteError
 
+from torch import abs as tensor_abs
 
 def inference(cfg,model,val_loader):
     device = cfg.DEVICE
@@ -13,18 +14,12 @@ def inference(cfg,model,val_loader):
     evaluator = create_supervised_evaluator(model, metrics={'MAE': MeanAbsoluteError()},
                                             device=device)
 
-    # view the validation score
-    @evaluator.on(Events.EPOCH_COMPLETED)
-    def print_validation_results(engine):
-        metrics = evaluator.state.metrics
-        avg_score = metrics['MAE']
-        logger.info("Validation Results - MAE: {:.3f}".format(avg_score))
-
     # record per batch MAE
     batch_scores = [] # 其中每个元素会是一个tensor数组
     @evaluator.on(Events.ITERATION_COMPLETED)
     def save_batch_score(engine):
-        batch_score = engine.state.output
+        y_pred,y = engine.state.output
+        batch_score = tensor_abs(y_pred - y).mean()
         batch_scores.append(batch_score)
 
     evaluator.run(val_loader)
