@@ -87,15 +87,15 @@ def train(cfg):
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
 
-    if(cfg.LOG.OUTPUT_TO_FILE): 
-        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-        logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
-
     if(extra_cfg_path): logger.info("try to merge from " + extra_cfg_path)
     extra_cfg = Path(extra_cfg_path)
     if extra_cfg.exists() and extra_cfg.suffix == '.yml':
         cfg.merge_from_file(extra_cfg)
     cfg.freeze()
+
+    if(cfg.LOG.OUTPUT_TO_FILE): 
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(cfg.LOG.DIR + f'/{cur_time}.log', rotation='1 day', encoding='utf-8')
 
     output_dir = Path(cfg.OUTPUT_DIR)
     if not output_dir.exists: output_dir.mkdir()
