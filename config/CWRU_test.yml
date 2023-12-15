@@ -1,10 +1,11 @@
 FEATURE:
-  USED_F: ['RVF']
+  USED_F: ['Mean']
+  USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 INFERENCE:
   UNKWON_PATH: 'data/datasets/CWRU/122.csv'
   MODEL_PATH: "output/cwru_lstm.pth"
 
 LOG:
-  OUTPUT_TO_FILE: False
+  OUTPUT_TO_FILE: True
   PREFIX: "test" 

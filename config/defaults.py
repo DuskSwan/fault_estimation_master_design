@@ -55,6 +55,7 @@ _C.FEATURE = CN()
 _C.FEATURE.NEED_VIEW = True
 _C.FEATURE.MAX_LENGTH = 1024000 # max length of the raw signal used to calcuate features
 _C.FEATURE.USED_F = ['Mean']
+_C.FEATURE.USED_THRESHOLD  = ['log']
 
 # -----------------------------------------------------------------------------
 # TRAIN

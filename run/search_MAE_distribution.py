@@ -19,6 +19,8 @@ from utils import set_random_seed, initiate_cfg
 from data import make_data_loader
 from engine.inference import inference
 
+from utils.threshold import calc_thresholds
+
 
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
@@ -37,7 +39,8 @@ def main(extra_cfg_path = ''):
     errors = torch.stack(error_list)
     if(cfg.DEVICE != "cpu"): errors = errors.cpu()
     logger.info('Max error {:.6f} , Min error {:.6f}'.format(errors.max().item(), errors.min().item()))
-    threshold = errors.mean() + 3 * errors.std()
+    errors = errors.numpy()
+    # thresholds = calc_thresholds(errors, method = cfg.FEATURE.USED_THRESHOLD)
 
     plt.hist(errors)
     plt.axvline(x=threshold, color='r', linestyle='--')  # 添加竖线

@@ -15,6 +15,8 @@ from utils import set_random_seed,initiate_cfg
 from data import make_data_loader
 from engine.inference import inference
 
+from utils.threshold import calc_thresholds
+
 
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
@@ -32,10 +34,11 @@ def main(extra_cfg_path = ''):
     error_list = inference(cfg, model, normal_loader)
     errors = torch.stack(error_list)
     if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-    plt.hist(errors)
-    plt.show()
-    logger.info('Max error {:.6f} , Min error {:.6f}'.format(errors.max().item(), errors.min().item()))
-    threshold = errors.mean() + 3 * errors.std()
+    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
+                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+    errors_arr = errors.numpy()
+    thresholds = calc_thresholds(errors_arr, method = cfg.FEATURE.USED_THRESHOLD)
+    # logger.info('Thresholds are {}'.format(thresholds))
 
     # calculate unknown signal MAE
     logger.info('Start to calculate unknown signal MAE...')
@@ -44,16 +47,16 @@ def main(extra_cfg_path = ''):
     error_list = inference(cfg, model, test_loader)
     errors = torch.stack(error_list)
     if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-    logger.info('Max error {:.6f} , Min error {:.6f}, Mean error {}'
+    logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
                 .format(errors.max().item(), errors.min().item(), errors.mean().item()))
-    indicator = errors.mean()
+    indicator = errors.mean().item()
 
     # result
-    logger.info('Threshold is {:.6f}'.format(threshold))
-    logger.info('Indicator is {:.6f}'.format(indicator))
-    if(indicator > threshold): logger.info('Unknown signal is FAULTY.')
-    else: logger.info('Unknown signal is NORMAL.')
+    for k,threshold in thresholds.items():
+        logger.info('{} threshold is {:.4f}, indicator is {:.4f}'.format(k, threshold, indicator))
+        res = 'Normal' if indicator < threshold else 'Abnormal'
+        logger.info('Evaluation result is {}'.format(res))
     
 
 if __name__ == '__main__':
-    main('./config/CWRU_test(122).yml')
+    main('./config/CWRU_test.yml')

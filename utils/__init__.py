@@ -70,10 +70,3 @@ def initiate_cfg(cfg,merge_file = ''):
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
     else: logger.info("Output to console.")
-
-def cala_p_tile(arr,p = 0.99):
-    '''
-    计算p-tile，即百分位数
-    '''
-    arr = np.array(arr)
-    return np.percentile(arr,p*100)

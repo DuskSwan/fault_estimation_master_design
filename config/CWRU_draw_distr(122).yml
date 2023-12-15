@@ -1,5 +1,6 @@
 FEATURE:
   USED_F: ['RVF']
+  USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 INFERENCE:
   UNKWON_PATH: 'data/datasets/CWRU/122.csv'
