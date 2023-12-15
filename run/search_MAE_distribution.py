@@ -1,5 +1,8 @@
 # encoding: utf-8
-
+"""
+@author:  sherlock
+@contact: sherlockliao01@gmail.com
+"""
 import sys
 from loguru import logger
 
@@ -7,11 +10,12 @@ import torch
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+
 sys.path.append('.')
 from config import cfg
 
 from run.tools import signal_to_XY
-from utils import set_random_seed,initiate_cfg
+from utils import set_random_seed, initiate_cfg
 from data import make_data_loader
 from engine.inference import inference
 
@@ -32,28 +36,13 @@ def main(extra_cfg_path = ''):
     error_list = inference(cfg, model, normal_loader)
     errors = torch.stack(error_list)
     if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-    plt.hist(errors)
-    plt.show()
     logger.info('Max error {:.6f} , Min error {:.6f}'.format(errors.max().item(), errors.min().item()))
     threshold = errors.mean() + 3 * errors.std()
 
-    # calculate unknown signal MAE
-    logger.info('Start to calculate unknown signal MAE...')
-    X,Y = signal_to_XY(cfg, is_train=False)
-    test_loader = make_data_loader(cfg, X,Y, is_train=False)
-    error_list = inference(cfg, model, test_loader)
-    errors = torch.stack(error_list)
-    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-    logger.info('Max error {:.6f} , Min error {:.6f}, Mean error {}'
-                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
-    indicator = errors.mean()
-
-    # result
-    logger.info('Threshold is {:.6f}'.format(threshold))
-    logger.info('Indicator is {:.6f}'.format(indicator))
-    if(indicator > threshold): logger.info('Unknown signal is FAULTY.')
-    else: logger.info('Unknown signal is NORMAL.')
+    plt.hist(errors)
+    plt.axvline(x=threshold, color='r', linestyle='--')  # 添加竖线
+    plt.show()
     
 
 if __name__ == '__main__':
-    main('./config/CWRU_test(122).yml')
+    main('./config/CWRU_draw_distr(122).yml')

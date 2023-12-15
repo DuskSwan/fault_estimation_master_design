@@ -6,5 +6,5 @@ INFERENCE:
   MODEL_PATH: "output/cwru_lstm.pth"
 
 LOG:
-  OUTPUT_TO_FILE: True
+  OUTPUT_TO_FILE: False
   PREFIX: "test" 
