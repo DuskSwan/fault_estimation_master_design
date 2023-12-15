@@ -17,14 +17,11 @@ def do_train(
         optimizer,
         loss_fn,
 ):
-    log_period = cfg.LOG.ITER_INTERVAL
     device = cfg.DEVICE
     epochs = cfg.SOLVER.MAX_EPOCHS
     eval_metrics = {'RegLoss': Loss(loss_fn)}
 
-    logger.info(f"Start training with parameters:\n"
-                f"max epochs:{epochs}\n"
-                f"train batchs:{len(train_loader)}\n")
+    logger.info(f"Start training with parameters: max epochs:{epochs} train batchs:{len(train_loader)}")
 
 
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
@@ -42,14 +39,14 @@ def do_train(
 
     RunningAverage(output_transform = lambda x: x).attach(trainer, 'avg_loss')
 
-    @trainer.on(Events.ITERATION_COMPLETED)
+    @trainer.on(Events.ITERATION_COMPLETED(every=cfg.LOG.ITER_INTERVAL))
     def log_training_loss(engine):
-        iter = (engine.state.iteration - 1) % len(train_loader) + 1
-        if iter % log_period == 0:
+        iter_n = (engine.state.iteration - 1) % len(train_loader) + 1
+        if iter_n % cfg.LOG.ITER_INTERVAL == 0:
             logger.info("Epoch[{}] Iteration[{}/{}] Loss: {:.2f}"
-                        .format(engine.state.epoch, iter, len(train_loader), engine.state.metrics['avg_loss']))
+                        .format(engine.state.epoch, iter_n, len(train_loader), engine.state.metrics['avg_loss']))
 
-    @trainer.on(Events.EPOCH_COMPLETED)
+    @trainer.on(Events.EPOCH_COMPLETED(every=cfg.LOG.EPOCH_INTERVAL))
     def log_training_results(engine):
         evaluator.run(train_loader)
         metrics = evaluator.state.metrics
@@ -67,13 +64,12 @@ def do_train(
                         .format(engine.state.epoch, avg_loss)
                         )
 
-    # adding handlers using `trainer.on` decorator API
-    @trainer.on(Events.EPOCH_COMPLETED)
-    def print_times(engine):
-        logger.info('Epoch {} done. Time per batch: {:.3f}[s] Speed: {:.1f}[samples/s]'
-                    .format(engine.state.epoch, timer.value() * timer.step_count,
-                            train_loader.batch_size / timer.value()))
-        timer.reset()
+    # @trainer.on(Events.EPOCH_COMPLETED)
+    # def print_times(engine):
+    #     logger.info('Epoch {} done. Time per batch: {:.3f}[s] Speed: {:.1f}[samples/s]'
+    #                 .format(engine.state.epoch, timer.value() * timer.step_count,
+    #                         train_loader.batch_size / timer.value()))
+    #     timer.reset()
     
     # clear cuda cache
     # @trainer.on(Events.EPOCH_COMPLETED)

@@ -3,11 +3,11 @@ FEATURE:
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/CWRU/97.csv'
-  
+  NORMAL_PATH: 'data\datasets\BUCT\0normal.csv'
+
 INFERENCE:
-  UNKWON_PATH: 'data/datasets/CWRU/122.csv'
-  MODEL_PATH: "output/cwru_lstm.pth"
+  UNKWON_PATH: 'data\datasets\BUCT\0.5dybph.csv'
+  MODEL_PATH: "output/buct_lstm.pth"
 
 LOG:
   OUTPUT_TO_FILE: True

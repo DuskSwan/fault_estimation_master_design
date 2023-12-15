@@ -13,7 +13,7 @@ from torch import save as tsave
 sys.path.append('.')
 from config import cfg
 
-from utils import set_random_seed
+from utils import set_random_seed,initiate_cfg
 from utils.features import view_features_DTW
 
 from run.tools import signal_to_XY
@@ -58,16 +58,7 @@ def train(cfg):
 
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
-
-    if(extra_cfg_path): logger.info("try to merge from " + extra_cfg_path)
-    extra_cfg = Path(extra_cfg_path)
-    if extra_cfg.exists() and extra_cfg.suffix == '.yml':
-        cfg.merge_from_file(extra_cfg)
-    cfg.freeze()
-
-    if(cfg.LOG.OUTPUT_TO_FILE): 
-        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-        logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
+    initiate_cfg(cfg, extra_cfg_path)
 
     logger.info("In device {}".format(cfg.DEVICE))
     logger.info("Running with config:\n{}".format(cfg))
@@ -78,8 +69,8 @@ def main(extra_cfg_path = ''):
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
     # train
-    logger.info("feature(s) used:{}".format(', '.join(cfg.FEATURE.USED_F)))
+    logger.info("feature(s) used: {}".format(', '.join(cfg.FEATURE.USED_F)))
     train(cfg)
 
 if __name__ == '__main__':
-    main('./config/CWRU_train.yml')
+    main('./config/BUCT_train.yml')

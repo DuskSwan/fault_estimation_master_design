@@ -53,10 +53,10 @@ def main(extra_cfg_path = ''):
 
     # result
     for k,threshold in thresholds.items():
-        logger.info('{} threshold is {:.4f}, indicator is {:.4f}'.format(k, threshold, indicator))
         res = 'Normal' if indicator < threshold else 'Abnormal'
-        logger.info('Evaluation result is {}'.format(res))
+        logger.info('{} threshold is {:.4f}, indicator is {:.4f}'.format(k, threshold, indicator))
+        logger.info('   Evaluation result is {}'.format(res))
     
 
 if __name__ == '__main__':
-    main('./config/CWRU_test.yml')
+    main('./config/BUCT_test.yml')
