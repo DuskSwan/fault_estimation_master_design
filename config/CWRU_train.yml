@@ -6,7 +6,7 @@ TRAIN:
   FAULT_PATH: 'data/datasets/CWRU/189.csv'
 
 OUTPUT:
-  MODEL_DIR: "output/cwru_models"
+  MODEL_DIR: "output"
   MODEL_NAME: "cwru_lstm.pth"
 
 LOG:

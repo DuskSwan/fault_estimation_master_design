@@ -5,6 +5,6 @@ __pycache__
 .pypirc
 dist
 # my ignore
-log
-output
+log/
+output/
 data/datasets/BUCT

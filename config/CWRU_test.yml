@@ -3,7 +3,7 @@ FEATURE:
 
 INFERENCE:
   UNKWON_PATH: 'data/datasets/CWRU/122.csv'
-  MODEL_PATH: "output/cwru_models/cwru_lstm.pth"
+  MODEL_PATH: "output/cwru_lstm.pth"
 
 LOG:
   OUTPUT_TO_FILE: True

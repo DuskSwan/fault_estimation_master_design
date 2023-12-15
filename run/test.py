@@ -9,8 +9,9 @@ from pathlib import Path
 from loguru import logger
 
 import torch
-import numpy as np
-
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 sys.path.append('.')
 from config import cfg
 
@@ -33,8 +34,6 @@ def main(extra_cfg_path = ''):
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
 
-    logger.info('Start inference')
-
     # get model
     model = torch.load(cfg.INFERENCE.MODEL_PATH)
     model.to(cfg.DEVICE)
@@ -47,6 +46,8 @@ def main(extra_cfg_path = ''):
     error_list = inference(cfg, model, normal_loader)
     errors = torch.stack(error_list)
     if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+    plt.hist(errors)
+    plt.show()
     logger.info('Max error {:.6f} , Min error {:.6f}'.format(errors.max().item(), errors.min().item()))
     threshold = errors.mean() + 3 * errors.std()
 
@@ -67,7 +68,6 @@ def main(extra_cfg_path = ''):
     if(indicator > threshold): logger.info('Unknown signal is FAULTY.')
     else: logger.info('Unknown signal is NORMAL.')
     
-
 
 if __name__ == '__main__':
     main('./config/CWRU_test.yml')
