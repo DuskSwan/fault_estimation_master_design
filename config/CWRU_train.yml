@@ -1,5 +1,6 @@
 FEATURE:
-  USED_F: ['RVF']
+  USED_F: ['Mean']
+  NEED_VIEW: True
 
 TRAIN:
   NORMAL_PATH: 'data/datasets/CWRU/97.csv'

@@ -73,8 +73,9 @@ def main(extra_cfg_path = ''):
     logger.info("Running with config:\n{}".format(cfg))
 
     # calculate features and rank
-    ranked_feat = view_features_DTW(cfg)
-    logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+    if(cfg.FEATURE.NEED_VIEW):
+        ranked_feat = view_features_DTW(cfg)
+        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
     # train
     logger.info("feature(s) used:{}".format(', '.join(cfg.FEATURE.USED_F)))
