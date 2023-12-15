@@ -4,5 +4,7 @@ __pycache__
 .idea
 .pypirc
 dist
+# my ignore
 log
 output
+data/datasets/BUCT
