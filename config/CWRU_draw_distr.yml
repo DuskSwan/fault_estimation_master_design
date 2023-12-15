@@ -1,6 +1,9 @@
 FEATURE:
-  USED_F: ['RVF']
+  USED_F: ['Mean']
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
+
+TRAIN:
+  NORMAL_PATH: 'data/datasets/CWRU/97.csv'
 
 INFERENCE:
   UNKWON_PATH: 'data/datasets/CWRU/122.csv'

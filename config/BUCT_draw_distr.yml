@@ -1,6 +1,3 @@
-DESIGN:
-  SUBLEN: 4096
-
 FEATURE:
   USED_F: ['Mean']
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
@@ -13,5 +10,5 @@ INFERENCE:
   MODEL_PATH: "output/buct_lstm.pth"
 
 LOG:
-  OUTPUT_TO_FILE: True
-  PREFIX: "test" 
+  OUTPUT_TO_FILE: False
+  PREFIX: "draw" 

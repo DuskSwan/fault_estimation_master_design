@@ -1,5 +1,5 @@
 DESIGN:
-  SUBLEN: 9186
+  SUBLEN: 4096
 
 FEATURE:
   USED_F: ['Mean']

@@ -10,6 +10,7 @@ from torch import abs as tensor_abs
 
 def inference(cfg,model,val_loader):
     device = cfg.DEVICE
+    model.eval()
     logger.info("Start inferencing")
     evaluator = create_supervised_evaluator(model, metrics={'MAE': MeanAbsoluteError()},
                                             device=device)
