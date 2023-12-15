@@ -43,7 +43,7 @@ _C.DESIGN.SUBLEN = 2048 # size of the raw signal's piece
 _C.DESIGN.PIECE = 256 # num of pieces drawed from raw signal
 _C.DESIGN.M = 100
 _C.DESIGN.P = 10
-_C.DESIGN.FPIECE = 200
+_C.DESIGN.FPIECE = 200 # num of pieces drawed from feature series
 _C.DESIGN.FSUBLEN = _C.DESIGN.M + _C.DESIGN.P
 _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 
