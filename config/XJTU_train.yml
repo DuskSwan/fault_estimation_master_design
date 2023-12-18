@@ -1,6 +1,6 @@
 FEATURE:
-  USED_F: ['Mean']
-  NEED_VIEW: True
+  USED_F: ['KV','CF']
+  NEED_VIEW: False
 
 TRAIN:
   NORMAL_PATH: 'data\datasets\XJTU-SY\Bearing1_1\1.csv'
@@ -8,7 +8,7 @@ TRAIN:
 
 OUTPUT:
   MODEL_DIR: "output"
-  MODEL_NAME: "cwru_lstm.pth"
+  MODEL_NAME: "xjtu_lstm.pth"
 
 LOG:
   OUTPUT_TO_FILE: True
