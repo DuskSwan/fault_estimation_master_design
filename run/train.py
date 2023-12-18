@@ -73,4 +73,4 @@ def main(extra_cfg_path = ''):
     train(cfg)
 
 if __name__ == '__main__':
-    main('./config/BUCT_train.yml')
+    main('./config/XJTU_train.yml')

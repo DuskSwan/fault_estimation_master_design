@@ -61,10 +61,13 @@ def main(extra_cfg_path = ''):
     colors = ['red', 'blue', 'green', 'orange', 'pink']  # 指定不同的颜色
     for i, (k, t) in enumerate(thresholds.items()):
         plt.axvline(x=t, linestyle='--', color=colors[i], label=k)  # 添加竖线并指定颜色
-    plt.legend()
 
+    # draw fault signal indicator
+    plt.axvline(x = errors.numpy().mean(), linestyle='--', color='black', label='mean MAE (fault)')
+
+    plt.legend()
     plt.show()
     
 
 if __name__ == '__main__':
-    main('./config/CWRU_draw_distr.yml')
+    main('./config/XJTU_draw_distr.yml')
