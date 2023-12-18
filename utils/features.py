@@ -187,10 +187,10 @@ RVF = Rvf
 # 功能函数
 
 def view_features_DTW(cfg):
-    # 计算特征
+    # 分别提取特征
     tpaths = [cfg.TRAIN.NORMAL_PATH, cfg.TRAIN.FAULT_PATH]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
-    for i in range(len(tpaths)): #每个类别
+    for i in range(2): #分别对正常和故障
         data_path = tpaths[i]
         data = pd.read_csv(data_path).values #numpy数组
         n,_ = data.shape
@@ -199,19 +199,35 @@ def view_features_DTW(cfg):
         XY = sheet_cut(data, cfg.DESIGN.SUBLEN, method = 0)
         f_df = signal_to_features_tf(XY, output_type='pd') #提取特征
         feat_with_classes.append(f_df)
-    # 对特征排序
+
+    # 计算特征得分
     cols = feat_with_classes[0].columns
     feat_mark = {}
     for col in cols:
         arr1 = feat_with_classes[0][col]
         arr2 = feat_with_classes[1][col]
         dtws = TimeSeriesSimilarity(arr1, arr2)
-        # txt = '{:20}: dtw= {:.6f} '.format(col,dtws)
-        # print(txt)
         feat_mark[col] = dtws
-    ranked_feat=sorted(feat_mark.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
-    for k,v in ranked_feat: print('{:20}: dtw= {:.6f} '.format(k,v))
+
+    # 展示得分排序
+    if(cfg.FEATURE.CHANNEL_SCORE_MODE=='sum'): show_dict = merge_dict_by_suffix(feat_mark)
+    elif(cfg.FEATURE.CHANNEL_SCORE_MODE=='every'): show_dict = feat_mark
+    ranked_feat = sorted(show_dict.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
+    # for k,v in ranked_feat: print('{:20}: dtw= {:.6f} '.format(k,v))
     return ranked_feat
+
+def merge_dict_by_suffix(diction):
+    # 根据键值的后缀名来合并字典
+    new_dict = {}
+    for key, value in diction.items():
+        # 提取后缀
+        suffix = key.split('_')[1]
+        # 如果新字典中已经有这个后缀，就将值相加
+        if suffix in new_dict:
+            new_dict[suffix] += value
+        else:
+            new_dict[suffix] = value
+    return new_dict
 
 def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = None):
     """
@@ -225,10 +241,8 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
         feature_dict = {}
         for i in range(n_tun):
             tun_signal = sample[:,i] #选第i通道
-            i_dict = extract_features(tun_signal, 'tun'+str(i), feat_func_name_list)
+            i_dict = extract_features(tun_signal, 'chn'+str(i), feat_func_name_list)
             feature_dict.update(i_dict)
-        # feature_df = feature_df.append(feature_dict, ignore_index=True)
-            # ==warning:The frame.append method is deprecated and will be removed from pandas in a future version. Use pandas.concat instead.
         df_dictionary = pd.DataFrame([feature_dict])
         feature_df = pd.concat([feature_df, df_dictionary], ignore_index=True)
     # print(feature_df.columns)
@@ -258,7 +272,7 @@ def extract_features(signal, prefix='', feat_func_name_list = None):
         funcs = []
         for name in feat_func_name_list:
             try: funcs.append(eval(name))
-            except: raise ValueError(f"not find function {name}")
+            except: raise ValueError(f"Can't find function {name}")
 
     features={} #保存特征
     for i in range(len(funcs)):

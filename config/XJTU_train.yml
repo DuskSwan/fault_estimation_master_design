@@ -1,0 +1,15 @@
+FEATURE:
+  USED_F: ['Mean']
+  NEED_VIEW: True
+
+TRAIN:
+  NORMAL_PATH: 'data\datasets\XJTU-SY\Bearing1_1\1.csv'
+  FAULT_PATH: 'data\datasets\XJTU-SY\Bearing1_1\123.csv'
+
+OUTPUT:
+  MODEL_DIR: "output"
+  MODEL_NAME: "cwru_lstm.pth"
+
+LOG:
+  OUTPUT_TO_FILE: True
+  PREFIX: "train" 

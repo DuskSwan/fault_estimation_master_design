@@ -1,16 +1,6 @@
 from yacs.config import CfgNode as CN
 
 # -----------------------------------------------------------------------------
-# Convention about Training / Test specific parameters
-# -----------------------------------------------------------------------------
-# Whenever an argument can be either used for training or for testing, the
-# corresponding name will be post-fixed by a _TRAIN for a training parameter,
-# or _TEST for a test-specific parameter.
-# For example, the number of images during training will be
-# IMAGES_PER_BATCH_TRAIN, while the number of images for testing will be
-# IMAGES_PER_BATCH_TEST
-
-# -----------------------------------------------------------------------------
 # Config definition
 # -----------------------------------------------------------------------------
 
@@ -56,6 +46,8 @@ _C.FEATURE.NEED_VIEW = True
 _C.FEATURE.MAX_LENGTH = 1024000 # max length of the raw signal used to calcuate features
 _C.FEATURE.USED_F = ['Mean']
 _C.FEATURE.USED_THRESHOLD  = ['log']
+_C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get sum of differernt channel
+    # 'sum' or 'every'
 
 # -----------------------------------------------------------------------------
 # TRAIN
@@ -66,6 +58,7 @@ _C.TRAIN.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
 _C.TRAIN.FAULT_PATH = r'data\datasets\CWRU\122.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHRCKPOINT = False
+
 
 # -----------------------------------------------------------------------------
 # INFERENCE
@@ -82,6 +75,7 @@ _C.INFERENCE.MODEL_PATH = r'output\model.pth'
 _C.DATALOADER = CN()
 # Number of data loading threads
 _C.DATALOADER.NUM_WORKERS = 0
+
 
 # ---------------------------------------------------------------------------- #
 # Solver
