@@ -48,30 +48,8 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
         if(need_true_fb): QMessageBox.information(window, "info", true_fb)
         return True
 
-def calcMAEWithLSTM(path,lstm,used_func,
-                    sublen,piece,m,p,fpiece,
-                    name=''):
-    data = pd.read_csv(path).values #numpy数组
-    # data = data[:1200000] #这里是减少所用的信号长度
-    
-    XY = DF.sheet_cut(data, sublen, piece, method = 1, show_para = False)
-    f_df = SF.signal_to_features_tf(XY,feat_func_name_list = used_func) #提取特征
-    
-    score = SF.test_features_predict(f_df,m,p,lstm,piece=fpiece,
-                                  need_plot=False, title=name,
-                                  view_sample_idx = 0) #预测查看误差
-    s = score.mean() #计算平均误差
-    print('{},mean MAE={}'.format(name,s))
-    return s
-
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
-
-def calc_threshold(normal_idx,fault_idx, type = 'linear', lmd = 0.2):
-    assert fault_idx > normal_idx, 'fault_idx should be larger than normal_idx'
-    if type == 'linear': return (fault_idx - normal_idx) * lmd + normal_idx
-    elif type == 'exp': return exp(log(fault_idx - normal_idx) * lmd) + normal_idx
-    else: return normal_idx * (1 + lmd)
 
 
 #%% 重载窗口类
@@ -87,27 +65,8 @@ class GUIWindow(QWidget):
         self.editor = Ui_Form() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
         
-        self.sublen_of_draw_features = 2048
-        self.m = 50
-        self.p = 5
-        self.f_piece = 100 #需要的特征样本数
-        self.piece = self.f_piece * (self.m+self.p) # 需要的原信号样本数
-            #为了满足lstm的训练要求，最开始必须划分出足够多的样本
-        self.lstm_epoch = 100
-        self.lstm_batch_size = 32
-        
-        self.normalSignalForSelectionPath = None
-        self.faultSignalForSelectionPath = None
-        self.normalSignalForTrainingPath = None
-        self.faultSignalForTrainingPath = None
-        self.signalForPredctionPath = None
-            # 要求是无列名的csv数据表
-        self.seletedFeatureNames = None
-        self.threshold = 0
-        self.normal_MAE = 0
-        self.fault_MAE = 1e10
-        self.lstm = None
-        self.seletedFeatureNames = []
+        self.cfg = cfg
+        self.model = None
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
