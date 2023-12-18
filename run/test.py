@@ -59,4 +59,4 @@ def main(extra_cfg_path = ''):
     
 
 if __name__ == '__main__':
-    main('./config/BUCT_test.yml')
+    main('./config/XJTU_test.yml')
