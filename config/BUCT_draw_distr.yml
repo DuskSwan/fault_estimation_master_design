@@ -11,4 +11,4 @@ INFERENCE:
 
 LOG:
   OUTPUT_TO_FILE: False
-  PREFIX: "draw" 
+  PREFIX: "BUCT_draw" 

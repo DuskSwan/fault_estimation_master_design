@@ -14,4 +14,4 @@ INFERENCE:
 
 LOG:
   OUTPUT_TO_FILE: True
-  PREFIX: "test" 
+  PREFIX: "BUCT_test" 

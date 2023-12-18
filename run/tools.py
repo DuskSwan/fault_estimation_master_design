@@ -7,6 +7,8 @@ import pandas as pd
 sys.path.append('.')
 from utils import  sheet_cut
 from utils.features import signal_to_features_tf
+from data import make_data_loader
+from engine.inference import inference
 
 # signal series (2D) -> signal cuts (3D) -> features seriers (2D) -> features cuts (3D) -> X,Y (3D,3D)
 #               sheet_cut      signal_to_features_tf            sheet_cut         feature_cuts_to_XY
@@ -54,3 +56,16 @@ def signal_to_XY(cfg, is_train=True):
         #再次切分成小数据集，现在是三维数组
 
     return feature_cuts_to_XY(cfg, feature_cuts)
+
+def raw_signal_to_errors(cfg, model, is_normal=True):
+    logger.info('Start to calculate error scores...')
+
+    if(is_normal): X,Y = signal_to_XY(cfg, is_train=True)
+    else: X,Y = signal_to_XY(cfg, is_train=False)
+
+    loader = make_data_loader(cfg, X,Y, is_train=False)
+    error_list = inference(cfg, model, loader)
+    errors = error_list.cpu().numpy()
+    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
+                .format(errors.max(), errors.min(), errors.mean()))
+    return errors

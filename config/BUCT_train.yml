@@ -15,7 +15,7 @@ OUTPUT:
 
 LOG:
   OUTPUT_TO_FILE: True
-  PREFIX: "train" 
+  PREFIX: "BUCT_train" 
   ITER_INTERVAL: 100
   EPOCH_INTERVAL: 100
 
