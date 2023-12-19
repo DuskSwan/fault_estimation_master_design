@@ -65,6 +65,7 @@ def main(extra_cfg_path = ''):
     # draw fault signal indicator
     plt.axvline(x = errors.numpy().mean(), linestyle='--', color='black', label='mean MAE (fault)')
 
+    plt.title(cfg.INFERENCE.UNKWON_PATH.split('\\')[-1] + ' MAE distribution')
     plt.legend()
     plt.show()
     
