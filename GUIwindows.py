@@ -20,7 +20,7 @@ from PyQt5.QtCore import pyqtSlot #定义信号事件
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 
-from GUI.FaultDegreeGUI import Ui_Form #导入窗口编辑器类
+from GUI.FaultDegreeGUI_old import Ui_Form #导入窗口编辑器类
 
 # self-defined utils
 

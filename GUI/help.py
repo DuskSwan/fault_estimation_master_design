@@ -26,17 +26,18 @@ Created on Wed Sep  6 20:10:48 2023
 #%% 修改多选下拉框
 '''
 插入 from .CheckableComboBoxPY import CheckableComboBox
-
-用段
 comunes = ['RMS','SRA', 'KV', 'SV', 'PPV',
          'CF', 'IF', 'MF', 'SF', 'KF',
          'FC', 'RMSF', 'RVF',
          'Mean', 'Var', 'Std', 'Max', 'Min',
          ]
-self.comboBoxSelectFeaturesInTraining = CheckableComboBox(self.widget_3)
+
+用段
+
+self.comboBoxSelectFeaturesInTraining = CheckableComboBox(self.widgetInTriaining)
 self.comboBoxSelectFeaturesInTraining.addItems(comunes)
 替换
-self.comboBoxSelectFeaturesInTraining = QtWidgets.QComboBox(self.widget_3)
+self.comboBoxSelectFeaturesInTraining = QtWidgets.QComboBox(self.widgetInTriaining)
 
 同理用
 self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widget_5)
