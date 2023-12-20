@@ -48,13 +48,28 @@ self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widget_5)
 
 #%% 一些测试
 
-from torch import load as tload
-import torch.nn as nn
+def modify_file(filename):
+    with open(filename, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
 
-lstm = tload(r'.\model\LSTM.pt')
+    # 在首行插入新的导入语句
+    lines.insert(0, 'from .CheckableComboBoxPY import CheckableComboBox\n')
+    lines.insert(1, "comunes = ['RMS','SRA', 'KV', 'SV', 'PPV', 'CF', 'IF', 'MF', 'SF', 'KF', 'FC', 'RMSF', 'RVF', 'Mean', 'Var', 'Std', 'Max', 'Min',]\n")
 
-if isinstance(lstm, nn.Module):
-    first_module = next(lstm.modules())
-    input_dim = first_module.in_features  # 输入维度
-else:
-    input_dim = lstm.in_features  # 输入维度
+    # 替换 comboBoxSelectFeaturesInTraining 和 comboBoxSelectFeaturesInPrediction 的定义
+    inde = ' ' * 8
+    for i in range(len(lines)):
+        if 'self.comboBoxSelectFeaturesInTraining = QtWidgets.QComboBox(self.widgetInTriaining)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectFeaturesInTraining = CheckableComboBox(self.widgetInTriaining)\n'
+            lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInTraining.addItems(comunes)\n')
+        elif 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
+            lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInPrediction.addItems(comunes)\n')
+
+    # 将修改后的内容写回新的文件名
+    new_filename = filename.replace('.py', '_m.py')
+    with open(new_filename, 'w', encoding='utf-8') as file:
+        file.writelines(lines)
+
+# 使用函数
+modify_file('GUI/Ui_FaultDegreeGUI.py')
