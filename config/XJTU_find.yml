@@ -2,8 +2,8 @@ FEATURE:
   NEED_VIEW: True
 
 TRAIN:
-  NORMAL_PATH: 'data\datasets\XJTU-SY\Bearing1_1\1.csv'
-  FAULT_PATH: 'data\datasets\XJTU-SY\Bearing1_1\123.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_1/123.csv'
 
 LOG:
   OUTPUT_TO_FILE: True

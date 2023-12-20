@@ -3,11 +3,11 @@ FEATURE:
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 TRAIN:
-  NORMAL_PATH: 'data\datasets\XJTU-SY\Bearing1_1\1.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
   
 INFERENCE:
-  UNKWON_PATH: 'data\datasets\XJTU-SY\Bearing1_1\61.csv'
-  MODEL_PATH: 'output\xjtu_lstm.pth'
+  UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/61.csv'
+  MODEL_PATH: 'output/xjtu_lstm.pth'
 
 LOG:
   OUTPUT_TO_FILE: True

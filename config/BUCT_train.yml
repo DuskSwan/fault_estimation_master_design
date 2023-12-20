@@ -6,8 +6,8 @@ FEATURE:
   NEED_VIEW: False
 
 TRAIN:
-  NORMAL_PATH: 'data\datasets\BUCT\0normal.csv'
-  FAULT_PATH: 'data\datasets\BUCT\2dybph.csv'
+  NORMAL_PATH: 'data/datasets/BUCT/0normal.csv'
+  FAULT_PATH: 'data/datasets/BUCT/2dybph.csv'
 
 OUTPUT:
   MODEL_DIR: "output"

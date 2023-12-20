@@ -12,4 +12,4 @@ OUTPUT:
 
 LOG:
   OUTPUT_TO_FILE: True
-  PREFIX: "train" 
+  PREFIX: "CWRU_train" 

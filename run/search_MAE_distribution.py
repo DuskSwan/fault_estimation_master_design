@@ -65,10 +65,10 @@ def main(extra_cfg_path = ''):
     # draw fault signal indicator
     plt.axvline(x = errors.numpy().mean(), linestyle='--', color='black', label='mean MAE (fault)')
 
-    plt.title(cfg.INFERENCE.UNKWON_PATH.split('\\')[-1] + ' MAE distribution')
+    plt.title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
     plt.legend()
     plt.show()
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_draw_distr.yml')
+    main('./config/CWRU_draw_distr.yml')
