@@ -3,7 +3,7 @@ DESIGN:
 
 FEATURE:
   USED_F: ['Mean']
-  NEED_VIEW: False
+  NEED_VIEW: True
 
 TRAIN:
   NORMAL_PATH: 'data/datasets/BUCT/0normal.csv'

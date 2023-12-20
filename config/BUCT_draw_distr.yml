@@ -6,7 +6,7 @@ TRAIN:
   NORMAL_PATH: 'data/datasets/BUCT/0normal.csv'
 
 INFERENCE:
-  UNKWON_PATH: 'data/datasets/BUCT/1dybph.csv'
+  UNKWON_PATH: 'data/datasets/BUCT/0.5gybph.csv'
   MODEL_PATH: "output/buct_lstm.pth"
 
 LOG:
