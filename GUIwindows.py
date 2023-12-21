@@ -26,7 +26,7 @@ from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑�
 
 from config import cfg_GUI
 
-from utils import set_random_seed,initiate_cfg
+from utils import set_random_seed
 from utils.features import view_features_DTW
 
 from run.tools import signal_to_XY
@@ -67,68 +67,61 @@ class GUIWindow(QWidget):
         
         self.cfg = cfg_GUI
         self.model = None
+
+        logger.info("GUI window initialized")
+        set_random_seed(self.cfg.SEED)
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.cfg.TRAIN.NORMAL_PATH = fname     
+        logger.info("Normal signal imported: {}".format(fname))
+        self.cfg.TRAIN.NORMAL_PATH = fname
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        logger.info("Fault signal imported: {}".format(fname))
         self.cfg.TRAIN.FAULT_PATH = fname
     @pyqtSlot() #导入正常信号 for 模型训练
     def on_btnImportNormalSignalInTraining_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         if Path(self.cfg.TRAIN.NORMAL_PATH).exists():
             checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
                          false_fb="导入的正常信号与特征筛选使用的信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+        logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname        
     @pyqtSlot() #导入故障信号 for 新数据预测
     def on_btnImportSignalInPrediction_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        logger.info("Unknown signal imported: {}".format(fname))
         self.cfg.INFERENCE.UNKWON_PATH = fname
     @pyqtSlot() #导入预测模型
     def on_btnImportModel_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(.pth)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
         if fname and not checkAndWarn(self,fname[-3:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
-        if(fname): self.lstm = tload(fname)
+        if(fname): 
+            logger.info("Model imported: {}".format(fname))
+            self.lstm = tload(fname)
     
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
-        state = self.normalSignalForSelectionPath and self.faultSignalForSelectionPath
+        state = self.cfg.TRAIN.NORMAL_PATH and self.cfg.TRAIN.FAULT_PATH
         if not checkAndWarn(self,state,
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
                             True): return
-        # 计算特征
-        tpaths = [self.normalSignalForSelectionPath,self.faultSignalForSelectionPath]      
-        feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
-        for i in range(len(tpaths)): #每个类别
-            data_path = tpaths[i]
-            data = pd.read_csv(data_path).values #numpy数组
-            data = data[:1024000] #这里是减少所用的信号长度
-            XY = DF.sheet_cut(data, self.sublen_of_draw_features, method = 0, show_para = False)
-            # XY = DF.sheet_cut(data, self.sublen_of_draw_features, view_piece, method = 1, show_para = False)
-            f_df = SF.signal_to_features_tf(XY, output_type='pd') #提取特征
-            feat_with_classes.append(f_df)
-        # 对特征排序
-        cols = feat_with_classes[0].columns
-        feat_mark = {}
-        for col in cols:
-            arr1 = feat_with_classes[0][col]
-            arr2 = feat_with_classes[1][col]
-            dtws = TF.TimeSeriesSimilarity(arr1, arr2)
-            txt = '{:20}: dtw= {:.6f} '.format(col,dtws)
-            print(txt)
-            feat_mark[col] = dtws
-        d_order=sorted(feat_mark.items(),key=lambda x:x[1])[::-1]
-        # for i in d_order: print(i)
+ 
+        logger.info("Search propre features...")
+        ranked_feat = view_features_DTW(self.cfg)
+        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+
         # 将排序后的列表转换为 Pandas DataFrame
-        df = pd.DataFrame(d_order, columns=["feature", "DTW score"])
+        df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
         # 在 QTableWidget 中显示 DataFrame
         self.editor.tableWidget.setRowCount(len(df))
         self.editor.tableWidget.setColumnCount(len(df.columns))
