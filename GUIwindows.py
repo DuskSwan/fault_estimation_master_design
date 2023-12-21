@@ -20,11 +20,11 @@ from PyQt5.QtCore import pyqtSlot #定义信号事件
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 
-from GUI.FaultDegreeGUI_old import Ui_Form #导入窗口编辑器类
+from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
 
 # self-defined utils
 
-from config import cfg
+from config import cfg_GUI
 
 from utils import set_random_seed,initiate_cfg
 from utils.features import view_features_DTW
@@ -40,9 +40,9 @@ from engine.trainer import do_train
 #%% 定义辅助函数
 
 def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
-    # 希望handle为真，如果假则会警告
+    # 希望handle为真，如果假则会警告，为真则根据需要返回提示
     if not handle:
-        QMessageBox.critical(window, "Warning",false_fb, QMessageBox.Ok)
+        QMessageBox.critical(window, "Warning", false_fb, QMessageBox.Ok)
         return False
     else:
         if(need_true_fb): QMessageBox.information(window, "info", true_fb)
@@ -58,45 +58,43 @@ class GUIWindow(QWidget):
     '''
     该类用于创建GUI主页面，以及设置功能。
     该类是窗口的子类，比窗口拥有更多属性，比如self.ui这个窗口编辑器
-    依赖自定义库GUI_view中的类Ui_Form
+    依赖自定义库GUI中定义的窗口Ui
     '''
     def __init__(self):
         super().__init__()
-        self.editor = Ui_Form() #实例化一个窗口编辑器
+        self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
         
-        self.cfg = cfg
+        self.cfg = cfg_GUI
         self.model = None
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "All Files(*);;Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.normalSignalForSelectionPath = fname     
+        self.cfg.TRAIN.NORMAL_PATH = fname     
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "All Files(*);;Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.faultSignalForSelectionPath = fname
+        self.cfg.TRAIN.FAULT_PATH = fname
     @pyqtSlot() #导入正常信号 for 模型训练
     def on_btnImportNormalSignalInTraining_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "All Files(*);;Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.normalSignalForTrainingPath = fname        
-    @pyqtSlot() #导入故障信号 for 模型训练
-    def on_btnImportFaultSignalInTraining_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "All Files(*);;Comma-Separated Values(.csv)")
-        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.faultSignalForTrainingPath = fname
+        if Path(self.cfg.TRAIN.NORMAL_PATH).exists():
+            checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
+                         false_fb="导入的正常信号与特征筛选使用的信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+        self.cfg.TRAIN.NORMAL_PATH = fname        
     @pyqtSlot() #导入故障信号 for 新数据预测
     def on_btnImportSignalInPrediction_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入未知信号","./", "All Files(*);;Comma-Separated Values(.csv)")
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        self.signalForPredctionPath = fname
+        self.cfg.INFERENCE.UNKWON_PATH = fname
     @pyqtSlot() #导入预测模型
     def on_btnImportModel_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "All Files(*);;PyTorch model(.pt)")
-        if fname and not checkAndWarn(self,fname[-3:]=='.pt',false_fb="选中的文件并非.pt类型，请检查"): return
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(.pth)")
+        if fname and not checkAndWarn(self,fname[-3:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
         if(fname): self.lstm = tload(fname)
     
     @pyqtSlot() # 计算DTW并展示
