@@ -14,14 +14,16 @@ from torch import save as tsave
 from torch import load as tload
 
 # draw
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
 from PyQt5.QtCore import pyqtSlot #定义信号事件
-
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
+from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
 
 from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
 
@@ -99,6 +101,7 @@ class GUIWindow(QWidget):
         
         self.cfg = cfg_GUI
         self.model = None
+        self.editor.frameInTraining.setLayout(QVBoxLayout())
 
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
@@ -186,8 +189,13 @@ class GUIWindow(QWidget):
         # 计算阈值
         logger.info('Start to calculate threshold and distribution...')
         normal_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
-        plt.hist(normal_errors,bins=18,
-                color='blue',label='normal signal')
+
+        # 绘制并显示
+        figure = Figure()
+        canvas = FigureCanvas(figure)
+        ax = figure.add_subplot(111)
+        ax.hist(normal_errors, bins=18, color='blue', label='normal signal')
+        self.editor.frameInTraining.layout().addWidget(canvas)
  
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):

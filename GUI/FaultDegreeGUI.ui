@@ -276,7 +276,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QFrame" name="DrawFameInTraining">
+        <widget class="QFrame" name="frameInTraining">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -430,7 +430,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QFrame" name="DrawFameInPrediction">
+        <widget class="QFrame" name="frameInPrediction">
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
