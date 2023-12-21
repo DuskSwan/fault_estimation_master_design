@@ -3,6 +3,7 @@ from loguru import logger
 
 import numpy as np
 import pandas as pd
+from torch import stack as tstack
 
 sys.path.append('.')
 from utils import  sheet_cut
@@ -58,14 +59,14 @@ def signal_to_XY(cfg, is_train=True):
     return feature_cuts_to_XY(cfg, feature_cuts)
 
 def raw_signal_to_errors(cfg, model, is_normal=True):
-    logger.info('Start to calculate error scores...')
+    logger.info('Start to calculate error scores...(is_normal={})'.format(is_normal))
 
     if(is_normal): X,Y = signal_to_XY(cfg, is_train=True)
     else: X,Y = signal_to_XY(cfg, is_train=False)
 
     loader = make_data_loader(cfg, X,Y, is_train=False)
     error_list = inference(cfg, model, loader)
-    errors = error_list.cpu().numpy()
-    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
+    errors = tstack(error_list).cpu().numpy()
+    logger.info('Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
                 .format(errors.max(), errors.min(), errors.mean()))
     return errors

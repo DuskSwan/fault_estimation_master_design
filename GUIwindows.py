@@ -13,6 +13,9 @@ import torch.nn as nn
 from torch import save as tsave
 from torch import load as tload
 
+# draw
+import matplotlib.pyplot as plt
+
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
 from PyQt5.QtCore import pyqtSlot #定义信号事件
@@ -29,7 +32,7 @@ from config import cfg_GUI
 from utils import set_random_seed
 from utils.features import view_features_DTW
 
-from run.tools import signal_to_XY
+from run.tools import signal_to_XY, raw_signal_to_errors
 
 from data import make_data_loader
 from modeling import build_model
@@ -51,6 +54,35 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
+def train(cfg):
+    # get data
+    X,Y = signal_to_XY(cfg)
+    train_loader = make_data_loader(cfg, X,Y, is_train=True)
+    val_loader = None
+
+    # GET MODEL
+    _, in_len, in_tunnel = X.shape
+    _, out_len, out_tunnel = Y.shape
+    net_params = {'input_len':in_len,
+                  'output_len':out_len,
+                  'input_dim':in_tunnel,
+                  'output_dim':out_tunnel,}
+    model = build_model(cfg, net_params)
+    logger.info('Get model with params: {}'.format(net_params))
+
+    # get solver
+    optimizer = make_optimizer(cfg, model)
+
+    do_train(
+        cfg,
+        model,
+        train_loader,
+        val_loader,
+        optimizer,
+        nn.MSELoss(reduction='mean'),
+    )
+
+    return model
 
 #%% 重载窗口类
 
@@ -106,7 +138,7 @@ class GUIWindow(QWidget):
         if fname and not checkAndWarn(self,fname[-3:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
         if(fname): 
             logger.info("Model imported: {}".format(fname))
-            self.lstm = tload(fname)
+            self.model = tload(fname)
     
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
@@ -140,104 +172,65 @@ class GUIWindow(QWidget):
         # 打印已选择的选项文本
         if not checkAndWarn(self,items,false_fb="未选中任何特征"): return
         print("已选择的特征:", ", ".join(items))
-        self.seletedFeatureNames = items
+        self.cfg.FEATURE.USED_F = items
         
-        # 判断是否导入
-        state = self.normalSignalForTrainingPath and self.faultSignalForTrainingPath
-        if not checkAndWarn(self,state,false_fb="数据缺失，请导入正常与故障信号"): return
+        # 判断是否导入正常信号
+        if not checkAndWarn(self, self.cfg.TRAIN.NORMAL_PATH,
+                            false_fb="数据缺失，请导入正常信号"): return
         
-        # 设置参数
-        normal_data = pd.read_csv(self.normalSignalForTrainingPath).values #读成numpy数组
-        n,_ = normal_data.shape # 1958912
-        piece = self.piece
-        subl = self.sublen_of_draw_features
-        
-        # 判断采样点数是否足够
-        state = n > piece + subl
-        if not checkAndWarn(self,state,false_fb=f"原始采样点数为{n}，所需采样点数为{piece}+{subl}={piece+subl}，无法达标"): return
-        
-        # 特征提取
-        XY = DF.sheet_cut(normal_data, subl, piece, method = 3, show_para = True)
-            # 这一步需要保证特征是连续提取的
-        st = time.time()
-        normal_f = SF.signal_to_features_tf(XY,feat_func_name_list = self.seletedFeatureNames) 
-            # 形状(piece,p_feature)
-        et = time.time()
-        print(normal_f.shape)
-        print('draw time:', et-st)
-        
-        # 训练LSTM
-        more_para = {'lstm_hidden_dim':10}
-        self.lstm = SF.train_lstm_with_features(normal_f, m=self.m, p=self.p, piece=self.f_piece,
-                                           need_view_loss = False, 
-                                           epochs = self.lstm_epoch, 
-                                           bs = self.lstm_batch_size,
-                                           **more_para)
-        
-        # 计算MAE
-        params = {'m':self.m, 'p':self.p,
-                  'piece':self.piece, 'fpiece':self.f_piece,
-                  'lstm':self.lstm, 'used_func':self.seletedFeatureNames,
-                  'sublen':self.sublen_of_draw_features}
-        normal_MAE = calcMAEWithLSTM(self.normalSignalForTrainingPath,name='normal signal',**params)
-        fault_MAE = calcMAEWithLSTM(self.faultSignalForTrainingPath,name='fault signal',**params)
-        
-        # 展示MAE
-        self.editor.lineEditNormalMAE.setText(str(normal_MAE))
-        self.editor.lineEditFaultMAE.setText(str(fault_MAE))
-        
-        # 记录阈值、误差上下限
-        self.threshold = calc_threshold(normal_MAE,fault_MAE, 'exp', 0.2)
-        self.normal_MAE = normal_MAE
-        self.fault_MAE = fault_MAE
-        self.editor.lineEditMAEThreshold.setText(str(self.threshold))
-        
+        # 开始训练
+        logger.info("Start training with config:{}".format(self.cfg))
+        logger.info("feature(s) used: {}".format(', '.join(self.cfg.FEATURE.USED_F)))
+        self.model = train(self.cfg)
+
+        # 计算阈值
+        logger.info('Start to calculate threshold and distribution...')
+        normal_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+        plt.hist(normal_errors,bins=18,
+                color='blue',label='normal signal')
+ 
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
-        if not checkAndWarn(self,self.lstm,false_fb="模型不存在，请训练模型"): return
-        file_path, _ = QFileDialog.getSaveFileName(self, "保存模型", "LSTM", "Model Files (*.pt);;All Files (*)")
+        if not checkAndWarn(self,self.model,false_fb="模型不存在，请训练模型"): return
+        file_path, _ = QFileDialog.getSaveFileName(self, "保存模型", "LSTM", "Model Files (*.pth)")
         if file_path:
             # 检查路径是否存在中文
             if not checkAndWarn(self,not_contains_chinese(file_path),
                                 false_fb="路径含有中文，无法保存",
                                 true_fb=f"模型将保存到：{file_path}",
                                 need_true_fb=True): return
-            tsave(self.lstm, file_path)
+            tsave(self.model, file_path)
             
     @pyqtSlot() # 对新数据进行预测
     def on_btnPredict_clicked(self):
         # 检测是否有未知数据
-        if not checkAndWarn(self,self.signalForPredctionPath,false_fb="请导入待测信号"): return
+        if not checkAndWarn(self,self.cfg.INFERENCE.UNKWON_PATH,false_fb="请导入待测信号"): return
         # 检测是否有模型
-        if not checkAndWarn(self,self.lstm,false_fb="请导入预测模型"): return
+        if not checkAndWarn(self,self.model,false_fb="请导入预测模型"): return
         # 检测是否选择特征，未选择就用训练时指定的
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
-        if pointed_features: self.seletedFeatureNames = pointed_features
-        if not checkAndWarn(self,self.seletedFeatureNames,false_fb="未选中任何特征"): return
-        # 检测是否设定阈值
-        pointed_threshold_text = self.editor.lineEditMAEThreshold.text()
-        if not checkAndWarn(self,pointed_threshold_text,false_fb="未设定阈值"): return
-        self.threshold = float(pointed_threshold_text)
+        if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
+        if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
         
         # 读取模型的输入维数并检查
-        input_dim = self.lstm.lstm.input_size #模型的输入维数/通道数
-        data_tunnel = pd.read_csv(self.signalForPredctionPath).shape[1] #数据表列数
-        feature_n = len(self.seletedFeatureNames)
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
         state = (feature_n * data_tunnel == input_dim)
         if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
     
-        # 进行预测
-        params = {'m':self.m, 'p':self.p,
-                  'piece':self.piece, 'fpiece':self.f_piece,
-                  'lstm':self.lstm, 'used_func':self.seletedFeatureNames,
-                  'sublen':self.sublen_of_draw_features}
-        new_MAE = calcMAEWithLSTM(self.signalForPredctionPath,name='unknown signal',**params)
-        is_fault = (new_MAE > self.threshold)
+        # # 进行预测
+        # params = {'m':self.m, 'p':self.p,
+        #           'piece':self.piece, 'fpiece':self.f_piece,
+        #           'lstm':self.model, 'used_func':self.cfg.FEATURE.USED_F,
+        #           'sublen':self.sublen_of_draw_features}
+        # new_MAE = calcMAEWithLSTM(self.cfg.INFERENCE.UNKWON_PATH,name='unknown signal',**params)
+        # is_fault = (new_MAE > self.threshold)
         
-        # 展示结果
-        self.editor.lineEditPredictionMAE.setText(str(new_MAE))
-        if is_fault: self.editor.lineEditResult.setText('该信号故障')
-        else: self.editor.lineEditResult.setText('该信号正常')
+        # # 展示结果
+        # self.editor.lineEditPredictionMAE.setText(str(new_MAE))
+        # if is_fault: self.editor.lineEditResult.setText('该信号故障')
+        # else: self.editor.lineEditResult.setText('该信号正常')
         
 
 #%% 开始运行
