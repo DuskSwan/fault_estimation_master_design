@@ -111,3 +111,10 @@ _C.LOG.ITER_INTERVAL = 1
 _C.LOG.EPOCH_INTERVAL = 10
 _C.LOG.OUTPUT_TO_FILE = False # 是否输出到文件，默认输出到控制台
 _C.LOG.PREFIX = "GUI_default" # 输出到文件的命名前缀
+
+# -----------------------------------------------------------------------------
+# DRAW
+# -----------------------------------------------------------------------------
+_C.DRAW = CN()
+_C.DRAW.HIST_BIN = 18
+_C.DRAW.THRESHOLD_COLORS = ['red','orange','aqua','lime','violet','gold']  # 指定不同的颜色

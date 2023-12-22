@@ -4,12 +4,19 @@ from loguru import logger
 import numpy as np
 import pandas as pd
 from torch import stack as tstack
+import torch.nn as nn
 
 sys.path.append('.')
 from utils import  sheet_cut
 from utils.features import signal_to_features_tf
+
+from modeling import build_model
+from solver import make_optimizer
 from data import make_data_loader
+
+from engine.trainer import do_train
 from engine.inference import inference
+
 
 # signal series (2D) -> signal cuts (3D) -> features seriers (2D) -> features cuts (3D) -> X,Y (3D,3D)
 #               sheet_cut      signal_to_features_tf            sheet_cut         feature_cuts_to_XY
@@ -70,3 +77,33 @@ def raw_signal_to_errors(cfg, model, is_normal=True):
     logger.info('Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
                 .format(errors.max(), errors.min(), errors.mean()))
     return errors
+
+def set_train_model(cfg):
+    # get data
+    X,Y = signal_to_XY(cfg)
+    train_loader = make_data_loader(cfg, X,Y, is_train=True)
+    val_loader = None
+
+    # GET MODEL
+    _, in_len, in_tunnel = X.shape
+    _, out_len, out_tunnel = Y.shape
+    net_params = {'input_len':in_len,
+                  'output_len':out_len,
+                  'input_dim':in_tunnel,
+                  'output_dim':out_tunnel,}
+    model = build_model(cfg, net_params)
+    logger.info('Get model with params: {}'.format(net_params))
+
+    # get solver
+    optimizer = make_optimizer(cfg, model)
+
+    do_train(
+        cfg,
+        model,
+        train_loader,
+        val_loader,
+        optimizer,
+        nn.MSELoss(reduction='mean'),
+    )
+
+    return model

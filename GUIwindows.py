@@ -33,14 +33,10 @@ from config import cfg_GUI
 
 from utils import set_random_seed
 from utils.features import view_features_DTW
+from utils.threshold import calc_thresholds
 
-from run.tools import signal_to_XY, raw_signal_to_errors
+from run.tools import set_train_model, raw_signal_to_errors
 
-from data import make_data_loader
-from modeling import build_model
-from solver import make_optimizer
-
-from engine.trainer import do_train
 
 #%% 定义辅助函数
 
@@ -56,35 +52,32 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
-def train(cfg):
-    # get data
-    X,Y = signal_to_XY(cfg)
-    train_loader = make_data_loader(cfg, X,Y, is_train=True)
-    val_loader = None
+def hist_tied_to_frame(cfg,arrays,frame,is_train=False):
+    n_bin = cfg.DRAW.HIST_BIN
+    colors = cfg.DRAW.THRESHOLD_COLORS
 
-    # GET MODEL
-    _, in_len, in_tunnel = X.shape
-    _, out_len, out_tunnel = Y.shape
-    net_params = {'input_len':in_len,
-                  'output_len':out_len,
-                  'input_dim':in_tunnel,
-                  'output_dim':out_tunnel,}
-    model = build_model(cfg, net_params)
-    logger.info('Get model with params: {}'.format(net_params))
+    figure = Figure()
+    canvas = FigureCanvas(figure)
 
-    # get solver
-    optimizer = make_optimizer(cfg, model)
-
-    do_train(
-        cfg,
-        model,
-        train_loader,
-        val_loader,
-        optimizer,
-        nn.MSELoss(reduction='mean'),
-    )
-
-    return model
+    if(is_train):
+        # arrays is a vector
+        ax = figure.add_subplot(111)
+        ax.hist(arrays, bins=n_bin, color='blue', label='normal signal')
+        ax.set_title(cfg.TRAIN.NORMAL_PATH.split('/')[-1] + ' MAE distribution')
+    else:
+        # arrays is a list, the first is normal signal errors, the second is unknown signal errors
+        ax = figure.add_subplot(111)
+        ax.hist(arrays[0], bins=n_bin, color='blue', label='normal signal')
+        ax.hist(arrays[1], bins=18, color='green', label='unknown signal', alpha=0.75)
+        thresholds = calc_thresholds(arrays[0], method = cfg.FEATURE.USED_THRESHOLD)
+        assert len(thresholds) <= len(colors), 'thresholds more than colors, checkout config'
+        for i, (k, t) in enumerate(thresholds.items()):
+            ax.axvline(x=t, linestyle='--', color=colors[i], label=k)  # 添加竖线并指定颜色
+        ax.axvline(x = arrays[1].mean(), linestyle='--', color='black', label='indicator')
+        ax.set_title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
+    
+    ax.legend()
+    frame.layout().addWidget(canvas)
 
 #%% 重载窗口类
 
@@ -98,10 +91,11 @@ class GUIWindow(QWidget):
         super().__init__()
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
+        self.editor.frameInTraining.setLayout(QVBoxLayout())
+        self.editor.frameInPrediction.setLayout(QVBoxLayout())
         
         self.cfg = cfg_GUI
         self.model = None
-        self.editor.frameInTraining.setLayout(QVBoxLayout())
 
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
@@ -124,7 +118,7 @@ class GUIWindow(QWidget):
     def on_btnImportNormalSignalInTraining_clicked(self):
         fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        if Path(self.cfg.TRAIN.NORMAL_PATH).exists():
+        if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
             checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
                          false_fb="导入的正常信号与特征筛选使用的信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
         logger.info("Normal signal imported: {}".format(fname))
@@ -138,7 +132,8 @@ class GUIWindow(QWidget):
     @pyqtSlot() #导入预测模型
     def on_btnImportModel_clicked(self):
         fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
-        if fname and not checkAndWarn(self,fname[-3:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
+        logger.info("Model imported: name {}, type {}".format(fname, ftype))
+        if fname and not checkAndWarn(self,fname[-4:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
         if(fname): 
             logger.info("Model imported: {}".format(fname))
             self.model = tload(fname)
@@ -184,18 +179,20 @@ class GUIWindow(QWidget):
         # 开始训练
         logger.info("Start training with config:{}".format(self.cfg))
         logger.info("feature(s) used: {}".format(', '.join(self.cfg.FEATURE.USED_F)))
-        self.model = train(self.cfg)
+        self.model = set_train_model(self.cfg)
 
         # 计算阈值
         logger.info('Start to calculate threshold and distribution...')
         normal_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+        self.refence_errors = normal_errors
 
         # 绘制并显示
-        figure = Figure()
-        canvas = FigureCanvas(figure)
-        ax = figure.add_subplot(111)
-        ax.hist(normal_errors, bins=18, color='blue', label='normal signal')
-        self.editor.frameInTraining.layout().addWidget(canvas)
+        hist_tied_to_frame(self.cfg,normal_errors,self.editor.frameInTraining,is_train=True)
+        # figure = Figure()
+        # canvas = FigureCanvas(figure)
+        # ax = figure.add_subplot(111)
+        # ax.hist(normal_errors, bins=18, color='blue', label='normal signal')
+        # self.editor.frameInTraining.layout().addWidget(canvas)
  
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
@@ -211,6 +208,8 @@ class GUIWindow(QWidget):
             
     @pyqtSlot() # 对新数据进行预测
     def on_btnPredict_clicked(self):
+
+        logger.info("Start checkout config matching...")
         # 检测是否有未知数据
         if not checkAndWarn(self,self.cfg.INFERENCE.UNKWON_PATH,false_fb="请导入待测信号"): return
         # 检测是否有模型
@@ -226,7 +225,13 @@ class GUIWindow(QWidget):
         feature_n = len(self.cfg.FEATURE.USED_F)
         state = (feature_n * data_tunnel == input_dim)
         if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
-    
+
+        # 计算未知信号MAE
+        logger.info('Start to calculate unknown signal MAE...')
+        errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
+        hist_tied_to_frame(self.cfg, [self.refence_errors,errors], 
+                           self.editor.frameInPrediction ,is_train=False)
+
         # # 进行预测
         # params = {'m':self.m, 'p':self.p,
         #           'piece':self.piece, 'fpiece':self.f_piece,
@@ -244,7 +249,7 @@ class GUIWindow(QWidget):
 #%% 开始运行
 
 app = QApplication(sys.argv)
-app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
+# app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
 
 w = GUIWindow()
 w.show()
