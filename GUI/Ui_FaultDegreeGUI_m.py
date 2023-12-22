@@ -16,7 +16,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_FaultDiagnosis(object):
     def setupUi(self, FaultDiagnosis):
         FaultDiagnosis.setObjectName("FaultDiagnosis")
-        FaultDiagnosis.resize(762, 485)
+        FaultDiagnosis.resize(1280, 960)
         self.gridLayout = QtWidgets.QGridLayout(FaultDiagnosis)
         self.gridLayout.setContentsMargins(9, 9, 9, 9)
         self.gridLayout.setSpacing(6)
@@ -241,7 +241,7 @@ class Ui_FaultDiagnosis(object):
         self.gridLayout.addWidget(self.tabWidget, 0, 1, 1, 1)
 
         self.retranslateUi(FaultDiagnosis)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(FaultDiagnosis)
 
     def retranslateUi(self, FaultDiagnosis):

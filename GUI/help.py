@@ -65,7 +65,8 @@ def modify_file(filename):
         elif 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInPrediction.addItems(comunes)\n')
-
+        elif 'self.tabWidget.setCurrentIndex(2)' in lines[i]:
+            lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
     # 将修改后的内容写回新的文件名
     new_filename = filename.replace('.py', '_m.py')
     with open(new_filename, 'w', encoding='utf-8') as file:
