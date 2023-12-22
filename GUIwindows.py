@@ -104,19 +104,19 @@ class GUIWindow(QWidget):
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
+        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(*.csv)")
+        fname,_ = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Fault signal imported: {}".format(fname))
         self.cfg.TRAIN.FAULT_PATH = fname
     @pyqtSlot() #导入正常信号 for 模型训练
     def on_btnImportNormalSignalInTraining_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
+        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
             checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
@@ -125,7 +125,7 @@ class GUIWindow(QWidget):
         self.cfg.TRAIN.NORMAL_PATH = fname        
     @pyqtSlot() #导入故障信号 for 新数据预测
     def on_btnImportSignalInPrediction_clicked(self):
-        fname,ftype = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(*.csv)")
+        fname,_ = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal imported: {}".format(fname))
         self.cfg.INFERENCE.UNKWON_PATH = fname
