@@ -1,12 +1,12 @@
 FEATURE:
-  USED_F: ['KV','CF']
+  USED_F: ['fMean']
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_2/1.csv'
   
 INFERENCE:
-  UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/123.csv'
+  UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_2/91.csv'
   MODEL_PATH: 'output/xjtu_lstm.pth'
 
 LOG:

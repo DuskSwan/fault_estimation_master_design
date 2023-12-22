@@ -1,10 +1,10 @@
 FEATURE:
-  USED_F: ['KV','CF']
+  USED_F: ['fMean']
   NEED_VIEW: False
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
-  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_1/123.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_2/1.csv'
+  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_2/161.csv'
 
 OUTPUT:
   MODEL_DIR: "output"
@@ -12,6 +12,6 @@ OUTPUT:
 
 LOG:
   OUTPUT_TO_FILE: True
-  PREFIX: "train" 
+  PREFIX: "XJTU_train" 
   ITER_INTERVAL: 100
   EPOCH_INTERVAL: 100
