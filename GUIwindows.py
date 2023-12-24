@@ -93,6 +93,7 @@ class GUIWindow(QWidget):
         
         self.cfg = cfg_GUI
         self.model = None
+        self.refence_errors = []
 
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
@@ -105,27 +106,41 @@ class GUIWindow(QWidget):
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
+
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入故障信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Fault signal imported: {}".format(fname))
         self.cfg.TRAIN.FAULT_PATH = fname
+
     @pyqtSlot() #导入正常信号 for 模型训练
-    def on_btnImportNormalSignalInTraining_clicked(self):
+    def on_btnImportNormalSignal_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
             checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
-                         false_fb="导入的正常信号与特征筛选使用的信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+                         false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
         logger.info("Normal signal imported: {}".format(fname))
-        self.cfg.TRAIN.NORMAL_PATH = fname        
+        self.cfg.TRAIN.NORMAL_PATH = fname
+
+    @pyqtSlot() #导入正常信号 for 新数据预测
+    def on_btnImportInferentSignal_clicked(self):
+        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
+        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
+            checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
+                         false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+        logger.info("Normal signal imported: {}".format(fname))
+        self.cfg.TRAIN.NORMAL_PATH = fname
+
     @pyqtSlot() #导入故障信号 for 新数据预测
-    def on_btnImportSignalInPrediction_clicked(self):
+    def on_btnImportUnknownSignal_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal imported: {}".format(fname))
         self.cfg.INFERENCE.UNKWON_PATH = fname
+
     @pyqtSlot() #导入预测模型
     def on_btnImportModel_clicked(self):
         fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
@@ -203,12 +218,18 @@ class GUIWindow(QWidget):
         logger.info("Start checkout config matching...")
         # 检测是否有未知数据
         if not checkAndWarn(self,self.cfg.INFERENCE.UNKWON_PATH,false_fb="请导入待测信号"): return
+        # 检测是否有正常信号
+        if not checkAndWarn(self,self.cfg.TRAIN.NORMAL_PATH,false_fb="请导入作为参考的正常信号"): return
         # 检测是否有模型
         if not checkAndWarn(self,self.model,false_fb="请导入预测模型"): return
         # 检测是否选择特征，未选择就用训练时指定的
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 检查是否已经计算了正常信号的MAE，没有计算则补上
+        if not self.refence_errors:
+            logger.info('Start to calculate normal signal MAE...')
+            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
         
         # 读取模型的输入维数并检查
         input_dim = self.model.lstm.input_size #模型的输入维数/通道数
