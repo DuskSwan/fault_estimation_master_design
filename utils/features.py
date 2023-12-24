@@ -28,7 +28,7 @@ def t5(signal): # 3阶原点矩 t5
     return np.mean(signal**3)
 def t6(signal): # 4阶原点矩 t6
     return np.mean(signal**4)
-def Ppk(signal): # 峰峰值/极差 t7
+def Peak2Peak(signal): # 峰峰值/极差 t7
     return np.max(signal)-np.min(signal)
 def t8(signal): #幅值峰值/幅值极大值 t8
     return np.max(np.abs(signal))
@@ -64,11 +64,11 @@ def ImpulseFactor(signal): # 脉冲因子 t18
     m=np.max(np.abs(signal))
     s=np.mean(np.abs(signal))
     return m/s
-def Cf(signal): #峰值系数 t19
+def CrestFactor(signal): #峰值系数 t19
     m = np.max(np.abs(signal))
     s = np.mean(signal**2) ** 0.5
     return m/s
-def Mf(signal): #裕度因子 t20
+def MarginFactor(signal): #裕度因子 t20
     m=np.max(np.abs(signal))
     s=np.mean(np.abs(signal)) ** 2
     return m/s
@@ -82,10 +82,10 @@ RMS = Rms
 SRA = Sra
 KV = Kurtosis
 SV = Skewness
-PPV = Ppk
-CF = CrestFactor = Cf
+PPV = Peak2Peak
+CF = CrestFactor
 IF = ImpulseFactor
-MF = Mf
+MF = MarginFactor
 SF = ShapeFactor
 KF = KurtosisFactor
 
@@ -99,7 +99,7 @@ def draw_fi(y): #提取出频率谱向量
     abs_y=np.abs(fft_y) #取复数的绝对值，即频率幅值
     f=abs_y[:N//2] #取前一半
     return f 
-def fMean(signal,f=None): #中心频率/频率均值 p1
+def Meanf(signal,f=None): #中心频率/频率均值 p1
     if(f is None): f = draw_fi(signal)
     return np.mean(f)
 def Rmsf(signal,f=None): #RMS频率/频率均方根
@@ -180,7 +180,7 @@ def p12(signal,f=None):
         #此处的幂指数1在老师给的公式中是0.5，疑为错误。因为底数并非恒正
     return np.sum(s)/(N * p6(signal,f))
 
-FC = fMean
+FC = Meanf
 RMSF = Rmsf
 RVF = Rvf
 
