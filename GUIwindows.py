@@ -159,7 +159,7 @@ class GUIWindow(QWidget):
                             True): return
  
         logger.info("Search propre features...")
-        ranked_feat = view_features_DTW(self.cfg)
+        ranked_feat = view_features_DTW(self.cfg) # list with (feature, DTW score)
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
         # 将排序后的列表转换为 Pandas DataFrame
@@ -173,6 +173,14 @@ class GUIWindow(QWidget):
                 self.editor.tableWidget.setItem(row, col, item)
         # 设置列宽度为内容适应
         self.editor.tableWidget.resizeColumnsToContents()
+
+        # 重设下拉多选框的选项
+        self.editor.comboBoxSelectFeaturesInTraining.clear()
+        self.editor.comboBoxSelectFeaturesInTraining.addItems([i[0] for i in ranked_feat])
+        self.editor.comboBoxSelectFeaturesInTraining.selectItems([0]) # 默认选中第一个
+        self.editor.comboBoxSelectFeaturesInPrediction.clear()
+        self.editor.comboBoxSelectFeaturesInPrediction.addItems([i[0] for i in ranked_feat])
+        self.editor.comboBoxSelectFeaturesInPrediction.selectItems([0])
 
     @pyqtSlot() # 训练LSTM模型
     def on_btnTraining_clicked(self):
