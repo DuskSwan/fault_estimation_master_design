@@ -132,5 +132,31 @@ combo = CheckableComboBox()
 combo.addItems(comunes)
 '''
 
-if __name__=='__main__':
-    pass
+# -*- coding: utf-8 -*-
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QPushButton
+
+if __name__ == '__main__':
+    app = QApplication([])
+    window = QMainWindow()
+    central_widget = QWidget()
+    layout = QVBoxLayout()
+    
+    combo = CheckableComboBox()
+    comunes = ['RMS', 'SRA', 'KV', 'SV', 'PPV',
+               'CF', 'IF', 'MF', 'SF', 'KF',
+               'FC', 'RMSF', 'RVF',
+               'Mean', 'Var', 'Std', 'Max', 'Min']
+    combo.addItems(comunes)
+    
+    layout.addWidget(combo)
+    
+    button = QPushButton("Show Selection")
+    button.clicked.connect(lambda: print(combo.currentData()))
+    layout.addWidget(button)
+    
+    central_widget.setLayout(layout)
+    window.setCentralWidget(central_widget)
+    
+    window.show()
+    app.exec_()
