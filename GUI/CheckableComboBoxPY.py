@@ -113,6 +113,9 @@ class CheckableComboBox(QComboBox):
                 data = None
             self.addItem(text, data)
 
+    def clearItems(self):
+        self.model().clear()
+
     def currentData(self):
         # Return the list of selected items data
         res = []
@@ -120,6 +123,12 @@ class CheckableComboBox(QComboBox):
             if self.model().item(i).checkState() == Qt.Checked:
                 res.append(self.model().item(i).data())
         return res
+    
+    def selectItems(self,idxs):
+        for i in idxs:
+            if i < self.model().rowCount():
+                self.model().item(i).setCheckState(Qt.Checked)
+        
 
 '''
 Usage:
@@ -148,12 +157,17 @@ if __name__ == '__main__':
                'FC', 'RMSF', 'RVF',
                'Mean', 'Var', 'Std', 'Max', 'Min']
     combo.addItems(comunes)
+    combo.selectItems([0, 1])  # 选中前两个项
     
     layout.addWidget(combo)
     
-    button = QPushButton("Show Selection")
-    button.clicked.connect(lambda: print(combo.currentData()))
-    layout.addWidget(button)
+    btnShow = QPushButton("Show Selection")
+    btnShow.clicked.connect(lambda: print(combo.currentData()))
+    layout.addWidget(btnShow)
+
+    btnClear = QPushButton("Clear item")
+    btnClear.clicked.connect(lambda: combo.clearItems())
+    layout.addWidget(btnClear)
     
     central_widget.setLayout(layout)
     window.setCentralWidget(central_widget)
