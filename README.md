@@ -55,11 +55,11 @@ The original template structure can be found in README_template.md. The modified
 │    └── build.py
 |       Customize solvers, including optimizers and learning rate schedulers.
 │ 
-├──  run			- Scripts that will actually run are placed here.
+├──  run   - Scripts that will actually run are placed here.
 │    └── train_net.py  
 │    └── test.py
 │    └── tools.py
-|		tools contains high-level functions used for training and testing	
+|       tools contains high-level functions used for training and testing	
 |       
 │ 
 └──  utils
@@ -69,10 +69,10 @@ The original template structure can be found in README_template.md. The modified
 │    └── threshold.py
 |       Utility tools. In this project, tools are needed for feature extraction, similarity calculation, threshold calculation, etc.
 │ 
-└──  log				- Stores logs
+└──  log    - Stores logs
 |    └── CWRU_train_2023-12-19-20-06-35.log
 │ 
-└──  output				- Stores output content, such as trained models
+└──  output    - Stores output content, such as trained models
      └── cwru_ltsm.pth
          
 ```
