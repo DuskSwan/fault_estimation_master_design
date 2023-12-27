@@ -120,7 +120,7 @@ class GUIWindow(QWidget):
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
             checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
-                         false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+                         false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请无视该警告")
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
 
@@ -235,7 +235,7 @@ class GUIWindow(QWidget):
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
         # 检查是否已经计算了正常信号的MAE，没有计算则补上
-        if not self.refence_errors:
+        if not self.refence_errors.any():
             logger.info('Start to calculate normal signal MAE...')
             self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
         

@@ -56,17 +56,24 @@ def modify_file(filename):
     lines.insert(0, 'from .CheckableComboBoxPY import CheckableComboBox\n')
     lines.insert(1, "comunes = ['RMS','SRA', 'KV', 'SV', 'PPV', 'CF', 'IF', 'MF', 'SF', 'KF', 'FC', 'RMSF', 'RVF', 'Mean', 'Var', 'Std', 'Max', 'Min',]\n")
 
-    # 替换 comboBoxSelectFeaturesInTraining 和 comboBoxSelectFeaturesInPrediction 的定义
-    inde = ' ' * 8
+    # 替换语句
+    inde = ' ' * 8 # 缩进数
     for i in range(len(lines)):
+        # 训练 - 特征选择下拉框
         if 'self.comboBoxSelectFeaturesInTraining = QtWidgets.QComboBox(self.widgetInTriaining)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInTraining = CheckableComboBox(self.widgetInTriaining)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInTraining.addItems(comunes)\n')
-        elif 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
+        # 预测 - 特征选择下拉框
+        if 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInPrediction.addItems(comunes)\n')
-        elif 'self.tabWidget.setCurrentIndex(2)' in lines[i]:
+        # 指定默认展示页
+        if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
+        # 指定窗口尺寸
+        if 'FaultDiagnosis.resize' in lines[i]:
+            lines[i] = inde + 'FaultDiagnosis.resize(1440, 960)\n'
+
     # 将修改后的内容写回新的文件名
     new_filename = filename.replace('.py', '_m.py')
     with open(new_filename, 'w', encoding='utf-8') as file:
