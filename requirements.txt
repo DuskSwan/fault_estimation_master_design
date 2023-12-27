@@ -1,9 +1,11 @@
 ignite==1.1.0
 loguru==0.7.2
+matplotlib==3.8.0
 numpy==1.26.2
 pandas==2.1.4
 PyQt5==5.15.10
 PyQt5_sip==12.13.0
+pytorch_ignite==0.4.13
+scipy==1.11.4
 torch==2.1.1
-torchvision==0.16.1
 yacs==0.1.8
