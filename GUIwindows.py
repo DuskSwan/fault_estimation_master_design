@@ -98,7 +98,8 @@ class GUIWindow(QWidget):
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
-        logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
+        if(self.cfg.LOG.OUTPUT_TO_FILE):
+            logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
