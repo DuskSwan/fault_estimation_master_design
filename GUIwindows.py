@@ -49,30 +49,36 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
-def hist_tied_to_frame(cfg,arrays,frame,is_train=False):
+def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     n_bin = cfg.DRAW.HIST_BIN
     colors = cfg.DRAW.THRESHOLD_COLORS
+
+    # Clear the previous canvas from the frame's layout
+    while frame.layout().count() > 0:
+        item = frame.layout().takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.deleteLater()
 
     figure = Figure()
     canvas = FigureCanvas(figure)
 
-    if(is_train):
-        # arrays is a vector
-        ax = figure.add_subplot(111)
+    ax = figure.add_subplot(111)
+    ax.clear()  # Clear the previous plot
+
+    if is_train:
         ax.hist(arrays, bins=n_bin, color='blue', label='normal signal')
         ax.set_title(cfg.TRAIN.NORMAL_PATH.split('/')[-1] + ' MAE distribution')
     else:
-        # arrays is a list, the first is normal signal errors, the second is unknown signal errors
-        ax = figure.add_subplot(111)
         ax.hist(arrays[0], bins=n_bin, color='blue', label='normal signal')
         ax.hist(arrays[1], bins=18, color='green', label='unknown signal', alpha=0.75)
-        thresholds = calc_thresholds(arrays[0], method = cfg.FEATURE.USED_THRESHOLD)
+        thresholds = calc_thresholds(arrays[0], method=cfg.FEATURE.USED_THRESHOLD)
         assert len(thresholds) <= len(colors), 'thresholds more than colors, checkout config'
         for i, (k, t) in enumerate(thresholds.items()):
-            ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))  # 添加竖线并指定颜色
-        ax.axvline(x = arrays[1].mean(), linestyle='--', color='black', label='indicator')
+            ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))
+        ax.axvline(x=arrays[1].mean(), linestyle='--', color='black', label='indicator')
         ax.set_title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
-    
+
     ax.legend()
     frame.layout().addWidget(canvas)
 
