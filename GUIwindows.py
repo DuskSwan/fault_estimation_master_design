@@ -57,12 +57,6 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     if frame.layout().count() == 1:
         frame.layout().takeAt(0).widget().deleteLater()
         logger.info('Previous canvas cleared')
- 
-    # while frame.layout().count() > 0:
-    #     item = frame.layout().takeAt(0)
-    #     widget = item.widget()
-    #     if widget is not None:
-    #         widget.deleteLater()
 
     figure = Figure()
     canvas = FigureCanvas(figure)
@@ -228,7 +222,7 @@ class GUIWindow(QWidget):
             # 检查路径是否存在中文
             if not checkAndWarn(self,not_contains_chinese(file_path),
                                 false_fb="路径含有中文，无法保存",
-                                true_fb=f"模型将保存到：{file_path}",
+                                true_fb=f"模型已保存到：{file_path}",
                                 need_true_fb=True): return
             tsave(self.model, file_path)
             
@@ -241,7 +235,7 @@ class GUIWindow(QWidget):
         if not checkAndWarn(self,self.cfg.TRAIN.NORMAL_PATH,false_fb="请导入作为参考的正常信号"): return
         # 检测是否有模型
         if not checkAndWarn(self,self.model,false_fb="请导入预测模型"): return
-        # 检测是否选择特征，未选择就用训练时指定的
+        # 检测是否选择特征
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
