@@ -54,11 +54,15 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     colors = cfg.DRAW.THRESHOLD_COLORS
 
     # Clear the previous canvas from the frame's layout
-    while frame.layout().count() > 0:
-        item = frame.layout().takeAt(0)
-        widget = item.widget()
-        if widget is not None:
-            widget.deleteLater()
+    if frame.layout().count() == 1:
+        frame.layout().takeAt(0).widget().deleteLater()
+        logger.info('Previous canvas cleared')
+ 
+    # while frame.layout().count() > 0:
+    #     item = frame.layout().takeAt(0)
+    #     widget = item.widget()
+    #     if widget is not None:
+    #         widget.deleteLater()
 
     figure = Figure()
     canvas = FigureCanvas(figure)
