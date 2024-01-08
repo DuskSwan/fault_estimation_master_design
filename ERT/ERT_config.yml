@@ -1,0 +1,16 @@
+DEVICE: 'cpu'
+
+FEATURE:
+  USED_F: ['Mean']
+  NEED_VIEW: True
+
+TRAIN:
+  NORMAL_PATH: 'data/datasets/CWRU/97.csv'
+  FAULT_PATH: 'data/datasets/CWRU/189.csv'
+
+INFERENCE:
+  UNKWON_PATH: 'data/datasets/CWRU/122.csv'
+
+LOG:
+  OUTPUT_TO_FILE: True
+  PREFIX: "CWRU_train" 
