@@ -1,116 +1,110 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
 
-# 定义LSTM编码器
-class EncoderLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers=1):
-        super(EncoderLSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+# 定义结合了注意力的LSTM时间序列预测网络
+class LSTMAttentionNet(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, 
+                 output_len=5):
+        super(LSTMAttentionNet, self).__init__()
+        self.output_len = output_len
+        self.output_size = output_size
+        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
+        # 注意力机制用于计算每个时间步的每个隐藏状态的权重
+        self.attention = nn.Linear(hidden_size, hidden_size)
+        self.fc = nn.Linear(hidden_size, output_size * output_len)
 
     def forward(self, x):
-        outputs, (hidden, cell) = self.lstm(x)
-        return outputs, hidden, cell
+        # x: [batch_size, seq_len, input_size]
+        lstm_out, _ = self.lstm(x)  # LSTM层输出
+        # lstm_out: [batch_size, seq_len, hidden_size]
 
-# 定义注意力机制
-class Attention(nn.Module):
-    def __init__(self, hidden_size):
-        super(Attention, self).__init__()
-        self.attention = nn.Linear(hidden_size * 2, 1)
+        # 为每个隐藏状态计算独立的权重
+        attention_weights = torch.softmax(self.attention(lstm_out), dim=2)
+        # attention_weights: [batch_size, seq_len, hidden_size]
 
-    def forward(self, encoder_outputs, decoder_hidden):
-        seq_len = encoder_outputs.size(1)
-        decoder_hidden = decoder_hidden.repeat(seq_len, 1, 1).transpose(0, 1)
-        cat_hidden = torch.cat((decoder_hidden, encoder_outputs), dim=2)
-        energy = torch.tanh(self.attention(cat_hidden))
-        attention_weights = torch.softmax(energy.squeeze(2), dim=1)
-        return attention_weights
+        # 计算上下文向量
+        context_vector = torch.sum(attention_weights * lstm_out, dim=1)
+        # context_vector: [batch_size, hidden_size]
 
-# 定义LSTM解码器
-class DecoderLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
-        super(DecoderLSTM, self).__init__()
-        self.lstm = nn.LSTM(hidden_size + input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
+        # 全连接层输出预测结果
+        out = self.fc(context_vector)
+        # out: [batch_size, output_size * output_len]
+        return out.view(-1, self.output_len, self.output_size)
 
-    def forward(self, x, hidden, cell):
-        output, (hidden, cell) = self.lstm(x, (hidden, cell))
-        prediction = self.fc(output)
-        return prediction, hidden, cell
+# 使用三角函数产生数据进行测试
+def generate_trigonometric_series(n=100, noise=0.1):
+    np.random.seed(0)
+    x = np.linspace(-2*np.pi, 2*np.pi, n)
+    y = np.sin(x) + np.random.normal(0, noise, n)
+    return y
 
-# 定义LSTM-Attention-LSTM模型
-class LSTMAttentionLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_layers=1):
-        super(LSTMAttentionLSTM, self).__init__()
-        self.encoder = EncoderLSTM(input_size, hidden_size, num_layers)
-        self.decoder = DecoderLSTM(input_size + hidden_size, hidden_size, output_size, num_layers)
-        self.attention = Attention(hidden_size)
-        self.input_size = input_size
+def make_X_Y_with_series(s, x_len, y_len, n_samples=100, seed=0):
+    np.random.seed(seed)
+    X, Y = [], []
+    for _ in range(n_samples):
+        start = np.random.randint(0, len(s) - x_len - y_len)
+        x = s[start:start+x_len]
+        y = s[start+x_len:start+x_len+y_len]
+        X.append(x)
+        Y.append(y)
+    return np.array(X), np.array(Y)
 
-    def forward(self, source, target_len):
-        encoder_outputs, hidden, cell = self.encoder(source)
-        batch_size = source.size(0)
-        decoder_input = torch.zeros(batch_size, 1, self.input_size).to(source.device)
+def test_net():
+    # 设置随机种子
+    seed = 0
+    torch.manual_seed(seed)
 
-        outputs = torch.zeros(batch_size, target_len, self.decoder.fc.out_features).to(source.device)
+    # 设置参数
+    x_len = 200
+    y_len = 5
+    n_samples = 2000
+    seq_len = x_len + y_len + n_samples
 
-        for t in range(target_len):
-            attention_weights = self.attention(encoder_outputs, hidden[-1])
-            context = torch.bmm(attention_weights.unsqueeze(1), encoder_outputs).squeeze(1)
-            decoder_input = torch.cat((context.unsqueeze(1), decoder_input), dim=2)
-            out, hidden, cell = self.decoder(decoder_input, hidden, cell)
-            outputs[:, t] = out.squeeze(1)
+    # 准备数据
+    s = generate_trigonometric_series(seq_len,)
+    X, Y = make_X_Y_with_series(s, x_len, y_len, n_samples, seed)
+    print('X shape:', X.shape)
+    print('Y shape:', Y.shape)
+    X = torch.tensor(X, dtype=torch.float32).view(-1, x_len, 1)  # (batch, in_len, input_size)
+    Y = torch.tensor(Y, dtype=torch.float32).view(-1, y_len, 1)  # (batch, out_len, input_size)
 
-        return outputs
+    # 定义模型
+    model = LSTMAttentionNet(input_size=1, hidden_size=10, output_size=1, output_len=5)
 
-# 生成模拟数据
-def generate_random_data(batch_size, seq_len, input_size):
-    return torch.rand(batch_size, seq_len, input_size)
+    # 定义损失函数和优化器
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-def generate_log_data(batch_size, seq_len, input_size):
-    x = torch.linspace(1, 10, steps=seq_len)
-    y = torch.log(x)
-    return y.repeat(batch_size, 1, input_size)
-
-# 测试模型
-def test():
-    seq_len = 10
-    input_size = 1
-    batch_size = 32
-
-    data = generate_log_data(batch_size, seq_len, input_size)
-    input_seq = data[:, :seq_len // 2, :]
-    target_seq = data[:, seq_len // 2:, :]
-
-    train_size = int(batch_size * 0.8)
-    train_input, test_input = input_seq[:train_size], input_seq[train_size:]
-    train_target, test_target = target_seq[:train_size], target_seq[train_size:]
-
-    hidden_size = 128
-    output_size = 1
-    num_layers = 1
-
-    model = LSTMAttentionLSTM(input_size, hidden_size, output_size, num_layers)
-    criterion = nn.L1Loss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-    num_epochs = 100
-    for epoch in range(num_epochs):
-        model.train()
+    # 训练
+    for epoch in range(100):
+        output = model(X)
+        loss = criterion(output, Y)
         optimizer.zero_grad()
-        output = model(train_input, train_target.shape[1])
-        loss = criterion(output, train_target)
         loss.backward()
         optimizer.step()
+        if (epoch+1) % 10 == 0:
+            print('Epoch[{}/{}], loss: {:.6f}'.format(epoch+1, 100, loss.item()))
 
-        if epoch % 10 == 0:
-            print(f'Epoch {epoch}/{num_epochs}, Loss: {loss.item()}')
-
-    model.eval()
+    # 预测
     with torch.no_grad():
-        predicted = model(test_input, test_target.shape[1])
-        test_mae = criterion(predicted, test_target)
-        print(f'Test MAE: {test_mae.item()}')
+        model.eval()
+        predicted = model(X).detach().numpy()
+
+    # 绘制结果
+    x = X[0, :, 0].numpy()
+    y = Y[0, :, 0].numpy()
+    pred_y = predicted[0, :, 0]
+    
+    true_s = np.concatenate([x, y])
+    pred_s = np.concatenate([x, pred_y])
+
+    plt.plot(true_s, label='Actual')
+    plt.plot(pred_s, label='Predicted')
+    plt.legend()
+    plt.show()
+
 
 if __name__ == '__main__':
-    test()
+    test_net()
