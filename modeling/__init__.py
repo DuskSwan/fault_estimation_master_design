@@ -17,6 +17,12 @@ def build_model(cfg, kwargs):
                          lstm_hidden_dim = cfg.MODEL.LSTM_HIDDEN, 
                          line_hidden_dim = cfg.MODEL.LINE_HIDDEN, 
                          used_layers = cfg.MODEL.USED_LAYERS)
+    elif cfg.MODEL.NAME == 'LAN':
+        model = LAN(input_size = kwargs['input_dim'],
+                    hidden_size = cfg.MODEL.LSTM_HIDDEN,
+                    output_size = kwargs['output_dim'],
+                    output_len = kwargs['output_len'],
+                    num_layers = cfg.MODEL.USED_LAYERS)
 
     if cfg.DATA_TYPE == 'float':
         model = model.float()

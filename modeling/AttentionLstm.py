@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 
 # 定义结合了注意力的LSTM时间序列预测网络
 class LSTMAttentionNet(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, 
-                 output_len=5):
+    def __init__(self, input_size, hidden_size, output_size, output_len,
+                 num_layers=1,):
         super(LSTMAttentionNet, self).__init__()
         self.output_len = output_len
         self.output_size = output_size
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
+                            batch_first=True)
         # 注意力机制用于计算每个时间步的每个隐藏状态的权重
         self.attention = nn.Linear(hidden_size, hidden_size)
         self.fc = nn.Linear(hidden_size, output_size * output_len)
