@@ -6,7 +6,7 @@ TRAIN:
   NORMAL_PATH: 'data/datasets/CWRU/97.csv'
 
 INFERENCE:
-  UNKWON_PATH: 'data/datasets/CWRU/213.csv'
+  UNKWON_PATH: 'data/datasets/CWRU/189.csv'
   MODEL_PATH: "output/cwru_lstm.pth"
 
 LOG:

@@ -55,4 +55,4 @@ def main(extra_cfg_path = ''):
     
 
 if __name__ == '__main__':
-    main('./config/CWRU_draw_distr.yml')
+    main('./config/XJTU_draw_distr.yml')

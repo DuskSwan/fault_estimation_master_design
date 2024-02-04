@@ -1,16 +1,16 @@
 DEVICE: 'cpu'
 
 FEATURE:
-  USED_F: ['Mean']
+  USED_F: ['KV']
   NEED_VIEW: True
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/CWRU/97.csv'
-  FAULT_PATH: 'data/datasets/CWRU/189.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_1/123.csv'
 
 INFERENCE:
-  UNKWON_PATH: 'data/datasets/CWRU/122.csv'
+  UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/61.csv'
 
 LOG:
-  OUTPUT_TO_FILE: True
-  PREFIX: "CWRU_train" 
+  OUTPUT_TO_FILE: False
+  PREFIX: "ERT" 

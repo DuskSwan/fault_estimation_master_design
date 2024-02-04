@@ -5,7 +5,9 @@ from loguru import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor as RFR
+from sklearn.ensemble import GradientBoostingRegressor as GBR
+from sklearn.multioutput import MultiOutputRegressor as MOR
 
 sys.path.append('.')
 from config import cfg
@@ -19,11 +21,12 @@ def train_and_test(cfg):
     # get data
     X_train,Y_train = signal_to_XY(cfg, is_train=True)
     num_samples,_,_ = X_train.shape
-    # 为了使用随机森林，需要将数据转换为二维形式
+    # 为了使用模型，需要将数据转换为二维形式
     X_train_reshaped = X_train.reshape(num_samples, -1)
     Y_train_reshaped = Y_train.reshape(num_samples, -1)
     # 训练模型
-    model = RandomForestRegressor(n_estimators=100)
+    # model = RFR(n_estimators=100)
+    model = MOR(GBR(n_estimators=100))
     model.fit(X_train_reshaped, Y_train_reshaped)
     # 测试集数据
     X_test,Y_test = signal_to_XY(cfg, is_train=False)
@@ -35,10 +38,13 @@ def train_and_test(cfg):
     # 重新计算训练集的预测值和MAE
     Y_train_pred = model.predict(X_train_reshaped)
     train_mae = np.mean(np.abs(Y_train_reshaped - Y_train_pred), axis=1)
+    # 输出训练集和测试集的MAE
+    print("Train MAE: {:.4f}".format(np.mean(train_mae)))
+    print("Test MAE: {:.4f}".format(np.mean(sample_mae)))
     # 绘制训练集和测试集的MAE分布图
-    plt.hist(train_mae, bins=20, alpha=0.5, label='Train MAE')
-    plt.hist(sample_mae, bins=20, alpha=0.5, label='Test MAE')
-    plt.title("Train vs Test Samples MAE Distribution")
+    plt.hist(train_mae, bins=20, label='Train MAE')
+    plt.hist(sample_mae, bins=20, label='Test MAE', alpha=0.75)
+    plt.title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE Distribution')
     plt.xlabel("Mean Absolute Error")
     # plt.ylabel("Frequency")
     plt.legend()
