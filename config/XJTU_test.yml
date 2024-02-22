@@ -8,7 +8,7 @@ TRAIN:
 INFERENCE:
   UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/61.csv'
   MODEL_PATH: 'output/xjtu_lstm.pth'
-  TEST_CONTENT: 'data\datasets\XJTU-SY\Bearing1_1'
+  TEST_CONTENT: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
 
 LOG:
   OUTPUT_TO_FILE: True

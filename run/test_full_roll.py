@@ -42,10 +42,16 @@ def full_roll_test(cfg, model, threshold):
         print("大于阈值的元素数量：", num_greater_than_threshold)
         print("大于阈值的元素比例：", ratio)
     
-    plt.plot(res.keys(), [x[1] for x in res.values()])
-    plt.title('Ratio of elements greater than threshold')
+    x = list(res.keys())
+    y = [x[1] for x in res.values()]
+    xticks = x[::5]
+    plt.plot(x,y, label='ratio of elements greater than threshold')
+    plt.xticks(xticks, rotation=45)
+    plt.title(cont.stem)
     plt.legend()
     plt.show()
+    save_path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + '_ErrRatio.png'
+    plt.savefig(save_path)
 
     return res
 
