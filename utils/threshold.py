@@ -42,7 +42,7 @@ def calc_log_threshold(samples):
     t  = mean + 3 * std
     return np.exp(t)
 
-def calc_threshold_based_on_Z(samples, boundary = 3.5):
+def calc_threshold_based_on_Z_norefer(samples, boundary = 3.5):
     # 计算中位数
     median = np.median(samples)
     # 计算 IQR
@@ -54,4 +54,14 @@ def calc_threshold_based_on_Z(samples, boundary = 3.5):
     # => x−中位数 >< boundary * IQR / 1.349
     # => x >< boundary * IQR / 1.349 + 中位数
     t = boundary * iqr / 1.349 + median
+    return t
+
+def calc_threshold_based_on_Z(samples, boundary = 3.5):
+    median = np.median(samples)
+    MAD = np.median(np.abs(samples - median))
+
+    # Mi = 0.6475 * (xi- mean) / MAD >< boundary
+    # => xi- mean >< boundary * MAD / 0.6475
+    # => xi >< boundary * MAD / 0.6475 + mean
+    t = boundary * MAD / 0.6475 + median
     return t

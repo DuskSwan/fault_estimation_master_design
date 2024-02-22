@@ -38,8 +38,9 @@ def feature_cuts_to_XY(cfg, feature_cuts):
 
 # signal series (2D) -> ...... -> X,Y (3D,3D)
 #                   signal_to_XY
-def signal_to_XY(cfg, is_train=True):
+def signal_to_XY(cfg, is_train=True, path = None):
     if(is_train): data_path = cfg.TRAIN.NORMAL_PATH
+    elif(path): data_path = path
     else: data_path = cfg.INFERENCE.UNKWON_PATH
 
     signal = pd.read_csv(data_path).values #读成numpy数组
@@ -65,7 +66,7 @@ def signal_to_XY(cfg, is_train=True):
 
     return feature_cuts_to_XY(cfg, feature_cuts)
 
-def raw_signal_to_errors(cfg, model, is_normal=True):
+def raw_signal_to_errors(cfg, model, is_normal=True) -> np.ndarray:
     logger.info('Start to calculate error scores...(is_normal={})'.format(is_normal))
 
     if(is_normal): X,Y = signal_to_XY(cfg, is_train=True)

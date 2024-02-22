@@ -1,10 +1,10 @@
 FEATURE:
-  USED_F: ['fMean']
+  USED_F: ['KV']
   NEED_VIEW: False
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_2/1.csv'
-  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_2/161.csv'
+  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+  FAULT_PATH: 'data/datasets/XJTU-SY/Bearing1_1/123.csv'
 
 OUTPUT:
   MODEL_DIR: "output"

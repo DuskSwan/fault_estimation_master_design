@@ -11,10 +11,8 @@ import matplotlib.pyplot as plt
 sys.path.append('.')
 from config import cfg
 
-from run.tools import signal_to_XY, raw_signal_to_errors
+from run.tools import raw_signal_to_errors
 from utils import set_random_seed, initiate_cfg
-from data import make_data_loader
-from engine.inference import inference
 
 from utils.threshold import calc_thresholds
 
@@ -52,7 +50,17 @@ def main(extra_cfg_path = ''):
     plt.title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
     plt.legend()
     plt.show()
+
+    #calculate ration
+    threshold = thresholds['Z']
+    unknown_errors_arr = errors
+
+    num_greater_than_threshold = (unknown_errors_arr > threshold).sum()
+    ratio = num_greater_than_threshold / unknown_errors_arr.size
+
+    print("大于阈值的元素数量：", num_greater_than_threshold)
+    print("大于阈值的元素比例：", ratio)
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_draw_distr.yml')
+    main('./config/XJTU_test.yml')

@@ -55,8 +55,8 @@ _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get s
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
-_C.TRAIN.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
-_C.TRAIN.FAULT_PATH = r'data\datasets\CWRU\122.csv'
+_C.TRAIN.NORMAL_PATH = r'data\datasets\XJTU-SY\Bearing1_1\1.csv'
+_C.TRAIN.FAULT_PATH = r'ddata\datasets\XJTU-SY\Bearing1_1\123.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHRCKPOINT = False
 
@@ -66,8 +66,9 @@ _C.TRAIN.NEED_CHRCKPOINT = False
 # -----------------------------------------------------------------------------
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
-_C.INFERENCE.UNKWON_PATH = r'data\datasets\CWRU\122.csv'
+_C.INFERENCE.UNKWON_PATH = r'data\datasets\XJTU-SY\Bearing1_1\61.csv'
 _C.INFERENCE.MODEL_PATH = r'output\model.pth'
+_C.INFERENCE.TEST_CONTENT = r'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
 
 
 # -----------------------------------------------------------------------------
