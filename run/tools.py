@@ -16,7 +16,24 @@ from data import make_data_loader
 
 from engine.trainer import do_train
 from engine.inference import inference
+from typing import Tuple
 
+def signal_to_raw_XY(cfg, signal:np.ndarray, show_para=False) -> Tuple[np.ndarray, np.ndarray]:
+    samples = sheet_cut(signal,
+                        piece=cfg.DESIGN.FPIECE,
+                        sublen=cfg.DESIGN.FSUBLEN,
+                        method=3,
+                        show_para = show_para)
+    # make XY
+    logger.info('start to make X and Y...')
+    X = []
+    Y = []
+    m = cfg.DESIGN.M
+    for signal in samples:
+        X.append(signal[:m,:][:])
+        Y.append(signal[m:,:][:])
+    X,Y = map(np.array,(X,Y))
+    return (X,Y)
 
 # signal series (2D) -> signal cuts (3D) -> features seriers (2D) -> features cuts (3D) -> X,Y (3D,3D)
 #               sheet_cut      signal_to_features_tf            sheet_cut         feature_cuts_to_XY
