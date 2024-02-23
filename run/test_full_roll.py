@@ -45,13 +45,15 @@ def full_roll_test(cfg, model, threshold):
     x = list(res.keys())
     y = [x[1] for x in res.values()]
     xticks = x[::5]
+    fig = plt.figure()
     plt.plot(x,y, label='ratio of elements greater than threshold')
     plt.xticks(xticks, rotation=45)
     plt.title(cont.stem)
     plt.legend()
-    plt.show()
+    
     save_path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + '_ErrRatio.png'
     plt.savefig(save_path)
+    # plt.show()
 
     return res
 
@@ -82,8 +84,8 @@ def main(extra_cfg_path = ''):
 
     # result
     logger.info('File index, ratio of elements greater than threshold')
-    for idx,(num, ratio) in enumerate(res.items()):
-        logger.info('{:3d}, {:.4f}'.format(idx, ratio))
+    for idx,v in enumerate(res.items()):
+        logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
     
 
 if __name__ == '__main__':
