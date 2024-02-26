@@ -23,7 +23,7 @@ from solver import make_optimizer
 
 from engine.trainer import do_train
 
-def train(cfg):
+def train(cfg, save=True):
     # get data
     X,Y = signal_to_XY(cfg)
     train_loader = make_data_loader(cfg, X,Y, is_train=True)
@@ -51,10 +51,14 @@ def train(cfg):
         nn.MSELoss(reduction='mean'),
     )
 
+    if(not save): return (model, None)
+    
     save_cont = Path(cfg.OUTPUT.MODEL_DIR)
     if not save_cont.exists(): save_cont.mkdir()
     save_path = save_cont / cfg.OUTPUT.MODEL_NAME
     tsave(model, save_path)
+
+    return (model, save_path)
 
 def main(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)

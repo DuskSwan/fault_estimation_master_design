@@ -54,6 +54,10 @@ def sheet_cut(x, sublen = None, piece = 500, method = 0, show_para = False):
     return np.array(res)
 
 def initiate_cfg(cfg,merge_file = ''):
+    '''
+    Initiate the cfg object with the default config file and the extra config file. 
+    The cfg will be frozen after initiation.
+    '''
     if(merge_file): logger.info("Try to merge from {}.".format(merge_file))
     else: logger.info("No extra config file to merge.")
 

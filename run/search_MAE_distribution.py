@@ -63,4 +63,5 @@ def main(extra_cfg_path = ''):
     
 
 if __name__ == '__main__':
+    cfg.LOG.OUTPUT_TO_FILE = False
     main('./config/XJTU_test.yml')

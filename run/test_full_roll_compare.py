@@ -28,10 +28,38 @@ from engine.inference import inference
 
 from utils.threshold import calc_thresholds
 
+def draw_and_print(res, label, handle):
+    '''
+    Draw the result and print the result.
+    res: dict, the result of the test. key is the file index, value is the ratio of elements greater than threshold
+    label: str, the label of the test
+    handle: str, the handle of the test method
+    '''
+    x = list(res.keys())
+    y = [x[1] for x in res.values()]
+    xticks = x[::5]
+    # fig = plt.figure()
+    plt.plot(x,y, label=label)
+    plt.xticks(xticks, rotation=45)
+    plt.ylabel('ratio')
+    plt.xlabel('file index')
+    plt.title(f'ratio of mean greater than threshold ({handle})')
+    plt.legend()
+    
+    save_path = 'output/' + label + f'_{handle}.png'
+    plt.savefig(save_path)
+    plt.show()
+
+    # print result
+    logger.info('File index, ratio of elements greater than threshold')
+    for idx,v in enumerate(res.items()):
+        logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
+
 def baseline(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
     initiate_cfg(cfg,extra_cfg_path)
 
+    logger.info('Start to test baseline...')
     logger.info('Start to calculate threshold...')
     normal_path = cfg.TRAIN.NORMAL_PATH
     signal = pd.read_csv(normal_path).values #读成numpy数组
@@ -61,28 +89,15 @@ def baseline(extra_cfg_path = ''):
         print("异常元素数量：", num_marked)
         print("异常元素比例：", ratio)
     
-    x = list(res.keys())
-    y = [x[1] for x in res.values()]
-    xticks = x[::5]
-    # fig = plt.figure()
-    plt.plot(x,y, label=cont.stem)
-    plt.xticks(xticks, rotation=45)
-    plt.ylabel('ratio')
-    plt.xlabel('file index')
-    plt.title(f'ratio of mean greater than {alpha}σ')
-    plt.legend()
-    
-    save_path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + '_Base.png'
-    plt.savefig(save_path)
-    # plt.show()
+    draw_and_print(res, cont.stem, 'baseline')
 
     logger.info(f'res is {res}')
-    logger.info('Finish testing, result saved in {}'.format(save_path))
     return res
 
 def no_features(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
     initiate_cfg(cfg,extra_cfg_path)
+    logger.info('Start to test no features...')
 
     # get data
     normal_path = cfg.TRAIN.NORMAL_PATH
@@ -149,26 +164,60 @@ def no_features(extra_cfg_path = ''):
         print("大于阈值的元素比例：", ratio)
     
     # draw result
-    x = list(res.keys())
-    y = [x[1] for x in res.values()]
-    xticks = x[::5]
-    # fig = plt.figure()
-    plt.plot(x,y, label=cont.stem)
-    plt.xticks(xticks, rotation=45)
-    plt.ylabel('ratio')
-    plt.xlabel('file index')
-    plt.title('ratio of mean greater than threshold')
-    plt.legend()
-    
-    save_path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + '_NoFeat.png'
-    plt.savefig(save_path)
-    plt.show()
+    draw_and_print(res, cont.stem, 'no_features')
 
-    # print result
-    logger.info('File index, ratio of elements greater than threshold')
-    for idx,v in enumerate(res.items()):
-        logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
+def all_features(extra_cfg_path = ''):
+    set_random_seed(cfg.SEED)
+    extra_cfg = Path(extra_cfg_path)
+    cfg.merge_from_file(extra_cfg)
+    cfg.FEATURE.USED_F = ['RMS', 'SRA', 'KV', 'SV', 'PPV', 'CF', 'IF', 'MF', 'SF', 'KF', 'FC', 'RMSF', 'RVF', 'Mean', 'Var', 'Std', 'Max', 'Min']
+
+    logger.info('Start to test all features...')
+
+    # get model
+    from run.train import train
+    model, _ = train(cfg, save=False)
+
+    # calculate threshold
+    logger.info('Start to calculate threshold...')
+    X,Y = signal_to_XY(cfg, is_train=True)
+    normal_loader = make_data_loader(cfg, X,Y, is_train=False)
+    error_list = inference(cfg, model, normal_loader)
+    errors = torch.stack(error_list)
+    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
+                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+    errors_arr = errors.numpy()
+    thresholds = calc_thresholds(errors_arr, method = cfg.FEATURE.USED_THRESHOLD)
+    threshold = thresholds['Z']
+
+    # full roll test
+    cont = Path(cfg.INFERENCE.TEST_CONTENT)
+    files = sorted(cont.glob('*.csv'), key=lambda x: int(x.stem))
+    res = {}
+    for file in files:
+        logger.info('Start to test file: {}'.format(file.stem))
+        X,Y = signal_to_XY(cfg, is_train=False, path = file)
+        test_loader = make_data_loader(cfg, X,Y, is_train=False)
+        error_list = inference(cfg, model, test_loader)
+        errors = torch.stack(error_list)
+        if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+
+        logger.info('Current file index: {}'.format(file.stem))
+        logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
+                    .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+        
+        unknown_errors_arr = errors.numpy()
+        num_greater_than_threshold = (unknown_errors_arr > threshold).sum()
+        ratio = num_greater_than_threshold / unknown_errors_arr.size
+        res[file.stem] = (num_greater_than_threshold, ratio)
+        print("大于阈值的元素数量：", num_greater_than_threshold)
+        print("大于阈值的元素比例：", ratio)
+
+    # result
+    draw_and_print(res, cont.stem, 'all_features')
 
 if __name__ == '__main__':
     # baseline('./config/XJTU_test.yml')
-    no_features('./config/XJTU_test.yml')
+    # no_features('./config/XJTU_test.yml')
+    all_features('./config/XJTU_test.yml')
