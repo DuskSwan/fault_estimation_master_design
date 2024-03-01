@@ -67,6 +67,10 @@ def initiate_cfg(cfg,merge_file = ''):
         logger.info("Merge successfully.")
     else:
         logger.info("Wrong file path or file type of extra config file.")
+
+    cfg.DESIGN.FSUBLEN = cfg.DESIGN.M + cfg.DESIGN.P
+    cfg.DESIGN.PIECE = cfg.DESIGN.FPIECE * (cfg.DESIGN.M + cfg.DESIGN.P)
+
     cfg.freeze()
 
     if(cfg.LOG.OUTPUT_TO_FILE): 

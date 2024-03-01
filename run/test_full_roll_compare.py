@@ -52,8 +52,8 @@ def draw_and_print(res, label, handle):
 
     # print result
     logger.info('File index, ratio of elements greater than threshold')
-    for idx,v in enumerate(res.items()):
-        logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
+    for idx, v in res.items():
+        logger.info('{:3}, {:.4f}'.format(idx, v[1]))
 
 def baseline(extra_cfg_path = ''):
     set_random_seed(cfg.SEED)
@@ -172,6 +172,14 @@ def all_features(extra_cfg_path = ''):
     cfg.merge_from_file(extra_cfg)
     cfg.FEATURE.USED_F = ['RMS', 'SRA', 'KV', 'SV', 'PPV', 'CF', 'IF', 'MF', 'SF', 'KF', 'FC', 'RMSF', 'RVF', 'Mean', 'Var', 'Std', 'Max', 'Min']
 
+    # initiate cfg
+    import time
+    if(cfg.LOG.OUTPUT_TO_FILE): 
+        logger.info("Output to file.")
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
+    else: logger.info("Output to console.")
+
     logger.info('Start to test all features...')
 
     # get model
@@ -217,7 +225,68 @@ def all_features(extra_cfg_path = ''):
     # result
     draw_and_print(res, cont.stem, 'all_features')
 
+def pointed_features(extra_cfg_path = ''):
+    set_random_seed(cfg.SEED)
+    extra_cfg = Path(extra_cfg_path)
+    cfg.merge_from_file(extra_cfg)
+    usdf = ['RVF']
+    cfg.FEATURE.USED_F = usdf
+
+    # initiate cfg
+    import time
+    if(cfg.LOG.OUTPUT_TO_FILE): 
+        logger.info("Output to file.")
+        cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
+    else: logger.info("Output to console.")
+
+    logger.info(f'Start to test pointed features with {usdf}')
+
+    # get model
+    from run.train import train
+    model, _ = train(cfg, save=False)
+
+    # calculate threshold
+    logger.info('Start to calculate threshold...')
+    X,Y = signal_to_XY(cfg, is_train=True)
+    normal_loader = make_data_loader(cfg, X,Y, is_train=False)
+    error_list = inference(cfg, model, normal_loader)
+    errors = torch.stack(error_list)
+    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
+                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+    errors_arr = errors.numpy()
+    thresholds = calc_thresholds(errors_arr, method = cfg.FEATURE.USED_THRESHOLD)
+    threshold = thresholds['Z']
+
+    # full roll test
+    cont = Path(cfg.INFERENCE.TEST_CONTENT)
+    files = sorted(cont.glob('*.csv'), key=lambda x: int(x.stem))
+    res = {}
+    for file in files:
+        logger.info('Start to test file: {}'.format(file.stem))
+        X,Y = signal_to_XY(cfg, is_train=False, path = file)
+        test_loader = make_data_loader(cfg, X,Y, is_train=False)
+        error_list = inference(cfg, model, test_loader)
+        errors = torch.stack(error_list)
+        if(cfg.DEVICE != "cpu"): errors = errors.cpu()
+
+        logger.info('Current file index: {}'.format(file.stem))
+        logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
+                    .format(errors.max().item(), errors.min().item(), errors.mean().item()))
+        
+        unknown_errors_arr = errors.numpy()
+        num_greater_than_threshold = (unknown_errors_arr > threshold).sum()
+        ratio = num_greater_than_threshold / unknown_errors_arr.size
+        res[file.stem] = (num_greater_than_threshold, ratio)
+        print("大于阈值的元素数量：", num_greater_than_threshold)
+        print("大于阈值的元素比例：", ratio)
+
+    # result
+    draw_and_print(res, cont.stem, 'features' + '_'.join(usdf) )
+
 if __name__ == '__main__':
     # baseline('./config/XJTU_test.yml')
     # no_features('./config/XJTU_test.yml')
-    all_features('./config/XJTU_test.yml')
+    # all_features('./config/XJTU_test.yml')
+    pointed_features('./config/XJTU_test.yml')

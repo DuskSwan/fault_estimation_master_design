@@ -19,9 +19,19 @@ from engine.inference import inference
 
 from utils.threshold import calc_thresholds
 
+def sort_list(path_list):
+    try:
+        # 尝试将元素转换为整数进行排序
+        return sorted(path_list, key=lambda p: int(p.name.rstrip('.csv')))
+    except ValueError:
+        # 如果转换失败，按照字典序进行排序
+        return sorted(path_list, key=lambda p: p.name)
+    except Exception as e:
+        raise e
+
 def full_roll_test(cfg, model, threshold):
     cont = Path(cfg.INFERENCE.TEST_CONTENT)
-    files = sorted(cont.glob('*.csv'), key=lambda x: int(x.stem))
+    files = sort_list(list(cont.glob('*.csv')))
     res = {}
     for file in files:
         logger.info('Start to test file: {}'.format(file.stem))
@@ -45,7 +55,6 @@ def full_roll_test(cfg, model, threshold):
     x = list(res.keys())
     y = [x[1] for x in res.values()]
     xticks = x[::5]
-    fig = plt.figure()
     plt.plot(x,y, label='ratio of elements greater than threshold')
     plt.xticks(xticks, rotation=45)
     plt.title(cont.stem)
@@ -58,13 +67,17 @@ def full_roll_test(cfg, model, threshold):
     return res
 
 def main(extra_cfg_path = ''):
-    set_random_seed(cfg.SEED)
-    initiate_cfg(cfg,extra_cfg_path)
 
-    # get model
-    model = torch.load(cfg.INFERENCE.MODEL_PATH)
-    model.to(cfg.DEVICE)
-    logger.info('Change model to {}'.format(cfg.DEVICE))
+    set_random_seed(cfg.SEED)
+    initiate_cfg(cfg, extra_cfg_path)
+
+    logger.info("In device {}".format(cfg.DEVICE))
+    logger.info("Running with config:\n{}".format(cfg))
+
+    # train
+    logger.info("feature(s) used: {}".format(', '.join(cfg.FEATURE.USED_F)))
+    from run.train import train
+    model,_ = train(cfg, save=True)
 
     # calculate threshold
     logger.info('Start to calculate threshold...')
@@ -84,9 +97,9 @@ def main(extra_cfg_path = ''):
 
     # result
     logger.info('File index, ratio of elements greater than threshold')
-    for idx,v in enumerate(res.items()):
+    for idx,v in res.items():
         logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_test.yml')
+    main('./config/IMS_test.yml')

@@ -24,4 +24,4 @@ def main(extra_cfg_path = ''):
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
 if __name__ == '__main__':
-    main('config/XJTU_find.yml')
+    main('config/IMS_find.yml')
