@@ -54,7 +54,8 @@ def full_roll_test(cfg, model, threshold):
     
     x = list(res.keys())
     y = [x[1] for x in res.values()]
-    xticks = x[::5]
+    interval = len(x) // 10
+    xticks = x[::interval]
     plt.plot(x,y, label='ratio of elements greater than threshold')
     plt.xticks(xticks, rotation=45)
     plt.title(cont.stem)
@@ -98,7 +99,7 @@ def main(extra_cfg_path = ''):
     # result
     logger.info('File index, ratio of elements greater than threshold')
     for idx,v in res.items():
-        logger.info('{:3d}, {:.4f}'.format(idx, v[1]))
+        logger.info('{}, {:.4f}'.format(idx, v[1]))
     
 
 if __name__ == '__main__':
