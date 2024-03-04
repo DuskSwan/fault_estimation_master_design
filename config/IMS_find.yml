@@ -2,8 +2,8 @@ FEATURE:
   NEED_VIEW: True
 
 TRAIN:
-  NORMAL_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_34bearing\2003.10.22.12.06.csv'
-  FAULT_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_34bearing\2003.11.25.23.39.csv'
+  NORMAL_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_34bearing\2003.10.22.12.06.24.csv'
+  FAULT_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_34bearing\2003.11.25.23.39.56.csv'
 
 LOG:
   OUTPUT_TO_FILE: True

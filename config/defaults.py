@@ -37,6 +37,15 @@ _C.DESIGN.FPIECE = 200 # num of pieces drawed from feature series
 _C.DESIGN.FSUBLEN = _C.DESIGN.M + _C.DESIGN.P
 _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 
+# -----------------------------------------------------------------------------
+# DENOISE
+# -----------------------------------------------------------------------------
+_C.DENOISE = CN()
+_C.DENOISE.NEED = True
+_C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
+_C.DENOISE.SMOOTH_STEP = 3
+_C.DENOISE.WAVELET = 'db4'
+_C.DENOISE.LEVEL = 4
 
 # -----------------------------------------------------------------------------
 # FEATURE

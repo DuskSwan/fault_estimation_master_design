@@ -9,6 +9,7 @@ import torch.nn as nn
 sys.path.append('.')
 from utils import  sheet_cut
 from utils.features import signal_to_features_tf
+from utils.denoise import array_denoise
 
 from modeling import build_model
 from solver import make_optimizer
@@ -125,3 +126,7 @@ def set_train_model(cfg):
     )
 
     return model
+
+def denoise(arr, cfg):
+    denoised_arr = array_denoise(arr, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
+    return denoised_arr

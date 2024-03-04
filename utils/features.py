@@ -3,6 +3,7 @@ import numpy as np
 
 from . import sheet_cut
 from .similarity import TimeSeriesSimilarity
+from .denoise import array_denoise
 
 # 时域/统计量
 def origin(signal): #原始值
@@ -196,6 +197,10 @@ def view_features_DTW(cfg):
         n,_ = data.shape
         length = min(n, cfg.FEATURE.MAX_LENGTH)
         data = data[:length] #减少所用的信号长度
+
+        if(cfg.DENOISE.NEED):
+            data = array_denoise(data, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
+
         XY = sheet_cut(data, cfg.DESIGN.SUBLEN, method = 0)
         f_df = signal_to_features_tf(XY, output_type='pd') #提取特征
         feat_with_classes.append(f_df)

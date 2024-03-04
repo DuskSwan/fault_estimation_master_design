@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pywt
 
 def smooth_denoise(signal, step=3):
@@ -17,10 +18,25 @@ def wavelet_denoise(signal, wavelet='db4', level=2):
     
     return denoised_signal
 
+def array_denoise(array, method='smooth', step=3, wavelet='db4', level=4):
+    denoised_array = np.zeros_like(array)
+    for i in range(array.shape[1]):
+        signal = array[:, i]
+        if method == 'smooth':
+            denoised_signal = smooth_denoise(signal, step=step)
+        elif method == 'wavelet':
+            denoised_signal = wavelet_denoise(signal, wavelet=wavelet, level=level)
+        else:
+            raise ValueError("Invalid denoising method")
+        denoised_array[:, i] = denoised_signal
+    return denoised_array
+
 if __name__ == "__main__":
-    # Test the denoise function
+    # Apply denoising to each column of the DataFrame
+    
     import matplotlib.pyplot as plt
     import matplotlib
+    import pandas as pd
     matplotlib.use('TkAgg')
 
     # Generate a noisy signal
