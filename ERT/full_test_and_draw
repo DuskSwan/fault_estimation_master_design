@@ -1,25 +1,39 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 
 import sys
 from loguru import logger
 from pathlib import Path
 
-import torch
 import numpy as np
 import pandas as pd
-
 import matplotlib
 matplotlib.use('TkAgg')
+
+from sklearn.ensemble import RandomForestRegressor as RFR
+from sklearn.ensemble import GradientBoostingRegressor as GBR
+from sklearn.multioutput import MultiOutputRegressor as MOR
 
 sys.path.append('.')
 from config import cfg
 
-from run.tools import signal_to_XY, plot_time_series
 from utils import set_random_seed,initiate_cfg
-from data import make_data_loader
-from engine.inference import inference
-
 from utils.threshold import calc_thresholds
+
+from run.tools import signal_to_XY, plot_time_series
+
+def train(cfg):
+    # get data
+    X_train,Y_train = signal_to_XY(cfg, is_train=True)
+    num_samples,_,_ = X_train.shape
+    # 为了使用模型，需要将数据转换为二维形式
+    X_train_reshaped = X_train.reshape(num_samples, -1)
+    Y_train_reshaped = Y_train.reshape(num_samples, -1)
+    # 训练模型
+    # model = RFR(n_estimators=100)
+    model = MOR(GBR(n_estimators=100))
+    model.fit(X_train_reshaped, Y_train_reshaped)
+    
+    return model
 
 def sort_list(path_list):
     try:
@@ -31,24 +45,22 @@ def sort_list(path_list):
     except Exception as e:
         raise e
 
-
 def full_roll_test(cfg, model, threshold):
     cont = Path(cfg.INFERENCE.TEST_CONTENT)
     files = sort_list(list(cont.glob('*.csv')))
     res = {}
     for file in files:
         logger.info('Start to test file: {}'.format(file.stem))
-        X,Y = signal_to_XY(cfg, is_train=False, path = file)
-        test_loader = make_data_loader(cfg, X,Y, is_train=False)
-        error_list = inference(cfg, model, test_loader)
-        errors = torch.stack(error_list)
-        if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-
-        logger.info('Current file index: {}'.format(file.stem))
-        logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
-                    .format(errors.max().item(), errors.min().item(), errors.mean().item()))
-        
-        unknown_errors_arr = errors.numpy()
+        # 测试集数据
+        X_test,Y_test = signal_to_XY(cfg, is_train=False)
+        X_test_reshaped = X_test.reshape(X_test.shape[0], -1)
+        Y_test_reshaped = Y_test.reshape(Y_test.shape[0], -1)
+        # 测试集预测
+        Y_test_pred = model.predict(X_test_reshaped)
+        sample_mae = np.mean(np.abs(Y_test_reshaped - Y_test_pred), axis=1)
+        logger.info("Test MAE: {:.4f}".format(np.mean(sample_mae)))
+       
+        unknown_errors_arr = sample_mae
         num_greater_than_threshold = (unknown_errors_arr > threshold).sum()
         ratio = num_greater_than_threshold / unknown_errors_arr.size
         res[file.stem] = (num_greater_than_threshold, ratio)
@@ -56,7 +68,7 @@ def full_roll_test(cfg, model, threshold):
         print("大于阈值的元素比例：", ratio)
     
     res_series = pd.Series({k: v[1] for k, v in res.items()})
-    plot_time_series(cfg, res_series)
+    plot_time_series(cfg, res_series, suffix='ERT')
     return res
 
 def main(extra_cfg_path = ''):
@@ -69,20 +81,22 @@ def main(extra_cfg_path = ''):
 
     # train
     logger.info("feature(s) used: {}".format(', '.join(cfg.FEATURE.USED_F)))
-    from run.train import train
-    model,_ = train(cfg, save=True)
+    model = train(cfg)
 
     # calculate threshold
     logger.info('Start to calculate threshold...')
-    X,Y = signal_to_XY(cfg, is_train=True)
-    normal_loader = make_data_loader(cfg, X,Y, is_train=False)
-    error_list = inference(cfg, model, normal_loader)
-    errors = torch.stack(error_list)
-    if(cfg.DEVICE != "cpu"): errors = errors.cpu()
-    logger.info('Normal signal: Max error {:.4f} , Min error {:.4f}， Mean error {:.4f}'
-                .format(errors.max().item(), errors.min().item(), errors.mean().item()))
-    errors_arr = errors.numpy()
-    thresholds = calc_thresholds(errors_arr, method = cfg.FEATURE.USED_THRESHOLD)
+    # get data
+    X_train,Y_train = signal_to_XY(cfg, is_train=True)
+    num_samples,_,_ = X_train.shape
+    # 为了使用模型，需要将数据转换为二维形式
+    X_train_reshaped = X_train.reshape(num_samples, -1)
+    Y_train_reshaped = Y_train.reshape(num_samples, -1)
+    # 重新计算训练集的预测值和MAE
+    Y_train_pred = model.predict(X_train_reshaped)
+    train_mae = np.mean(np.abs(Y_train_reshaped - Y_train_pred), axis=1)
+    logger.info("Train MAE: {:.4f}".format(np.mean(train_mae)))
+    # 计算阈值
+    thresholds = calc_thresholds(train_mae, method = cfg.FEATURE.USED_THRESHOLD)
     threshold = thresholds['Z']
 
     # full roll test
@@ -95,4 +109,4 @@ def main(extra_cfg_path = ''):
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_test.yml')
+    main('./ERT/ERT_config.yml')

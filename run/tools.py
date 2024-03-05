@@ -1,10 +1,14 @@
 import sys
 from loguru import logger
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from torch import stack as tstack
 import torch.nn as nn
+
+import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter, AutoDateLocator
 
 sys.path.append('.')
 from utils import  sheet_cut
@@ -65,6 +69,11 @@ def signal_to_XY(cfg, is_train=True, path = None):
     n,_ = signal.shape # 1958912
     piece = cfg.DESIGN.PIECE
     subl = cfg.DESIGN.SUBLEN
+
+    # 去噪
+    if(cfg.DENOISE.NEED):
+        logger.info('start to denoise...')
+        signal = array_denoise(signal, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
     
     # 判断采样点数是否足够
     assert n > piece + subl, f"原始采样点数为{n}，所需采样点数为{piece}+{subl}={piece+subl}，无法达标"
@@ -127,6 +136,40 @@ def set_train_model(cfg):
 
     return model
 
-def denoise(arr, cfg):
-    denoised_arr = array_denoise(arr, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
-    return denoised_arr
+def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
+    # 尝试检测索引类型（时间戳或整数）
+    try:
+        # 尝试将索引转换为DatetimeIndex
+        temp_index = pd.to_datetime(series.index, format='%Y.%m.%d.%H.%M.%S', errors='raise')
+        # 如果成功，假设是时间戳
+        is_timestamp = True
+    except ValueError:
+        # 转换失败，假设是整数
+        is_timestamp = False
+
+    if is_timestamp:
+        # 使用日期格式化
+        x = temp_index
+        plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
+        plt.gca().xaxis.set_major_locator(AutoDateLocator())
+    else:
+        # 索引被假设为整数，直接使用
+        x = pd.RangeIndex(start=0, stop=len(series))
+    
+    cont = Path(cfg.INFERENCE.TEST_CONTENT)
+    y = series.values
+    interval = len(x) // 10
+    xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
+
+    import matplotlib
+    matplotlib.use('TkAgg')
+
+    plt.plot(x, y, label='ratio of elements greater than threshold')
+    plt.ylim(0, 1)
+    plt.xticks(ticks=range(0, len(series), interval), labels=xticks, rotation=45)
+    plt.title(cont.stem)  # 假设cont是一个Path对象
+    plt.legend()
+
+    save_path = f'output/{cont.stem}_{suffix}.png'
+    plt.savefig(save_path)
+    plt.show()

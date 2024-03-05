@@ -46,6 +46,7 @@ _C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SMOOTH_STEP = 3
 _C.DENOISE.WAVELET = 'db4'
 _C.DENOISE.LEVEL = 4
+_C.DENOISE.SHOW_NEED = False
 
 # -----------------------------------------------------------------------------
 # FEATURE

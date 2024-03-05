@@ -3,6 +3,7 @@ DEVICE: 'cpu'
 FEATURE:
   USED_F: ['KV']
   NEED_VIEW: True
+  USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 TRAIN:
   NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
@@ -10,7 +11,9 @@ TRAIN:
 
 INFERENCE:
   UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/61.csv'
+  TEST_CONTENT: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
+
 
 LOG:
-  OUTPUT_TO_FILE: False
+  OUTPUT_TO_FILE: TRUE
   PREFIX: "ERT" 
