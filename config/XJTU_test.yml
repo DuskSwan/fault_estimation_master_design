@@ -2,6 +2,13 @@ FEATURE:
   USED_F: ['KV']
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
+DENOISE:
+  NEED: False
+  METHOD: 'wavelet'
+  WAVELET: 'db4'
+  LEVEL: 3
+  SHOW_NEED: False
+
 TRAIN:
   NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
   

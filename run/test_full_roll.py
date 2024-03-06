@@ -95,4 +95,4 @@ def main(extra_cfg_path = ''):
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_test.yml')
+    main('./config/IMS_test.yml')

@@ -158,15 +158,18 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     
     cont = Path(cfg.INFERENCE.TEST_CONTENT)
     y = series.values
-    interval = len(x) // 10
+    interval = len(x) // 10 if len(x) >=50 else 1
     xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
-
+    
+    if(cfg.DENOISE.SHOW_NEED):
+        y = array_denoise(y, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
+    
     import matplotlib
     matplotlib.use('TkAgg')
 
     plt.plot(x, y, label='ratio of elements greater than threshold')
     plt.ylim(0, 1)
-    plt.xticks(ticks=range(0, len(series), interval), labels=xticks, rotation=45)
+    plt.xticks(xticks, rotation=45)
     plt.title(cont.stem)  # 假设cont是一个Path对象
     plt.legend()
 
