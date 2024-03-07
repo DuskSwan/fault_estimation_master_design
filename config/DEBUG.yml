@@ -1,0 +1,26 @@
+DESIGN:
+  FPIECE: 50 # num of pieces drawed from feature series
+
+FEATURE:
+  USED_F: ['SV']
+  USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
+
+DENOISE:
+  NEED: True
+  METHOD: 'wavelet'
+  WAVELET: 'db4'
+  LEVEL: 3
+  SHOW_NEED: True
+
+TRAIN:
+  NORMAL_PATH: 'data\datasets\cincinatiIMS\1st_test_4bearing\2003.10.22.12.06.24.csv'
+  FAULT_PATH: 'data\datasets\cincinatiIMS\1st_test_4bearing\2003.11.25.23.39.56.csv'
+  
+INFERENCE:
+  UNKWON_PATH: 'data\datasets\cincinatiIMS\1st_test_4bearing\2003.11.25.23.39.56.csv'
+  MODEL_PATH: 'output/ims_lstm.pth'
+  TEST_CONTENT: 'data\datasets\cincinatiIMS\1st_test_4bearing'
+
+LOG:
+  OUTPUT_TO_FILE: True
+  PREFIX: "DEBUG"

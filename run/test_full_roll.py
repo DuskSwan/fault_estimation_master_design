@@ -5,7 +5,6 @@ from loguru import logger
 from pathlib import Path
 
 import torch
-import numpy as np
 import pandas as pd
 
 import matplotlib
@@ -14,7 +13,7 @@ matplotlib.use('TkAgg')
 sys.path.append('.')
 from config import cfg
 
-from run.tools import signal_to_XY, plot_time_series
+from run.tools import signal_to_XY, plot_time_series, save_arraylike
 from utils import set_random_seed,initiate_cfg
 from data import make_data_loader
 from engine.inference import inference
@@ -57,7 +56,7 @@ def full_roll_test(cfg, model, threshold):
     
     res_series = pd.Series({k: v[1] for k, v in res.items()})
     plot_time_series(cfg, res_series)
-    return res
+    return res_series
 
 def main(extra_cfg_path = ''):
 
@@ -87,11 +86,11 @@ def main(extra_cfg_path = ''):
 
     # full roll test
     res = full_roll_test(cfg, model, threshold)
+    # save_arraylike(res, 'output', 'full_roll_test_result')
 
     # result
     logger.info('File index, ratio of elements greater than threshold')
-    for idx,v in res.items():
-        logger.info('{}, {:.4f}'.format(idx, v[1]))
+    logger.info(res)
     
 
 if __name__ == '__main__':

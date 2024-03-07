@@ -161,18 +161,33 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     interval = len(x) // 10 if len(x) >=50 else 1
     xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
     
-    if(cfg.DENOISE.SHOW_NEED):
-        y = array_denoise(y, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
-    
     import matplotlib
     matplotlib.use('TkAgg')
 
     plt.plot(x, y, label='ratio of elements greater than threshold')
-    plt.ylim(0, 1)
+
+    if(cfg.DENOISE.SHOW_NEED):
+        denoised_y = array_denoise(y, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
+        plt.plot(x, denoised_y, label='denoised ratio')
+
+    # plt.ylim(0, 1)
     plt.xticks(xticks, rotation=45)
     plt.title(cont.stem)  # 假设cont是一个Path对象
     plt.legend()
 
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)
-    plt.show()
+    # plt.show()
+
+def save_arraylike(arraylike, cont, name):
+    save_cont = Path(cont)
+    if not save_cont.exists():
+        save_cont.mkdir(parents=True, exist_ok=True)
+    if(isinstance(arraylike, np.ndarray)):
+        path = save_cont / f'{name}.npy'
+        np.save(path, arraylike)
+    elif(isinstance(arraylike, pd.Series)):
+        path = save_cont / f'{name}.csv'
+        arraylike.to_csv(path)
+    else:    
+        raise ValueError('arraylike should be np.ndarray or pd.Series')

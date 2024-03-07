@@ -6,7 +6,7 @@ DENOISE:
   NEED: False
   METHOD: 'wavelet'
   WAVELET: 'db4'
-  LEVEL: 3
+  LEVEL: 4
   SHOW_NEED: False
 
 TRAIN:

@@ -29,8 +29,8 @@ def train(cfg):
     X_train_reshaped = X_train.reshape(num_samples, -1)
     Y_train_reshaped = Y_train.reshape(num_samples, -1)
     # 训练模型
-    # model = RFR(n_estimators=100)
-    model = MOR(GBR(n_estimators=100))
+    model = RFR(n_estimators=100)
+    # model = MOR(GBR(n_estimators=100))
     model.fit(X_train_reshaped, Y_train_reshaped)
     
     return model
@@ -52,7 +52,7 @@ def full_roll_test(cfg, model, threshold):
     for file in files:
         logger.info('Start to test file: {}'.format(file.stem))
         # 测试集数据
-        X_test,Y_test = signal_to_XY(cfg, is_train=False)
+        X_test,Y_test = signal_to_XY(cfg, is_train=False, path = file)
         X_test_reshaped = X_test.reshape(X_test.shape[0], -1)
         Y_test_reshaped = Y_test.reshape(Y_test.shape[0], -1)
         # 测试集预测
@@ -104,9 +104,8 @@ def main(extra_cfg_path = ''):
 
     # result
     logger.info('File index, ratio of elements greater than threshold')
-    for idx,v in res.items():
-        logger.info('{}, {:.4f}'.format(idx, v[1]))
+    logger.info(res)
     
 
 if __name__ == '__main__':
-    main('./ERT/ERT_config.yml')
+    main('./config/IMS_test.yml')
