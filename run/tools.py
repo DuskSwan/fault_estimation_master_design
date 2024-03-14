@@ -164,20 +164,26 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     import matplotlib
     matplotlib.use('TkAgg')
 
-    plt.plot(x, y, label='ratio of elements greater than threshold')
+    if(not cfg.DENOISE.SHOW_ONLY):
+        plt.plot(x, y)
 
     if(cfg.DENOISE.SHOW_NEED):
-        denoised_y = array_denoise(y, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
-        plt.plot(x, denoised_y, label='denoised ratio')
+        denoised_y = array_denoise(y, 
+                                   method=cfg.DENOISE.SHOW_METHOD, 
+                                   step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
+                                   wavelet=cfg.DENOISE.SHOW_WAVELET, 
+                                   level=cfg.DENOISE.SHOW_LEVEL)
+        plt.plot(x, denoised_y)
 
     # plt.ylim(0, 1)
+    plt.xlabel('Time' if is_timestamp else 'Index')
     plt.xticks(xticks, rotation=45)
-    plt.title(cont.stem)  # 假设cont是一个Path对象
-    plt.legend()
+    plt.title(cont.stem + ' ratio of elements greater than threshold')  # 假设cont是一个Path对象
+    # plt.legend()
 
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)
-    # plt.show()
+    plt.show()
 
 def save_arraylike(arraylike, cont, name):
     save_cont = Path(cont)

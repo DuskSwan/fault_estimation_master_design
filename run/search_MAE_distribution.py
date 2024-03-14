@@ -2,6 +2,7 @@
 
 import sys
 from loguru import logger
+from pathlib import Path
 
 import torch
 import matplotlib
@@ -47,7 +48,8 @@ def main(extra_cfg_path = ''):
     # draw fault signal indicator
     plt.axvline(x = errors.mean(), linestyle='--', color='black', label='mean MAE (fault)')
 
-    plt.title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
+    title = f'MAE distribution {Path(cfg.INFERENCE.UNKWON_PATH).stem}({cfg.FEATURE.USED_F[0]})'
+    plt.title(title)
     plt.legend()
     plt.show()
 
@@ -64,4 +66,4 @@ def main(extra_cfg_path = ''):
 
 if __name__ == '__main__':
     cfg.LOG.OUTPUT_TO_FILE = False
-    main('./config/XJTU_test.yml')
+    main('./config/CWRU_test.yml')

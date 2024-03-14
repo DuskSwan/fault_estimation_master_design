@@ -6,11 +6,12 @@ FEATURE:
   USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
 
 DENOISE:
-  NEED: True
+  NEED: False
   METHOD: 'wavelet'
   WAVELET: 'db4'
   LEVEL: 3
   SHOW_NEED: True
+  SHOW_ONLY: True
 
 TRAIN:
   NORMAL_PATH: 'data\datasets\cincinatiIMS\1st_test_4bearing\2003.10.22.12.06.24.csv'

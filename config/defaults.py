@@ -41,12 +41,18 @@ _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 # DENOISE
 # -----------------------------------------------------------------------------
 _C.DENOISE = CN()
-_C.DENOISE.NEED = True
+_C.DENOISE.NEED = False
 _C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SMOOTH_STEP = 3
 _C.DENOISE.WAVELET = 'db4'
 _C.DENOISE.LEVEL = 4
 _C.DENOISE.SHOW_NEED = False
+_C.DENOISE.SHOW_ONLY = False # if only show the denoised signal
+_C.DENOISE.SHOW_METHOD = 'wavelet' # 'smooth' or 'wavelet'
+_C.DENOISE.SHOW_SMOOTH_STEP = 3
+_C.DENOISE.SHOW_WAVELET = 'db4'
+_C.DENOISE.SHOW_LEVEL = 4
+
 
 # -----------------------------------------------------------------------------
 # FEATURE

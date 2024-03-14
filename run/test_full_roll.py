@@ -55,16 +55,28 @@ def full_roll_test(cfg, model, threshold):
         print("大于阈值的元素比例：", ratio)
     
     res_series = pd.Series({k: v[1] for k, v in res.items()})
-    plot_time_series(cfg, res_series)
+
+    # plot_time_series(cfg, res_series)
     return res_series
 
-def main(extra_cfg_path = ''):
+def draw_series_from_file(cfg, path):
+    df = pd.read_csv(path, index_col=0)
+    s = df['0']
+    plot_time_series(cfg, s)
+
+def main(extra_cfg_path = '', draw_from_file = False):
 
     set_random_seed(cfg.SEED)
     initiate_cfg(cfg, extra_cfg_path)
 
     logger.info("In device {}".format(cfg.DEVICE))
     logger.info("Running with config:\n{}".format(cfg))
+
+    # draw series from file
+    if(draw_from_file):
+        path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + cfg.FEATURE.USED_F[0] + '.csv'
+        draw_series_from_file(cfg, path)
+        return
 
     # train
     logger.info("feature(s) used: {}".format(', '.join(cfg.FEATURE.USED_F)))
@@ -86,12 +98,15 @@ def main(extra_cfg_path = ''):
 
     # full roll test
     res = full_roll_test(cfg, model, threshold)
-    # save_arraylike(res, 'output', 'full_roll_test_result')
+    save_name = Path(cfg.INFERENCE.TEST_CONTENT).stem + cfg.FEATURE.USED_F[0] 
+    save_arraylike(res, 'output', save_name)
 
     # result
     logger.info('File index, ratio of elements greater than threshold')
     logger.info(res)
+
     
 
 if __name__ == '__main__':
-    main('./config/IMS_test.yml')
+    main('./config/DEBUG.yml', draw_from_file = True)
+    
