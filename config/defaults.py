@@ -46,8 +46,7 @@ _C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SMOOTH_STEP = 3
 _C.DENOISE.WAVELET = 'db4'
 _C.DENOISE.LEVEL = 4
-_C.DENOISE.SHOW_NEED = False
-_C.DENOISE.SHOW_ONLY = False # if only show the denoised signal
+_C.DENOISE.SHOW_TYPE = 'both' # 'denoised only' or 'both' or 'original only'
 _C.DENOISE.SHOW_METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SHOW_SMOOTH_STEP = 3
 _C.DENOISE.SHOW_WAVELET = 'db4'
@@ -84,7 +83,7 @@ _C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = r'data\datasets\XJTU-SY\Bearing1_1\61.csv'
 _C.INFERENCE.MODEL_PATH = r'output\model.pth'
 _C.INFERENCE.TEST_CONTENT = r'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
-
+_C.INFERENCE.MAE_ratio_threshold = 0.5
 
 # -----------------------------------------------------------------------------
 # DataLoader

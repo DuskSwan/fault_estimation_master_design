@@ -164,20 +164,47 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     import matplotlib
     matplotlib.use('TkAgg')
 
-    if(not cfg.DENOISE.SHOW_ONLY):
+    if(cfg.DENOISE.SHOW_TYPE == 'original only'):
         plt.plot(x, y)
-
-    if(cfg.DENOISE.SHOW_NEED):
+        idx = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
+        plt.scatter(x[idx], y[idx], c='r', label='MAE ratio > threshold')
+        plt.text(x[idx], y[idx], f'({x[idx]})', ha='right', color='r')
+    elif(cfg.DENOISE.SHOW_TYPE == 'denoised only'):
         denoised_y = array_denoise(y, 
                                    method=cfg.DENOISE.SHOW_METHOD, 
                                    step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
                                    wavelet=cfg.DENOISE.SHOW_WAVELET, 
                                    level=cfg.DENOISE.SHOW_LEVEL)
         plt.plot(x, denoised_y)
+        idx = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
+        plt.scatter(x[idx], denoised_y[idx], c='r', label='MAE ratio > threshold')
+        plt.text(x[idx], denoised_y[idx], f'({x[idx]})', color='r',
+                 ha='right')
+    elif(cfg.DENOISE.SHOW_TYPE == 'both'):
+        plt.plot(x, y, label='original')
+        denoised_y = array_denoise(y, 
+                                   method=cfg.DENOISE.SHOW_METHOD, 
+                                   step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
+                                   wavelet=cfg.DENOISE.SHOW_WAVELET, 
+                                   level=cfg.DENOISE.SHOW_LEVEL)
+        plt.plot(x, denoised_y, label='denoised')
+
+        idx1 = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
+        plt.scatter(x[idx1], y[idx1], label='original ratio > threshold')
+        plt.text(x[idx1], y[idx1], f'({x[idx1]})', color='r',
+                 ha='right')
+
+        idx2 = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
+        plt.scatter(x[idx2], denoised_y[idx2], label='denoised MAE ratio > threshold')
+        plt.text(x[idx2], denoised_y[idx2], f'({x[idx2]})', color='r',
+                 ha='right')
+    else:
+        raise ValueError('cfg.DENOISE.SHOW_TYPE should be one of "original only", "denoised only", "both"')
+    plt.axhline(y=cfg.INFERENCE.MAE_ratio_threshold, linestyle='--', color='r', label='threshold')
 
     # plt.ylim(0, 1)
     plt.xlabel('Time' if is_timestamp else 'Index')
-    plt.xticks(xticks, rotation=45)
+    plt.xticks(xticks)
     plt.title(cont.stem + ' ratio of elements greater than threshold')  # 假设cont是一个Path对象
     # plt.legend()
 
