@@ -55,8 +55,6 @@ def full_roll_test(cfg, model, threshold):
         print("大于阈值的元素比例：", ratio)
     
     res_series = pd.Series({k: v[1] for k, v in res.items()})
-
-    # plot_time_series(cfg, res_series)
     return res_series
 
 def draw_series_from_file(cfg, path):
@@ -104,9 +102,9 @@ def main(extra_cfg_path = '', draw_from_file = False):
     # result
     logger.info('File index, ratio of elements greater than threshold')
     logger.info(res)
-
+    plot_time_series(cfg, res)
     
 
 if __name__ == '__main__':
-    main('./config/DEBUG.yml', draw_from_file = True)
+    main('./config/XJTU_test.yml', draw_from_file = False)
     

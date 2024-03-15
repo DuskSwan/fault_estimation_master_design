@@ -14,9 +14,33 @@ def wavelet_denoise(signal, wavelet='db4', level=2):
     thresholded_coeffs = [pywt.threshold(detail, value=0.5*max(detail)) for detail in coeffs[1:]]
     
     # Reconstruct the denoised signal
-    denoised_signal = pywt.waverec([coeffs[0]] + thresholded_coeffs, wavelet)
+    denoised_signal = pywt.waverec([coeffs[0]] + thresholded_coeffs, wavelet, mode='sym')
+    # Adjust the length of the denoised signal to match the original signal
+    if len(denoised_signal) > len(signal):
+        denoised_signal = denoised_signal[:len(signal)]
+    elif len(denoised_signal) < len(signal):
+        denoised_signal = np.pad(denoised_signal, (0, len(signal) - len(denoised_signal)), 'constant')
     
+    assert len(denoised_signal) == len(signal), "Denoised signal has different length from the original signal"
+
+
     return denoised_signal
+
+def array_denoise(array, method='smooth', step=3, wavelet='db4', level=4):
+    if array.ndim == 1: 
+        if method == 'smooth': denoised_array = smooth_denoise(array, step=step)
+        elif method == 'wavelet': denoised_array = wavelet_denoise(array, wavelet=wavelet, level=level)
+        else: raise ValueError("Invalid denoising method")
+        return denoised_array
+    elif array.ndim == 2:
+        denoised_array = np.zeros_like(array)
+        for i in range(array.shape[1]):
+            signal = array[:, i]
+            if method == 'smooth': denoised_signal = smooth_denoise(signal, step=step)
+            elif method == 'wavelet': denoised_signal = wavelet_denoise(signal, wavelet=wavelet, level=level)
+            else: raise ValueError("Invalid denoising method")
+            denoised_array[:, i] = denoised_signal
+        return denoised_array
 
 def array_denoise(array, method='smooth', step=3, wavelet='db4', level=4):
     if array.ndim == 1: 

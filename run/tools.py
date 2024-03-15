@@ -137,6 +137,9 @@ def set_train_model(cfg):
     return model
 
 def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
+
+    logger.info('Start to plot time series \n {}'.format(series))
+
     # 尝试检测索引类型（时间戳或整数）
     try:
         # 尝试将索引转换为DatetimeIndex
@@ -204,9 +207,9 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 
     # plt.ylim(0, 1)
     plt.xlabel('Time' if is_timestamp else 'Index')
-    plt.xticks(xticks)
+    plt.xticks(xticks,rotation=45)
     plt.title(cont.stem + ' ratio of elements greater than threshold')  # 假设cont是一个Path对象
-    # plt.legend()
+    plt.legend()
 
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)

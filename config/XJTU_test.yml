@@ -7,15 +7,15 @@ DENOISE:
   METHOD: 'wavelet'
   WAVELET: 'db4'
   LEVEL: 4
-  SHOW_NEED: False
+  SHOW_TYPE: 'both'
 
 TRAIN:
-  NORMAL_PATH: 'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+  NORMAL_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_3\1.csv'
   
 INFERENCE:
   UNKWON_PATH: 'data/datasets/XJTU-SY/Bearing1_1/61.csv'
   MODEL_PATH: 'output/xjtu_lstm.pth'
-  TEST_CONTENT: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
+  TEST_CONTENT: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_3'
 
 LOG:
   OUTPUT_TO_FILE: True
