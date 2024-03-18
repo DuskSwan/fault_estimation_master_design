@@ -166,6 +166,7 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     
     import matplotlib
     matplotlib.use('TkAgg')
+    plt.figure(figsize=(12,10))
 
     if(cfg.DENOISE.SHOW_TYPE == 'original only'):
         plt.plot(x, y)
@@ -213,7 +214,10 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)
-    plt.show()
+    # plt.show()
+
+    logger.info(f'Plot saved at {save_path}')
+    return save_path
 
 def save_arraylike(arraylike, cont, name):
     save_cont = Path(cont)

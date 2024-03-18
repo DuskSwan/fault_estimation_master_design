@@ -106,5 +106,5 @@ def main(extra_cfg_path = '', draw_from_file = False):
     
 
 if __name__ == '__main__':
-    main('./config/XJTU_test.yml', draw_from_file = False)
+    main('./config/IMS_test.yml', draw_from_file = True)
     

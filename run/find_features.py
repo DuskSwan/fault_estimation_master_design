@@ -20,7 +20,7 @@ def main(extra_cfg_path = ''):
 
     # calculate features and rank
     ranked_feat = view_features_DTW(cfg)
-    logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+    logger.info("features ranked:\n{}".format('\n'.join(f"'{k}': {v}," for k, v in ranked_feat))) 
 
 if __name__ == '__main__':
-    main('config/IMS_find.yml')
+    main('config/XJTU_find.yml')
