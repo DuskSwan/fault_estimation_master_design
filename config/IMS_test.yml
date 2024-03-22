@@ -2,11 +2,11 @@ DESIGN:
   FPIECE: 100 # num of pieces drawed from feature series
 
 FEATURE:
-  USED_F: ['SRA']
+  USED_F: ['MF']
   USED_THRESHOLD: ['Z']
 
 DENOISE:
-  SHOW_TYPE: 'original only'
+  SHOW_TYPE: 'both'
   SHOW_METHOD: 'wavelet'
   SHOW_WAVELET: 'db4'
   SHOW_LEVEL: 4

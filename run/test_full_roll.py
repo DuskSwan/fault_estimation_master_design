@@ -57,10 +57,10 @@ def full_roll_test(cfg, model, threshold):
     res_series = pd.Series({k: v[1] for k, v in res.items()})
     return res_series
 
-def draw_series_from_file(cfg, path):
+def draw_series_from_file(cfg, path, suffix='ErrRatio'):
     df = pd.read_csv(path, index_col=0)
     s = df['0']
-    plot_time_series(cfg, s)
+    plot_time_series(cfg, s, suffix)
 
 def main(extra_cfg_path = '', draw_from_file = False):
 
@@ -73,7 +73,7 @@ def main(extra_cfg_path = '', draw_from_file = False):
     # draw series from file
     if(draw_from_file):
         path = 'output/' + Path(cfg.INFERENCE.TEST_CONTENT).stem + cfg.FEATURE.USED_F[0] + '.csv'
-        draw_series_from_file(cfg, path)
+        draw_series_from_file(cfg, path, suffix=cfg.FEATURE.USED_F[0])
         return
 
     # train
@@ -102,9 +102,9 @@ def main(extra_cfg_path = '', draw_from_file = False):
     # result
     logger.info('File index, ratio of elements greater than threshold')
     logger.info(res)
-    plot_time_series(cfg, res)
+    plot_time_series(cfg, res, suffix=cfg.FEATURE.USED_F[0])
     
 
 if __name__ == '__main__':
-    main('./config/IMS_test.yml', draw_from_file = True)
+    main('./config/XJTU_test.yml', draw_from_file = False)
     

@@ -2,8 +2,8 @@ FEATURE:
   NEED_VIEW: True
 
 TRAIN:
-  NORMAL_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1\4.csv'
-  FAULT_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1\123.csv'
+  NORMAL_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_3\4.csv'
+  FAULT_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_3\371.csv'
 
 LOG:
   OUTPUT_TO_FILE: True

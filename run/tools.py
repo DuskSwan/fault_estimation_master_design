@@ -214,7 +214,7 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)
-    # plt.show()
+    plt.show()
 
     logger.info(f'Plot saved at {save_path}')
     return save_path

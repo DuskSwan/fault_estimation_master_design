@@ -178,9 +178,9 @@ def IMS_result():
     df4 = make_df([scores40, scores41, scores42, scores43])
 
     print('bearing3:\n',df3.loc['sum'].sort_values(ascending=False))
-    print('bearing3:\n',df4.loc['sum'].sort_values(ascending=False))
+    print('bearing4:\n',df4.loc['sum'].sort_values(ascending=False))
 
-def XJTU_result():
+def XJTU_result1():
     scores11 = {'Kurtosis': 7.8072704636987025,
 'CrestFactor': 7.690300003170081,
 'ShapeFactor': 7.6876649956822405,
@@ -408,6 +408,266 @@ def XJTU_result():
     print('bearing1_2\n',df2.loc['sum'].sort_values(ascending=False))
     print('bearing1_3\n',df3.loc['sum'].sort_values(ascending=False))
 
+    allsum = df1.loc['sum'] + df2.loc['sum'] + df3.loc['sum']
+    print('allsum\n',allsum.sort_values(ascending=False))
+
+def XJTU_result2():
+    scores21 = {'Mean': 8.467143067849367,
+'Min': 7.642808805919589,
+'Sra': 7.094355668111491,
+'Meanf': 7.076950226956278,
+'Skewness': 6.911193259581527,
+'Kurtosis': 6.869318434118262,
+'Max': 6.6944641979346455,
+'Peak2Peak': 6.576687354921837,
+'MarginFactor': 6.466972667512353,
+'ShapeFactor': 6.405391078176406,
+'KurtosisFactor': 6.369463839205887,
+'CrestFactor': 6.339496210466262,
+'ImpulseFactor': 6.336996558722014,
+'Var': 6.330355783633206,
+'Rms': 6.230189307347706,
+'Std': 6.228996278090349,
+'Rmsf': 6.217241885900485,
+'Rvf': 6.108714244571685,}
+    scores22 = {'Min': 8.772729683023078,
+'Rmsf': 7.34681563664361,
+'Rms': 7.341953901480595,
+'Std': 7.3363908545637795,
+'Var': 7.310141128787135,
+'Kurtosis': 7.1891675296297946,
+'Skewness': 6.98546562654044,
+'Peak2Peak': 6.953010327616055,
+'Mean': 6.8384334345260225,
+'Meanf': 6.824388987156615,
+'KurtosisFactor': 6.787624585400758,
+'Sra': 6.582846705335877,
+'Rvf': 6.406594130976789,
+'ShapeFactor': 6.344790873952411,
+'Max': 6.235281705999212,
+'MarginFactor': 6.196759700202167,
+'ImpulseFactor': 6.15713271445666,
+'CrestFactor': 6.0802635606879045,}
+    scores23 = {'Mean': 9.989221095159508,
+'Min': 8.151114305786937,
+'Max': 8.118598337736755,
+'Rvf': 7.85034862552819,
+'Var': 7.774680170236857,
+'Std': 7.707008873213866,
+'Rms': 7.69343515347006,
+'Rmsf': 7.684984336376063,
+'Kurtosis': 7.249364111478217,
+'Meanf': 7.24629508050127,
+'Peak2Peak': 7.010972688477915,
+'Sra': 6.843681647979098,
+'MarginFactor': 6.639355080364469,
+'Skewness': 6.638743491655684,
+'KurtosisFactor': 6.329620270139598,
+'ShapeFactor': 5.855253487623134,
+'ImpulseFactor': 5.722914434038559,
+'CrestFactor': 5.634316803489959,}
+    scores24 = {'Min': 8.064142090500935,
+'Skewness': 8.05423224384666,
+'Mean': 7.935008598517297,
+'Meanf': 7.143145060484857,
+'MarginFactor': 7.023709029114078,
+'Rvf': 6.983422208170579,
+'KurtosisFactor': 6.774448077134672,
+'Sra': 6.746756934236231,
+'ImpulseFactor': 6.643509147364769,
+'CrestFactor': 6.604438258123109,
+'ShapeFactor': 6.464064834553778,
+'Var': 6.396261619427623,
+'Std': 6.389769657855561,
+'Rms': 6.381997697217834,
+'Rmsf': 6.377806008759627,
+'Peak2Peak': 6.366529396452222,
+'Kurtosis': 6.244955714986885,
+'Max': 6.196573835869254,}
+
+    scores41 = {'Meanf': 7.777453971472921,
+'Mean': 7.4852598926194105,
+'Max': 7.222525334025923,
+'Sra': 7.213200141437772,
+'Peak2Peak': 7.102345824555767,
+'Rvf': 6.899061389352864,
+'Skewness': 6.732679055805821,
+'Rmsf': 6.6447200442891265,
+'Rms': 6.643169093558432,
+'Std': 6.641919384658227,
+'Var': 6.619331124642541,
+'KurtosisFactor': 6.563502287046797,
+'Min': 6.5079601832134095,
+'MarginFactor': 6.442277127821546,
+'Kurtosis': 6.408187024958284,
+'ShapeFactor': 6.099415823964588,
+'ImpulseFactor': 6.074032623370119,
+'CrestFactor': 5.901528088489538,}
+    scores42 = {}
+    scores43 = {}
+    scores44 = {}
+
+    scores51 = {'Meanf': 8.331316172917452,
+'Kurtosis': 7.852653094581876,
+'KurtosisFactor': 7.764225500158407,
+'Sra': 7.218645531718993,
+'Max': 6.875987833765521,
+'Skewness': 6.823154013112344,
+'Rvf': 6.708455294270326,
+'ShapeFactor': 6.6694929688289895,
+'Min': 6.52227686538585,
+'Std': 6.328283239677212,
+'Rms': 6.324882014426761,
+'Rmsf': 6.322756432244465,
+'Var': 6.304317689177573,
+'MarginFactor': 6.185422609594428,
+'Peak2Peak': 6.125731150012393,
+'CrestFactor': 5.821307585121518,
+'Mean': 5.811613860215129,
+'ImpulseFactor': 5.561228458611778,}
+    scores52 = {'MarginFactor': 8.931730748416344,
+'CrestFactor': 8.926868918664635,
+'ImpulseFactor': 8.783352586676507,
+'Skewness': 8.616401587194098,
+'ShapeFactor': 8.489482126134853,
+'Peak2Peak': 8.207183380028246,
+'Kurtosis': 8.106082580915714,
+'Min': 8.032803337250453,
+'KurtosisFactor': 7.727702805900689,
+'Max': 7.500609419320083,
+'Mean': 7.201115375042973,
+'Sra': 7.012934115469715,
+'Meanf': 6.87830457865347,
+'Rmsf': 6.401328747151744,
+'Rms': 6.395706884872888,
+'Std': 6.394522500001996,
+'Var': 6.3940676854029785,
+'Rvf': 6.1507968266453945,}
+    scores53 = {'ShapeFactor': 8.713391741164383,
+'Max': 8.438402212055351,
+'Var': 8.327144569007764,
+'Std': 8.317583826849171,
+'Rms': 8.313796593200667,
+'Rmsf': 8.312261710316438,
+'Sra': 8.296870088320771,
+'Rvf': 8.096924544145484,
+'CrestFactor': 7.970231919174781,
+'Peak2Peak': 7.931128121692996,
+'Skewness': 7.634219859692219,
+'ImpulseFactor': 7.519487876051499,
+'KurtosisFactor': 7.198072199820109,
+'MarginFactor': 7.113602243074347,
+'Meanf': 6.712673978704867,
+'Min': 6.3040265952624335,
+'Mean': 6.090611745325446,
+'Kurtosis': 5.521928288647356,}
+    scores54 = {'Kurtosis': 8.286808642317595,
+'Meanf': 7.749290843447847,
+'Skewness': 7.641202288666918,
+'Min': 7.423105347913468,
+'ShapeFactor': 7.1401507836094575,
+'Peak2Peak': 6.985410501803656,
+'CrestFactor': 6.778777258090756,
+'KurtosisFactor': 6.6627291347351925,
+'ImpulseFactor': 6.573092605532976,
+'Max': 6.421637778720671,
+'Sra': 6.299651885780543,
+'Rvf': 6.134182341073078,
+'Rmsf': 6.062299719106845,
+'Rms': 6.057649061147634,
+'Std': 6.057209846133649,
+'Mean': 6.009138917693827,
+'Var': 6.00386690279136,
+'MarginFactor': 5.896450262254957,}
+
+    df2 = make_df([scores21, scores22])
+    df4 = make_df([scores41])
+    df5 = make_df([scores51, scores52, scores53, scores54])
+
+    print('bearing2\n',df2.loc['sum'].sort_values(ascending=False))
+    print('bearing4\n',df4.loc['sum'].sort_values(ascending=False))
+    print('bearing5\n',df5.loc['sum'].sort_values(ascending=False))
+
+    allsum = df2.loc['sum'] + df4.loc['sum'] + df5.loc['sum']
+    print('allsum\n',allsum.sort_values(ascending=False))
+
+def XJTU_result3():
+    scores31 = {'Peak2Peak': 8.988773104600948,
+'Kurtosis': 8.879376039401121,
+'Max': 8.84644819719045,
+'ShapeFactor': 8.427040008815768,
+'CrestFactor': 8.326559960588149,
+'ImpulseFactor': 8.301202003572712,
+'KurtosisFactor': 8.288758915357409,
+'Mean': 8.222121312418324,
+'Sra': 7.992109154307473,
+'Rvf': 7.899287662847228,
+'Min': 7.639276578199524,
+'MarginFactor': 7.589532338551884,
+'Std': 7.393205379412652,
+'Rms': 7.392956196953712,
+'Rmsf': 7.381326077968161,
+'Var': 7.362800596874793,
+'Skewness': 6.38041425248123,
+'Meanf': 5.700759893056596,}
+    scores32 = {'Min': 8.579781612685451,
+'Mean': 8.237093653022248,
+'Peak2Peak': 7.432700770453404,
+'Rvf': 7.1997187634191295,
+'Max': 7.194051884765718,
+'Sra': 7.133559711062762,
+'Var': 6.997510177367307,
+'Rmsf': 6.980776275685291,
+'Rms': 6.972307783676081,
+'Std': 6.963195501109279,
+'ShapeFactor': 6.914214515228366,
+'Kurtosis': 6.712121700802934,
+'KurtosisFactor': 6.672207074786227,
+'CrestFactor': 6.602935593569651,
+'ImpulseFactor': 6.345632509554063,
+'Skewness': 6.295846022522345,
+'Meanf': 5.4115625405773,
+'MarginFactor': 5.235191677296296,}
+    scores33 = {'Max': 8.979047404468858,
+'Mean': 8.809770742559554,
+'Kurtosis': 8.158161041418515,
+'Sra': 7.243043554656323,
+'Peak2Peak': 7.177685782078596,
+'KurtosisFactor': 7.140041961916205,
+'Var': 7.061373803999948,
+'Rvf': 7.050621952999315,
+'Rms': 7.041340269086837,
+'Rmsf': 7.037336697658254,
+'Std': 7.036357316114049,
+'MarginFactor': 6.983358535719442,
+'Meanf': 6.93538356014072,
+'ImpulseFactor': 6.686485717519689,
+'CrestFactor': 6.683267264336811,
+'ShapeFactor': 6.6633416139343815,
+'Skewness': 6.550041767208194,
+'Min': 6.408498576495164,}
+    scores34 = {'Max': 9.46313102020543,
+'Rvf': 8.24493857208243,
+'ShapeFactor': 7.952363158261498,
+'Peak2Peak': 7.950526431365235,
+'CrestFactor': 7.8356821857335435,
+'Rmsf': 7.7221536981820735,
+'Var': 7.717275442994196,
+'Rms': 7.70725229519814,
+'Std': 7.705758393407544,
+'ImpulseFactor': 7.611383613561666,
+'Meanf': 7.422864536352471,
+'Mean': 7.280713975268909,
+'Sra': 6.906899682342038,
+'Kurtosis': 6.85124112507279,
+'MarginFactor': 6.760212491155476,
+'Skewness': 6.632490126574652,
+'KurtosisFactor': 6.589381588718364,
+'Min': 5.3939196809317576,}
+
+    df3 = make_df([scores31, scores32, scores33, scores34])
+    print('bearing3\n',df3.loc['sum'].sort_values(ascending=False))
+
 if __name__ == '__main__':
-    # IMS_result()
-    XJTU_result()
+    IMS_result()
+    XJTU_result3()
