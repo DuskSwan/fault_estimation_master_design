@@ -179,6 +179,7 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
                                    step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
                                    wavelet=cfg.DENOISE.SHOW_WAVELET, 
                                    level=cfg.DENOISE.SHOW_LEVEL)
+        denoised_y = np.clip(denoised_y, 0, 1)
         plt.plot(x, denoised_y)
         idx = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
         plt.scatter(x[idx], denoised_y[idx], c='r', label='MAE ratio > threshold')
@@ -191,6 +192,7 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
                                    step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
                                    wavelet=cfg.DENOISE.SHOW_WAVELET, 
                                    level=cfg.DENOISE.SHOW_LEVEL)
+        denoised_y = np.clip(denoised_y, 0, 1)
         plt.plot(x, denoised_y, label='denoised')
 
         idx1 = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
