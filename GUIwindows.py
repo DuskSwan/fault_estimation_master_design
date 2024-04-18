@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+#%% import
+
 # utils
 import sys
 import time
@@ -16,6 +18,8 @@ from torch import load as tload
 # draw
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib
+matplotlib.use('TKagg')
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog

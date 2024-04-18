@@ -67,6 +67,10 @@ def modify_file(filename):
         if 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInPrediction.addItems(comunes)\n')
+        # 检测 - 特征选择下拉框
+        if 'self.comboBoxSelectFeaturesInDetection = QtWidgets.QComboBox(self.widgetInDetection)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectFeaturesInDetection = CheckableComboBox(self.widgetInDetection)\n'
+            lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInDetection.addItems(comunes)\n')
         # 指定默认展示页
         if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
