@@ -93,11 +93,11 @@ def signal_to_XY(cfg, is_train=True, path = None):
 
     return feature_cuts_to_XY(cfg, feature_cuts)
 
-def raw_signal_to_errors(cfg, model, is_normal=True) -> np.ndarray:
+def raw_signal_to_errors(cfg, model, is_normal=True, file_path=None) -> np.ndarray:
     logger.info('Start to calculate error scores...(is_normal={})'.format(is_normal))
 
     if(is_normal): X,Y = signal_to_XY(cfg, is_train=True)
-    else: X,Y = signal_to_XY(cfg, is_train=False)
+    else: X,Y = signal_to_XY(cfg, is_train=False, path=file_path)
 
     loader = make_data_loader(cfg, X,Y, is_train=False)
     error_list = inference(cfg, model, loader)

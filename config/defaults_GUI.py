@@ -54,7 +54,7 @@ _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get s
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
-_C.TRAIN.NORMAL_PATH = ''
+_C.TRAIN.NORMAL_PATH = r'data/datasets/XJTU-SY/Bearing1_1/1.csv'
 _C.TRAIN.FAULT_PATH = ''
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHRCKPOINT = False
@@ -67,7 +67,7 @@ _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = ''
 _C.INFERENCE.MODEL_PATH = ''
-
+_C.INFERENCE.TEST_CONTENT = r'data\datasets\XJTU-SY\Bearing1_1'
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -118,3 +118,18 @@ _C.LOG.PREFIX = "GUI_default" # 输出到文件的命名前缀
 _C.DRAW = CN()
 _C.DRAW.HIST_BIN = 18
 _C.DRAW.THRESHOLD_COLORS = ['red','orange','aqua','lime','violet','gold']  # 指定不同的颜色
+
+# -----------------------------------------------------------------------------
+# DENOISE
+# -----------------------------------------------------------------------------
+_C.DENOISE = CN()
+_C.DENOISE.NEED = False
+_C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
+_C.DENOISE.SMOOTH_STEP = 3
+_C.DENOISE.WAVELET = 'db4'
+_C.DENOISE.LEVEL = 4
+_C.DENOISE.SHOW_TYPE = 'both' # 'denoised only' or 'both' or 'original only'
+_C.DENOISE.SHOW_METHOD = 'wavelet' # 'smooth' or 'wavelet'
+_C.DENOISE.SHOW_SMOOTH_STEP = 3
+_C.DENOISE.SHOW_WAVELET = 'db4'
+_C.DENOISE.SHOW_LEVEL = 4

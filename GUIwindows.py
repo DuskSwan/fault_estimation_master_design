@@ -10,8 +10,9 @@ from pathlib import Path
 from loguru import logger
 
 # data
+import numpy as np
 import pandas as pd
-import torch.nn as nn
+# import torch.nn as nn
 from torch import save as tsave
 from torch import load as tload
 
@@ -33,7 +34,7 @@ from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑�
 # self-defined utils
 from config import cfg_GUI
 
-from utils import set_random_seed
+from utils import set_random_seed, sort_list
 from utils.features import view_features_DTW
 from utils.threshold import calc_thresholds
 from run.tools import set_train_model, raw_signal_to_errors
@@ -84,6 +85,9 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     ax.legend()
     frame.layout().addWidget(canvas)
 
+def update_ratio_to_frame(cfg, ratio, frame):
+    pass
+
 #%% 重载窗口类
 
 class GUIWindow(QWidget): 
@@ -96,12 +100,14 @@ class GUIWindow(QWidget):
         super().__init__()
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
-        self.editor.frameInTraining.setLayout(QVBoxLayout())
+        self.editor.frameInTraining.setLayout(QVBoxLayout()) 
+            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入图像，下同
         self.editor.frameInPrediction.setLayout(QVBoxLayout())
+        self.editor.frameInDetection.setLayout(QVBoxLayout())
         
         self.cfg = cfg_GUI
         self.model = None
-        self.refence_errors = []
+        self.refence_errors = np.array([])
 
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
@@ -143,15 +149,41 @@ class GUIWindow(QWidget):
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
 
-    @pyqtSlot() #导入故障信号 for 新数据预测
+    @pyqtSlot() #导入未知信号 for 新数据预测
     def on_btnImportUnknownSignal_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入未知信号","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal imported: {}".format(fname))
         self.cfg.INFERENCE.UNKWON_PATH = fname
+    
+    @pyqtSlot() #导入正常信号 for 故障检测
+    def on_btnImportInferentSignal_Dete_clicked(self):
+        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
+        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        if self.cfg.TRAIN.NORMAL_PATH and Path(self.cfg.TRAIN.NORMAL_PATH).exists():
+            checkAndWarn(self, fname == self.cfg.TRAIN.NORMAL_PATH, 
+                         false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
+        logger.info("Normal signal imported: {}".format(fname))
+        self.cfg.TRAIN.NORMAL_PATH = fname
+    
+    @pyqtSlot() #导入未知信号集 for 故障检测
+    def on_btnImportFullTest_clicked(self):
+        fname = QFileDialog.getExistingDirectory(self, "导入未知信号集","./")
+        # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        logger.info("Unknown signal directory imported: {}".format(fname))
+        self.cfg.INFERENCE.TEST_CONTENT = fname
 
-    @pyqtSlot() #导入预测模型
+    @pyqtSlot() #导入预测模型 for 故障诊断
     def on_btnImportModel_clicked(self):
+        fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
+        logger.info("Model imported: name {}, type {}".format(fname, ftype))
+        if fname and not checkAndWarn(self,fname[-4:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
+        if(fname): 
+            logger.info("Model imported: {}".format(fname))
+            self.model = tload(fname)
+    
+    @pyqtSlot() #导入预测模型 for 故障检测
+    def on_btnImportModel_Dete_clicked(self):
         fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
         logger.info("Model imported: name {}, type {}".format(fname, ftype))
         if fname and not checkAndWarn(self,fname[-4:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
@@ -232,6 +264,7 @@ class GUIWindow(QWidget):
             
     @pyqtSlot() # 对新数据进行预测
     def on_btnPredict_clicked(self):
+        logger.info("Start predicting...")
         logger.info("Start checkout config matching...")
         # 检测是否有未知数据
         if not checkAndWarn(self,self.cfg.INFERENCE.UNKWON_PATH,false_fb="请导入待测信号"): return
@@ -260,6 +293,59 @@ class GUIWindow(QWidget):
         errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
         hist_tied_to_frame(self.cfg, [self.refence_errors,errors], 
                            self.editor.frameInPrediction ,is_train=False)
+    
+    @pyqtSlot() # 对全寿命数据进行故障检测
+    def on_btnDetect_clicked(self):
+        logger.info("Start detecting...")
+        logger.info("Start checkout config matching...")
+        # 检测是否有未知数据
+        if not checkAndWarn(self,self.cfg.INFERENCE.TEST_CONTENT,false_fb="请导入待测信号"): return
+        # 检测是否有正常信号
+        if not checkAndWarn(self,self.cfg.TRAIN.NORMAL_PATH,false_fb="请导入作为参考的正常信号"): return
+        # 检测是否有模型
+        if not checkAndWarn(self,self.model,false_fb="请导入预测模型"): return
+        # 检测是否选择特征
+        pointed_features = self.editor.comboBoxSelectFeaturesInDetection.currentData()
+        if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
+        if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 检查是否已经计算了正常信号的MAE，没有计算则补上
+        if not self.refence_errors.any():
+            logger.info('Start to calculate normal signal MAE...')
+            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+        
+        # 读取模型的输入维数并检查
+        cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
+        logger.info('Full roll test data directory: {}'.format(cont))
+        files = sort_list(list(cont.glob('*.csv')))
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
+        state = (feature_n * data_channel == input_dim)
+        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_channel}、特征数{feature_n}不匹配'): return
+
+        # 计算MAE比较阈值
+        logger.info('Start to calculate threshold...')
+        thresholds = calc_thresholds(self.refence_errors, method = self.cfg.FEATURE.USED_THRESHOLD)
+        threshold = thresholds['Z']
+
+        # 全寿命数据检测
+        res = {}
+        for file in files:
+            logger.info('Current file index: {}'.format(file.stem))
+            unknown_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False, file_path=file)
+            logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
+                        .format(unknown_errors.max().item(), 
+                                unknown_errors.min().item(), 
+                                unknown_errors.mean().item()))
+
+            num_greater_than_threshold = (unknown_errors > threshold).sum()
+            ratio = num_greater_than_threshold / unknown_errors.size
+            res[file.stem] = ratio
+            logger.info(f"大于阈值的元素比例：{ratio}")
+            update_ratio_to_frame(self.cfg, ratio, self.editor.frameInDetection)
+        logger.info('ratio of errors greater than threshold: {}'.format(res))
+        logger.info('Detection finished')
+    
         
 
 #%% 开始运行
