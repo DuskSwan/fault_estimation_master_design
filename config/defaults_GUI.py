@@ -66,8 +66,9 @@ _C.TRAIN.NEED_CHRCKPOINT = False
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = ''
-_C.INFERENCE.MODEL_PATH = ''
+_C.INFERENCE.MODEL_PATH = 'output/xjtu_lstm.pth'
 _C.INFERENCE.TEST_CONTENT = r'data\datasets\XJTU-SY\Bearing1_1'
+_C.INFERENCE.MAE_ratio_threshold = 0.5
 
 # -----------------------------------------------------------------------------
 # DataLoader
@@ -128,7 +129,7 @@ _C.DENOISE.METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SMOOTH_STEP = 3
 _C.DENOISE.WAVELET = 'db4'
 _C.DENOISE.LEVEL = 4
-_C.DENOISE.SHOW_TYPE = 'both' # 'denoised only' or 'both' or 'original only'
+_C.DENOISE.SHOW_TYPE = 'original only' # 'denoised only' or 'both' or 'original only'
 _C.DENOISE.SHOW_METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SHOW_SMOOTH_STEP = 3
 _C.DENOISE.SHOW_WAVELET = 'db4'

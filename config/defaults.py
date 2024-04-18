@@ -81,7 +81,7 @@ _C.TRAIN.NEED_CHRCKPOINT = False
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = r'data\datasets\XJTU-SY\Bearing1_1\61.csv'
-_C.INFERENCE.MODEL_PATH = r'output\model.pth'
+_C.INFERENCE.MODEL_PATH = r''
 _C.INFERENCE.TEST_CONTENT = r'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1'
 _C.INFERENCE.MAE_ratio_threshold = 0.5
 

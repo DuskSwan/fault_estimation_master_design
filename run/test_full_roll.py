@@ -31,7 +31,7 @@ def sort_list(path_list):
         raise e
 
 
-def full_roll_test(cfg, model, threshold):
+def full_roll_test(cfg, model, threshold) -> pd.Series:
     cont = Path(cfg.INFERENCE.TEST_CONTENT)
     files = sort_list(list(cont.glob('*.csv')))
     res = {}

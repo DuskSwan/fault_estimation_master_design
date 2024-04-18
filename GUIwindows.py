@@ -19,8 +19,10 @@ from torch import load as tload
 # draw
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib
-matplotlib.use('TKagg')
+# import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter, AutoDateLocator
+# import matplotlib
+# matplotlib.use('TKagg')
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
@@ -37,6 +39,7 @@ from config import cfg_GUI
 from utils import set_random_seed, sort_list
 from utils.features import view_features_DTW
 from utils.threshold import calc_thresholds
+from utils.denoise import array_denoise
 from run.tools import set_train_model, raw_signal_to_errors
 
 
@@ -85,8 +88,103 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     ax.legend()
     frame.layout().addWidget(canvas)
 
-def update_ratio_to_frame(cfg, ratio, frame):
-    pass
+def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
+    logger.info('Plot time series \n {}'.format(series))
+
+    # Clear the previous canvas from the frame's layout
+    if frame.layout().count() == 1:
+        frame.layout().takeAt(0).widget().deleteLater()
+        logger.info('Previous canvas cleared')
+
+    figure = Figure()
+    canvas = FigureCanvas(figure)
+
+    ax = figure.add_subplot(111)
+    ax.clear()  # Clear the previous plot
+
+    # 尝试检测索引类型（时间戳或整数）
+    try:
+        # 尝试将索引转换为DatetimeIndex
+        temp_index = pd.to_datetime(series.index, format='%Y.%m.%d.%H.%M.%S', errors='raise')
+        # 如果成功，假设是时间戳
+        is_timestamp = True
+    except ValueError:
+        # 转换失败，假设是整数
+        is_timestamp = False
+
+    if is_timestamp:
+        # 使用日期格式化
+        x = temp_index
+        ax.xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
+        ax.xaxis.set_major_locator(AutoDateLocator())
+    else:
+        # 索引被假设为整数，直接使用
+        x = pd.RangeIndex(start=0, stop=len(series))
+    
+    # cont = Path(cfg.INFERENCE.TEST_CONTENT)
+    y = series.values
+    interval = len(x) // 10 if len(x) >=50 else 1
+    xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
+
+    if(cfg.DENOISE.SHOW_TYPE == 'original only'):
+        ax.plot(x, y)
+        idx = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
+        if(idx): # 如果有大于阈值的元素
+            ax.scatter(x[idx], y[idx], c='r', label='MAE ratio > threshold')
+            ax.text(x[idx], y[idx], f'({x[idx]})', ha='right', color='r')
+    elif(cfg.DENOISE.SHOW_TYPE == 'denoised only'):
+        denoised_y = array_denoise(y, 
+                                   method=cfg.DENOISE.SHOW_METHOD, 
+                                   step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
+                                   wavelet=cfg.DENOISE.SHOW_WAVELET, 
+                                   level=cfg.DENOISE.SHOW_LEVEL)
+        denoised_y = np.clip(denoised_y, 0, 1)
+        ax.plot(x, denoised_y)
+        idx = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
+        ax.scatter(x[idx], denoised_y[idx], c='r', label='MAE ratio > threshold')
+        ax.text(x[idx], denoised_y[idx], f'({x[idx]})', color='r',
+                 ha='right')
+    elif(cfg.DENOISE.SHOW_TYPE == 'both'):
+        ax.plot(x, y, label='original')
+        denoised_y = array_denoise(y, 
+                                   method=cfg.DENOISE.SHOW_METHOD, 
+                                   step=cfg.DENOISE.SHOW_SMOOTH_STEP, 
+                                   wavelet=cfg.DENOISE.SHOW_WAVELET, 
+                                   level=cfg.DENOISE.SHOW_LEVEL)
+        denoised_y = np.clip(denoised_y, 0, 1)
+        ax.plot(x, denoised_y, label='denoised')
+
+        idx1 = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
+        ax.scatter(x[idx1], y[idx1], label='original ratio > threshold')
+        ax.text(x[idx1], y[idx1], f'({x[idx1]})', color='r',
+                 ha='right')
+
+        idx2 = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
+        ax.scatter(x[idx2], denoised_y[idx2], label='denoised MAE ratio > threshold')
+        ax.text(x[idx2], denoised_y[idx2], f'({x[idx2]})', color='r',
+                 ha='right')
+    else:
+        raise ValueError('cfg.DENOISE.SHOW_TYPE should be one of "original only", "denoised only", "both"')
+    ax.axhline(y=cfg.INFERENCE.MAE_ratio_threshold, linestyle='--', color='r', label='threshold')
+
+    # set labels
+    ax.set(ylim=(-0.1, 1.15),
+           xlabel = 'Time' if is_timestamp else 'Index',
+           ylabel='y',
+           title = tit + ' ratio of elements greater than threshold'
+           )
+ 
+    ax.set_xticks(xticks)
+    ax.tick_params(axis='x', labelrotation=45)
+    ax.legend()
+    frame.layout().addWidget(canvas)
+
+    # save_path = f'output/{cont.stem}_{suffix}.png'
+    # plt.savefig(save_path)
+    # plt.show()
+
+    # logger.info(f'Plot saved at {save_path}')
+    # return save_path
 
 #%% 重载窗口类
 
@@ -106,7 +204,7 @@ class GUIWindow(QWidget):
         self.editor.frameInDetection.setLayout(QVBoxLayout())
         
         self.cfg = cfg_GUI
-        self.model = None
+        # self.model = None
         self.refence_errors = np.array([])
 
         logger.info("GUI window initialized")
@@ -342,7 +440,8 @@ class GUIWindow(QWidget):
             ratio = num_greater_than_threshold / unknown_errors.size
             res[file.stem] = ratio
             logger.info(f"大于阈值的元素比例：{ratio}")
-            update_ratio_to_frame(self.cfg, ratio, self.editor.frameInDetection)
+            res_series = pd.Series({k: v for k, v in res.items()})
+            update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection, tit=file.stem)
         logger.info('ratio of errors greater than threshold: {}'.format(res))
         logger.info('Detection finished')
     
