@@ -89,12 +89,7 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
     frame.layout().addWidget(canvas)
 
 def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
-    logger.info('Plot time series \n {}'.format(series))
-
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
+    logger.info('Plot time series \n {}'.format(series))    
 
     figure = Figure()
     canvas = FigureCanvas(figure)
@@ -177,14 +172,14 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
     ax.set_xticks(xticks)
     ax.tick_params(axis='x', labelrotation=45)
     ax.legend()
+
+    # Clear the previous canvas from the frame's layout
+    if frame.layout().count() == 1:
+        frame.layout().takeAt(0).widget().deleteLater()
+        logger.info('Previous canvas cleared')
+        
     frame.layout().addWidget(canvas)
 
-    # save_path = f'output/{cont.stem}_{suffix}.png'
-    # plt.savefig(save_path)
-    # plt.show()
-
-    # logger.info(f'Plot saved at {save_path}')
-    # return save_path
 
 #%% 重载窗口类
 
@@ -442,6 +437,7 @@ class GUIWindow(QWidget):
             logger.info(f"大于阈值的元素比例：{ratio}")
             res_series = pd.Series({k: v for k, v in res.items()})
             update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection, tit=file.stem)
+            QApplication.processEvents()
         logger.info('ratio of errors greater than threshold: {}'.format(res))
         logger.info('Detection finished')
     
