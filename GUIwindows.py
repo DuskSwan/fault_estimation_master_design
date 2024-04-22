@@ -26,7 +26,8 @@ from matplotlib.dates import DateFormatter, AutoDateLocator
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
-from PyQt5.QtCore import pyqtSlot #定义信号事件
+from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
+from PyQt5.QtCore import QThread #定义线程
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
@@ -180,6 +181,59 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
         
     frame.layout().addWidget(canvas)
 
+#%% 定义复杂功能的线程
+
+class DetectThread(QThread):
+    signal_turn = pyqtSignal(dict)
+    def __init__(self, cfg, model, frame, refe_errs):
+        super().__init__()
+        self.cfg = cfg
+        self.model = model
+        self.frame = frame
+        self.refence_errors = refe_errs
+    def run(self):   #固定函数，不可变，线程开始自动执行run函数
+
+        # 检查是否已经计算了正常信号的MAE，没有计算则补上
+        if not self.refence_errors.any():
+            logger.info('Start to calculate normal signal MAE...')
+            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+
+        # 读取模型的输入维数并检查
+        cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
+        logger.info('Full roll test data directory: {}'.format(cont))
+        files = sort_list(list(cont.glob('*.csv')))
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
+        state = (feature_n * data_channel == input_dim)
+        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_channel}、特征数{feature_n}不匹配'): return
+
+        # 计算MAE比较阈值
+        logger.info('Start to calculate threshold...')
+        thresholds = calc_thresholds(self.refence_errors, method = self.cfg.FEATURE.USED_THRESHOLD)
+        threshold = thresholds['Z']
+
+        # 全寿命数据检测
+        res = {}
+        for file in files:
+            logger.info('Current file index: {}'.format(file.stem))
+            unknown_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False, file_path=file)
+            logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
+                        .format(unknown_errors.max().item(), 
+                                unknown_errors.min().item(), 
+                                unknown_errors.mean().item()))
+
+            num_greater_than_threshold = (unknown_errors > threshold).sum()
+            ratio = num_greater_than_threshold / unknown_errors.size
+            res[file.stem] = ratio
+            logger.info(f"大于阈值的元素比例：{ratio}")
+            self.signal_turn.emit(res)
+            # res_series = pd.Series({k: v for k, v in res.items()})
+            # update_ratio_to_frame(self.cfg, res_series, self.frame, tit=file.stem)
+            # QApplication.processEvents()
+        logger.info('ratio of errors greater than threshold: {}'.format(res))
+        logger.info('Detection finished')
+        return
 
 #%% 重载窗口类
 
@@ -199,7 +253,7 @@ class GUIWindow(QWidget):
         self.editor.frameInDetection.setLayout(QVBoxLayout())
         
         self.cfg = cfg_GUI
-        # self.model = None
+        self.model = None
         self.refence_errors = np.array([])
 
         logger.info("GUI window initialized")
@@ -401,47 +455,21 @@ class GUIWindow(QWidget):
         pointed_features = self.editor.comboBoxSelectFeaturesInDetection.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
-        # 检查是否已经计算了正常信号的MAE，没有计算则补上
-        if not self.refence_errors.any():
-            logger.info('Start to calculate normal signal MAE...')
-            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
         
-        # 读取模型的输入维数并检查
-        cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
-        logger.info('Full roll test data directory: {}'.format(cont))
-        files = sort_list(list(cont.glob('*.csv')))
-        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
-        feature_n = len(self.cfg.FEATURE.USED_F)
-        state = (feature_n * data_channel == input_dim)
-        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_channel}、特征数{feature_n}不匹配'): return
-
-        # 计算MAE比较阈值
-        logger.info('Start to calculate threshold...')
-        thresholds = calc_thresholds(self.refence_errors, method = self.cfg.FEATURE.USED_THRESHOLD)
-        threshold = thresholds['Z']
-
-        # 全寿命数据检测
-        res = {}
-        for file in files:
-            logger.info('Current file index: {}'.format(file.stem))
-            unknown_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False, file_path=file)
-            logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
-                        .format(unknown_errors.max().item(), 
-                                unknown_errors.min().item(), 
-                                unknown_errors.mean().item()))
-
-            num_greater_than_threshold = (unknown_errors > threshold).sum()
-            ratio = num_greater_than_threshold / unknown_errors.size
-            res[file.stem] = ratio
-            logger.info(f"大于阈值的元素比例：{ratio}")
-            res_series = pd.Series({k: v for k, v in res.items()})
-            update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection, tit=file.stem)
-            QApplication.processEvents()
-        logger.info('ratio of errors greater than threshold: {}'.format(res))
-        logger.info('Detection finished')
+        logger.info("Set Detecion Thread...")
+        self.decodethread = DetectThread(self.cfg, 
+                                         self.model, 
+                                         self.editor.frameInDetection, 
+                                         self.refence_errors)     #配置线程
+        logger.info("Start detection thread...")
+        self.decodethread.start()  # 启动线程
+        self.decodethread.signal_turn.connect(self.DetectionTurnDraw) #绑定信号函数
+        # self.source, self.jiema, self.yuzhi = decode(in_path) #原来执行函数的语句
+        print("Thread finished") 
     
-        
+    def DetectionTurnDraw(self, res):
+        res_series = pd.Series({k: v for k, v in res.items()})
+        update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection)
 
 #%% 开始运行
 
