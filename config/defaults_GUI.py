@@ -20,6 +20,7 @@ _C.OUTPUT.MODEL_NAME = "model.pth"
 # MODEL
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
+_C.MODEL.NAME = 'LSTM' # 'LSTM' or 'LAN'
 _C.MODEL.LSTM_HIDDEN = 10
 _C.MODEL.LINE_HIDDEN = 16
 _C.MODEL.USED_LAYERS = 1
