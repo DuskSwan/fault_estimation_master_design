@@ -185,11 +185,10 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
 
 class DetectThread(QThread):
     signal_turn = pyqtSignal(dict)
-    def __init__(self, cfg, model, frame, refe_errs):
+    def __init__(self, cfg, model, refe_errs):
         super().__init__()
         self.cfg = cfg
         self.model = model
-        self.frame = frame
         self.refence_errors = refe_errs
     def run(self):   #固定函数，不可变，线程开始自动执行run函数
 
@@ -234,6 +233,31 @@ class DetectThread(QThread):
         logger.info('ratio of errors greater than threshold: {}'.format(res))
         logger.info('Detection finished')
         return
+
+class PredictThread(QThread):
+    signal_finish = pyqtSignal(list)
+    def __init__(self, cfg, model, refe_errs):
+        super().__init__()
+        self.cfg = cfg
+        self.model = model
+        self.refence_errors = refe_errs
+    def run(self):
+        # 检查是否已经计算了正常信号的MAE，没有计算则补上
+        if not self.refence_errors.any():
+            logger.info('Start to calculate normal signal MAE...')
+            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+        
+        # 读取模型的输入维数并检查
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
+        state = (feature_n * data_tunnel == input_dim)
+        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
+
+        # 计算未知信号MAE
+        logger.info('Start to calculate unknown signal MAE...')
+        errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
+        self.signal_finish.emit([self.refence_errors, errors])
 
 #%% 重载窗口类
 
@@ -423,22 +447,34 @@ class GUIWindow(QWidget):
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
-        # 检查是否已经计算了正常信号的MAE，没有计算则补上
-        if not self.refence_errors.any():
-            logger.info('Start to calculate normal signal MAE...')
-            self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
+        # # 检查是否已经计算了正常信号的MAE，没有计算则补上
+        # if not self.refence_errors.any():
+        #     logger.info('Start to calculate normal signal MAE...')
+        #     self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
         
-        # 读取模型的输入维数并检查
-        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
-        feature_n = len(self.cfg.FEATURE.USED_F)
-        state = (feature_n * data_tunnel == input_dim)
-        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
+        # # 读取模型的输入维数并检查
+        # input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        # data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        # feature_n = len(self.cfg.FEATURE.USED_F)
+        # state = (feature_n * data_tunnel == input_dim)
+        # if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
 
-        # 计算未知信号MAE
-        logger.info('Start to calculate unknown signal MAE...')
-        errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
-        hist_tied_to_frame(self.cfg, [self.refence_errors,errors], 
+        # # 计算未知信号MAE
+        # logger.info('Start to calculate unknown signal MAE...')
+        # errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
+
+        logger.info("Set Prediction Thread...")
+        self.predict_thread = PredictThread(self.cfg,
+                                       self.model,
+                                       self.refence_errors)     #配置线程
+        self.predict_thread.signal_finish.connect(self.PredictionDraw) #绑定信号函数
+        logger.info("Start prediction thread...")
+        self.predict_thread.start()  # 启动线程
+        print("Thread finished") 
+
+    def PredictionDraw(self, errs: list[np.array, np.array]):
+        # errs = [self.refence_errors, errors]
+        hist_tied_to_frame(self.cfg, errs, 
                            self.editor.frameInPrediction ,is_train=False)
     
     @pyqtSlot() # 对全寿命数据进行故障检测
@@ -457,14 +493,12 @@ class GUIWindow(QWidget):
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
         
         logger.info("Set Detecion Thread...")
-        self.decodethread = DetectThread(self.cfg, 
+        self.detect_thread = DetectThread(self.cfg, 
                                          self.model, 
-                                         self.editor.frameInDetection, 
                                          self.refence_errors)     #配置线程
+        self.detect_thread.signal_turn.connect(self.DetectionTurnDraw) #绑定信号函数
         logger.info("Start detection thread...")
-        self.decodethread.start()  # 启动线程
-        self.decodethread.signal_turn.connect(self.DetectionTurnDraw) #绑定信号函数
-        # self.source, self.jiema, self.yuzhi = decode(in_path) #原来执行函数的语句
+        self.detect_thread.start()  # 启动线程
         print("Thread finished") 
     
     def DetectionTurnDraw(self, res):
