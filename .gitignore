@@ -8,3 +8,4 @@ data/datasets/BUCT/
 # exe file
 build
 dist
+*.spec

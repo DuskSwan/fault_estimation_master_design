@@ -1,5 +1,27 @@
 # -*- coding: utf-8 -*-
 
+
+#%% 设置环境变量
+
+# import PyQt5.QtCore as QtCore
+# version = QtCore.PYQT_VERSION_STR
+# print(f"PyQt5 version:{version}")
+
+# import os,sys
+# print(sys.path)
+
+# base_path = os.path.dirname(sys.executable) # 环境所在路径
+# plugin_path = os.path.join(base_path, "Library", "plugins")
+# platforms_path = os.path.join(plugin_path, "platforms")
+
+# os.environ["QT_PLUGIN_PATH"] = plugin_path
+# os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = platforms_path
+
+
+# os.environ["QT_PLUGIN_PATH"] = r'D:\anaconda3\Library\plugins' # yes
+# os.environ["QT_PLUGIN_PATH"] = r'D:\anaconda3\envs\fault_estimate\Library\plugins' # yes
+# os.environ["QT_PLUGIN_PATH"] = r'D:\Anaconda3\envs\fault_estimate\Lib\site-packages\PyQt5\Qt5\plugins' # no
+
 #%% import
 
 # utils
@@ -227,12 +249,9 @@ class DetectThread(QThread):
             res[file.stem] = ratio
             logger.info(f"大于阈值的元素比例：{ratio}")
             self.signal_turn.emit(res)
-            # res_series = pd.Series({k: v for k, v in res.items()})
-            # update_ratio_to_frame(self.cfg, res_series, self.frame, tit=file.stem)
-            # QApplication.processEvents()
         logger.info('ratio of errors greater than threshold: {}'.format(res))
         logger.info('Detection finished')
-        return
+
 
 class PredictThread(QThread):
     signal_finish = pyqtSignal(list)
@@ -447,21 +466,6 @@ class GUIWindow(QWidget):
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
-        # # 检查是否已经计算了正常信号的MAE，没有计算则补上
-        # if not self.refence_errors.any():
-        #     logger.info('Start to calculate normal signal MAE...')
-        #     self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
-        
-        # # 读取模型的输入维数并检查
-        # input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        # data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
-        # feature_n = len(self.cfg.FEATURE.USED_F)
-        # state = (feature_n * data_tunnel == input_dim)
-        # if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
-
-        # # 计算未知信号MAE
-        # logger.info('Start to calculate unknown signal MAE...')
-        # errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
 
         logger.info("Set Prediction Thread...")
         self.predict_thread = PredictThread(self.cfg,
@@ -470,7 +474,7 @@ class GUIWindow(QWidget):
         self.predict_thread.signal_finish.connect(self.PredictionDraw) #绑定信号函数
         logger.info("Start prediction thread...")
         self.predict_thread.start()  # 启动线程
-        print("Thread finished") 
+        logger.info("Thread finished") 
 
     def PredictionDraw(self, errs: list[np.array, np.array]):
         # errs = [self.refence_errors, errors]
@@ -499,7 +503,7 @@ class GUIWindow(QWidget):
         self.detect_thread.signal_turn.connect(self.DetectionTurnDraw) #绑定信号函数
         logger.info("Start detection thread...")
         self.detect_thread.start()  # 启动线程
-        print("Thread finished") 
+        logger.info("Thread finished") 
     
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
@@ -514,4 +518,9 @@ w = GUIWindow()
 w.show()
 
 n = app.exec()
+
+#%% 删除临时变量
+# os.environ.pop("QT_PLUGIN_PATH", None)
+# os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH", None)
+
 sys.exit(n)
