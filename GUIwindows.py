@@ -1,27 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-#%% 设置环境变量
-
-# import PyQt5.QtCore as QtCore
-# version = QtCore.PYQT_VERSION_STR
-# print(f"PyQt5 version:{version}")
-
-# import os,sys
-# print(sys.path)
-
-# base_path = os.path.dirname(sys.executable) # 环境所在路径
-# plugin_path = os.path.join(base_path, "Library", "plugins")
-# platforms_path = os.path.join(plugin_path, "platforms")
-
-# os.environ["QT_PLUGIN_PATH"] = plugin_path
-# os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = platforms_path
-
-
-# os.environ["QT_PLUGIN_PATH"] = r'D:\anaconda3\Library\plugins' # yes
-# os.environ["QT_PLUGIN_PATH"] = r'D:\anaconda3\envs\fault_estimate\Library\plugins' # yes
-# os.environ["QT_PLUGIN_PATH"] = r'D:\Anaconda3\envs\fault_estimate\Lib\site-packages\PyQt5\Qt5\plugins' # no
-
 #%% import
 
 # utils
@@ -249,7 +227,7 @@ class DetectThread(QThread):
             res[file.stem] = ratio
             logger.info(f"大于阈值的元素比例：{ratio}")
             self.signal_turn.emit(res)
-        logger.info('ratio of errors greater than threshold: {}'.format(res))
+        logger.info('ratio dict: {}'.format(res))
         logger.info('Detection finished')
 
 
@@ -426,6 +404,14 @@ class GUIWindow(QWidget):
         # 判断是否导入正常信号
         if not checkAndWarn(self, self.cfg.TRAIN.NORMAL_PATH,
                             false_fb="数据缺失，请导入正常信号"): return
+        # 检查正常信号的长度是否符合cfg要求
+        normal_data = pd.read_csv(self.cfg.TRAIN.NORMAL_PATH)
+        n,_ = normal_data.shape
+        if not n > self.cfg.DESIGN.PIECE + self.cfg.DESIGN.SUBLEN:
+            logger.warning(f"正常信号长度{n}不符合要求，至少需要{self.cfg.DESIGN.PIECE + self.cfg.DESIGN.SUBLEN}个采样点")
+            self.cfg.DESIGN.FPIECE = (n - self.cfg.DESIGN.SUBLEN) // self.cfg.DESIGN.FSUBLEN
+            self.cfg.DESIGN.PIECE = self.cfg.DESIGN.FPIECE * self.cfg.DESIGN.FSUBLEN
+            logger.warning(f"已重设fpiece为{self.cfg.DESIGN.FPIECE}，piece为{self.cfg.DESIGN.PIECE}")
         
         # 开始训练
         logger.info("Start training with config:{}".format(self.cfg))
@@ -518,9 +504,4 @@ w = GUIWindow()
 w.show()
 
 n = app.exec()
-
-#%% 删除临时变量
-# os.environ.pop("QT_PLUGIN_PATH", None)
-# os.environ.pop("QT_QPA_PLATFORM_PLUGIN_PATH", None)
-
 sys.exit(n)

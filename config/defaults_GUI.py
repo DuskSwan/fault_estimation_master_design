@@ -55,7 +55,7 @@ _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get s
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
-_C.TRAIN.NORMAL_PATH = r'data/datasets/XJTU-SY/Bearing1_1/1.csv'
+_C.TRAIN.NORMAL_PATH = ''
 _C.TRAIN.FAULT_PATH = ''
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHRCKPOINT = False
