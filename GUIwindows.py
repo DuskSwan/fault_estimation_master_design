@@ -17,13 +17,9 @@ from torch import save as tsave
 from torch import load as tload
 
 # draw
-# import matplotlib.pyplot as plt
-# import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
-# import matplotlib
-# matplotlib.use('TKagg')
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
