@@ -187,7 +187,7 @@ RVF = Rvf
 
 # 功能函数
 
-def view_features_DTW(cfg):
+def view_features_DTW(cfg, need_feat = False):
     # 分别提取特征
     tpaths = [cfg.TRAIN.NORMAL_PATH, cfg.TRAIN.FAULT_PATH]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
@@ -219,7 +219,12 @@ def view_features_DTW(cfg):
     elif(cfg.FEATURE.CHANNEL_SCORE_MODE=='every'): show_dict = feat_mark
     ranked_feat = sorted(show_dict.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
     # for k,v in ranked_feat: print('{:20}: dtw= {:.6f} '.format(k,v))
-    return ranked_feat
+
+    # 如果需要特征，返回正常信号的特征，这是为了绘制热力图
+    if(need_feat): 
+        return ranked_feat, feat_with_classes[0]
+    else:
+        return ranked_feat
 
 def merge_dict_by_suffix(diction):
     # 根据键值的后缀名来合并字典
@@ -238,7 +243,7 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
     """
     sample_list是时间序列切片得到的样本集，是三维数组（单个样本是二维数组），每个样本计算一个向量作为特征
     output_type指定输出类型的数组（np）还是数据表（pd）
-    输出特征组成的时间序列，是二维数组
+    输出特征组成的时间序列，为二维数组，每行是一个样本的特征，每列是一个特征
     """
     feature_df = pd.DataFrame([])
     _,_,n_tun = sample_list.shape #读取通道数
@@ -257,7 +262,7 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
     elif(output_type=='np'): return feature_df.values
     else: raise ValueError('unknown output_type '+output_type)
 
-def extract_features(signal, prefix='', feat_func_name_list = None):
+def extract_features(signal, prefix='', feat_func_name_list = None) -> dict:
     '''
     该函数针对一段信号，提取出全部的特征，返回特征构成的(特征名，特征值)字典
     prefix是保存名字时的前缀

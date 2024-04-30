@@ -17,9 +17,10 @@ from torch import save as tsave
 from torch import load as tload
 
 # draw
+# import matplotlib.pyplot as plt
+# import seaborn as sns
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-# import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, AutoDateLocator
 # import matplotlib
 # matplotlib.use('TKagg')
@@ -181,6 +182,31 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
         
     frame.layout().addWidget(canvas)
 
+def draw_heatmap(df, frame):
+    # Clear the previous canvas from the frame's layout
+    if frame.layout().count() == 1:
+        frame.layout().takeAt(0).widget().deleteLater()
+        logger.info('Previous canvas cleared')
+    figure = Figure()
+    canvas = FigureCanvas(figure)
+
+    ax = figure.add_subplot(111)
+    ax.clear()  # Clear the previous plot
+
+    corr = df.corr()
+    # 绘制热力图
+    cax = ax.matshow(corr, cmap='coolwarm')
+    figure.colorbar(cax)
+
+    # 设置轴标签
+    ax.set_xticks(np.arange(len(corr.columns)))
+    ax.set_yticks(np.arange(len(corr.columns)))
+    ax.set_xticklabels(corr.columns, rotation=90)
+    ax.set_yticklabels(corr.columns)
+    ax.set_title('Correlation Heatmap of Features')
+
+    frame.layout().addWidget(canvas)
+
 #%% 定义复杂功能的线程
 
 class DetectThread(QThread):
@@ -272,6 +298,7 @@ class GUIWindow(QWidget):
             # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入图像，下同
         self.editor.frameInPrediction.setLayout(QVBoxLayout())
         self.editor.frameInDetection.setLayout(QVBoxLayout())
+        self.editor.frameInFeatures.setLayout(QVBoxLayout())
         
         self.cfg = cfg_GUI
         self.model = None
@@ -361,15 +388,22 @@ class GUIWindow(QWidget):
     
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
+        # 检查是否导入了正常与故障信号
         state = self.cfg.TRAIN.NORMAL_PATH and self.cfg.TRAIN.FAULT_PATH
         if not checkAndWarn(self,state,
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
                             True): return
- 
+
+        # 计算DTW得分
         logger.info("Search propre features...")
-        ranked_feat = view_features_DTW(self.cfg) # list with (feature, DTW score)
+        ranked_feat, norm_feat = view_features_DTW(self.cfg, need_feat=True) 
+            # ranked_feat is dict{feature:DTW score}, norm_feat is pd.DataFrame
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+
+        # 绘制热力图
+        logger.info("Draw heat map...")
+        draw_heatmap(norm_feat, self.editor.frameInFeatures)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
