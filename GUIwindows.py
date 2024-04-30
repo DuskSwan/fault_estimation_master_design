@@ -119,7 +119,7 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
     
     # cont = Path(cfg.INFERENCE.TEST_CONTENT)
     y = series.values
-    interval = len(x) // 10 if len(x) >=50 else 1
+    interval = len(x) // 10 if len(x) > 30 else 1
     xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
 
     if(cfg.DENOISE.SHOW_TYPE == 'original only'):
