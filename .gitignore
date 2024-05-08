@@ -9,3 +9,4 @@ data/datasets/BUCT/
 build
 dist
 *.spec
+test.py
