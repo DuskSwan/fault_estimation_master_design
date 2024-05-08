@@ -45,6 +45,7 @@ from run.tools import set_train_model, raw_signal_to_errors
 
 def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
     # 希望handle为真，如果假则会警告，为真则根据需要返回提示
+    # 返回handle的真值
     if not handle:
         QMessageBox.critical(window, "Warning", false_fb, QMessageBox.Ok)
         return False
@@ -312,6 +313,16 @@ class GUIWindow(QWidget):
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
+        # # open multiple files with the .csv extension
+        # file_paths, _ = QFileDialog.getOpenFileNames(self, "导入多个正常信号", "./", "Comma-Separated Values (*.csv)")
+        # # Check if any files were selected
+        # if file_paths:
+        #     self.cfg.TRAIN.NORMAL_PATHS = [] # set empty
+        #     for fname in file_paths:
+        #         # Check if the file has a .csv extension
+        #         if not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        #         logger.info(f"Normal signal imported (in feature selection): {fname}")
+        #         self.cfg.TRAIN.NORMAL_PATHS.append(fname)
 
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):

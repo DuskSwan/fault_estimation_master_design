@@ -49,6 +49,7 @@ _C.FEATURE.USED_F = []
 _C.FEATURE.USED_THRESHOLD  = ['Z']
 _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get sum of differernt channel
     # 'sum' or 'every'
+_C.FEATURE.NORMAL_PATHS = []
 
 # -----------------------------------------------------------------------------
 # TRAIN

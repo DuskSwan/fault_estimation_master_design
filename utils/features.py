@@ -187,21 +187,37 @@ RVF = Rvf
 
 # 功能函数
 
-def view_features_DTW(cfg, need_feat = False):
+def view_features_DTW_with_n_normal(cfg, need_feat = False):
+    pass
+
+def view_features_DTW_with_one_normal(normal_path: str, fault_path: str, 
+                                      feat_max_length = 1024000,
+                                      need_denoise = False,
+                                      denoise_method = 'smooth',
+                                      smooth_step = 3,
+                                      wavelet = 'db4',
+                                      level = 4,
+                                      sublen = 2048,
+                                      channel_score_mode = 'sum',
+                                      need_feat = False):
     # 分别提取特征
-    tpaths = [cfg.TRAIN.NORMAL_PATH, cfg.TRAIN.FAULT_PATH]
+    tpaths = [normal_path, fault_path]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
     for i in range(2): #分别对正常和故障
         data_path = tpaths[i]
         data = pd.read_csv(data_path).values #numpy数组
         n,_ = data.shape
-        length = min(n, cfg.FEATURE.MAX_LENGTH)
+        length = min(n, feat_max_length)
         data = data[:length] #减少所用的信号长度
 
-        if(cfg.DENOISE.NEED):
-            data = array_denoise(data, method=cfg.DENOISE.METHOD, step=cfg.DENOISE.SMOOTH_STEP, wavelet=cfg.DENOISE.WAVELET, level=cfg.DENOISE.LEVEL)
+        if(need_denoise):
+            data = array_denoise(data, 
+                                 method = denoise_method, 
+                                 step = smooth_step, 
+                                 wavelet = wavelet, 
+                                 level = level)
 
-        XY = sheet_cut(data, cfg.DESIGN.SUBLEN, method = 0)
+        XY = sheet_cut(data, sublen, method = 0)
         f_df = signal_to_features_tf(XY, output_type='pd') #提取特征
         feat_with_classes.append(f_df)
 
@@ -215,16 +231,38 @@ def view_features_DTW(cfg, need_feat = False):
         feat_mark[col] = dtws
 
     # 展示得分排序
-    if(cfg.FEATURE.CHANNEL_SCORE_MODE=='sum'): show_dict = merge_dict_by_suffix(feat_mark)
-    elif(cfg.FEATURE.CHANNEL_SCORE_MODE=='every'): show_dict = feat_mark
+    if(channel_score_mode=='sum'): 
+        show_dict = merge_dict_by_suffix(feat_mark)
+    elif(channel_score_mode=='every'): 
+        show_dict = feat_mark
+    else:
+        raise ValueError('unknown channel_score_mode '+channel_score_mode)
     ranked_feat = sorted(show_dict.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
-    # for k,v in ranked_feat: print('{:20}: dtw= {:.6f} '.format(k,v))
 
     # 如果需要特征，返回正常信号的特征，这是为了绘制热力图
     if(need_feat): 
         return ranked_feat, feat_with_classes[0]
     else:
         return ranked_feat
+
+def view_features_DTW(cfg, need_feat = False):
+    '''
+    根据一个正常信号和一个故障信号来筛选特征
+    这是该函数的使用cfg类传递参数的版本，我希望在utils工具中的函数是独立的，因此重写了不使用cfg版本的函数
+    并把该函数重定向到不使用cfg版本的函数
+    '''
+    return view_features_DTW_with_one_normal(
+        normal_path= cfg.TRAIN.NORMAL_PATH,
+        fault_path= cfg.TRAIN.FAULT_PATH,
+        feat_max_length= cfg.FEATURE.MAX_LENGTH,
+        need_denoise= cfg.DENOISE.NEED,
+        denoise_method= cfg.DENOISE.METHOD,
+        smooth_step= cfg.DENOISE.SMOOTH_STEP,
+        wavelet= cfg.DENOISE.WAVELET, 
+        level=cfg.DENOISE.LEVEL,
+        channel_score_mode= cfg.FEATURE.CHANNEL_SCORE_MODE,
+        need_feat= need_feat,
+    )
 
 def merge_dict_by_suffix(diction):
     # 根据键值的后缀名来合并字典
