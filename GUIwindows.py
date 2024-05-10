@@ -63,18 +63,13 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
-def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
+def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
     n_bin = cfg.DRAW.HIST_BIN
     colors = cfg.DRAW.THRESHOLD_COLORS
 
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
-
-    figure = Figure()
-    canvas = FigureCanvas(figure)
-
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
     ax = figure.add_subplot(111)
     ax.clear()  # Clear the previous plot
 
@@ -92,14 +87,16 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
         ax.set_title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
 
     ax.legend()
-    frame.layout().addWidget(canvas)
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
 
-def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
+def update_ratio_to_frame(cfg, series: pd.Series, canvas, tit=''):
     logger.info('Plot time series \n {}'.format(series))    
 
-    figure = Figure()
-    canvas = FigureCanvas(figure)
-
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
     ax = figure.add_subplot(111)
     ax.clear()  # Clear the previous plot
 
@@ -179,12 +176,9 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
     ax.tick_params(axis='x', labelrotation=45)
     ax.legend()
 
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
-        
-    frame.layout().addWidget(canvas)
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
 
 def draw_heatmap(df, canvas):
     '''
@@ -320,13 +314,19 @@ class GUIWindow(QWidget):
             # 添加一个画布到layout中，这里记下来这个画布的名字以便后续更新
         self.canvasInFeatures.installEventFilter(self)
             # 安装事件过滤器到 FigureCanvas 上以便检测鼠标双击事件
-
+        # 对于其余画图的frame，也进行相同的操作
         self.editor.frameInTraining.setLayout(QVBoxLayout()) 
         self.editor.frameInPrediction.setLayout(QVBoxLayout())
         self.editor.frameInDetection.setLayout(QVBoxLayout())
         self.canvasInTraining = FigureCanvas(Figure())
         self.canvasInPrediction = FigureCanvas(Figure()) 
-        self.canvasInDetection = FigureCanvas(Figure()) 
+        self.canvasInDetection = FigureCanvas(Figure())
+        self.editor.frameInTraining.layout().addWidget(self.canvasInTraining)
+        self.editor.frameInPrediction.layout().addWidget(self.canvasInPrediction)
+        self.editor.frameInDetection.layout().addWidget(self.canvasInDetection)
+        self.canvasInTraining.installEventFilter(self)
+        self.canvasInPrediction.installEventFilter(self)
+        self.canvasInDetection.installEventFilter(self)
 
         self.cfg = cfg_GUI
         self.model = None
@@ -534,7 +534,7 @@ class GUIWindow(QWidget):
         self.refence_errors = normal_errors
 
         # 绘制并显示
-        hist_tied_to_frame(self.cfg,normal_errors,self.editor.frameInTraining,is_train=True)
+        hist_tied_to_frame(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
  
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
@@ -575,7 +575,8 @@ class GUIWindow(QWidget):
     def PredictionDraw(self, errs: list[np.array, np.array]):
         # errs = [self.refence_errors, errors]
         hist_tied_to_frame(self.cfg, errs, 
-                           self.editor.frameInPrediction ,is_train=False)
+                           self.canvasInPrediction,
+                           is_train=False)
     
     @pyqtSlot() # 对全寿命数据进行故障检测
     def on_btnDetect_clicked(self):
@@ -603,7 +604,7 @@ class GUIWindow(QWidget):
     
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
-        update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection)
+        update_ratio_to_frame(self.cfg, res_series, self.canvasInDetection)
 
 #%% 开始运行
 
