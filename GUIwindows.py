@@ -35,7 +35,7 @@ from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑�
 from config import cfg_GUI
 
 from utils import set_random_seed, sort_list
-from utils.features import view_features_DTW
+from utils.features import view_features_DTW_with_n_normal
 from utils.threshold import calc_thresholds
 from utils.denoise import array_denoise
 from run.tools import set_train_model, raw_signal_to_errors
@@ -180,6 +180,16 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
     frame.layout().addWidget(canvas)
 
 def draw_heatmap(df, frame):
+    '''
+    Draw a correlation heatmap of the given DataFrame on the specified frame.
+
+    Parameters:
+        df (pandas.DataFrame): The DataFrame containing the data.
+        frame (QFrame): The frame on which the heatmap will be drawn.
+
+    Returns:
+        None
+    '''
     # Clear the previous canvas from the frame's layout
     if frame.layout().count() == 1:
         frame.layout().takeAt(0).widget().deleteLater()
@@ -201,6 +211,11 @@ def draw_heatmap(df, frame):
     ax.set_xticklabels(corr.columns, rotation=90)
     ax.set_yticklabels(corr.columns)
     ax.set_title('Correlation Heatmap of Features')
+
+    # 设置x轴ticks出现在图片下方
+    ax.xaxis.set_ticks_position('bottom')
+    ax.xaxis.set_label_position('bottom')
+    # ax.tick_params(axis='x', bottom=True, labelbottom=True)
 
     frame.layout().addWidget(canvas)
 
@@ -309,20 +324,24 @@ class GUIWindow(QWidget):
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
-        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        logger.info("Normal signal imported: {}".format(fname))
-        self.cfg.TRAIN.NORMAL_PATH = fname
-        # # open multiple files with the .csv extension
-        # file_paths, _ = QFileDialog.getOpenFileNames(self, "导入多个正常信号", "./", "Comma-Separated Values (*.csv)")
-        # # Check if any files were selected
-        # if file_paths:
-        #     self.cfg.TRAIN.NORMAL_PATHS = [] # set empty
-        #     for fname in file_paths:
-        #         # Check if the file has a .csv extension
-        #         if not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        #         logger.info(f"Normal signal imported (in feature selection): {fname}")
-        #         self.cfg.TRAIN.NORMAL_PATHS.append(fname)
+        # fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
+        # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        # logger.info("Normal signal imported: {}".format(fname))
+        # self.cfg.TRAIN.NORMAL_PATH = fname
+
+        # open multiple files with the .csv extension
+        file_paths, _ = QFileDialog.getOpenFileNames(self, "导入正常信号", "./", "Comma-Separated Values (*.csv)")
+        # Check if any files were selected
+        if not file_paths:
+            logger.info("未选择任何文件")
+            return
+        
+        self.cfg.FEATURE.NORMAL_PATHS = [] # set empty
+        for fname in file_paths:
+            # Check if the file has a .csv extension
+            if not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+            logger.info(f"Normal signal imported (in feature selection): {fname}")
+            self.cfg.FEATURE.NORMAL_PATHS.append(fname)
 
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
@@ -396,7 +415,7 @@ class GUIWindow(QWidget):
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
         # 检查是否导入了正常与故障信号
-        state = self.cfg.TRAIN.NORMAL_PATH and self.cfg.TRAIN.FAULT_PATH
+        state = self.cfg.FEATURE.NORMAL_PATHS and self.cfg.TRAIN.FAULT_PATH
         if not checkAndWarn(self,state,
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
@@ -404,13 +423,23 @@ class GUIWindow(QWidget):
 
         # 计算DTW得分
         logger.info("Search propre features...")
-        ranked_feat, norm_feat = view_features_DTW(self.cfg, need_feat=True) 
-            # ranked_feat is dict{feature:DTW score}, norm_feat is pd.DataFrame
-        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+        ranked_feat, feat_df = view_features_DTW_with_n_normal(
+                normal_paths= self.cfg.FEATURE.NORMAL_PATHS,
+                fault_path= self.cfg.TRAIN.FAULT_PATH,
+                feat_max_length= self.cfg.FEATURE.MAX_LENGTH,
+                need_denoise= self.cfg.DENOISE.NEED,
+                denoise_method= self.cfg.DENOISE.METHOD,
+                smooth_step= self.cfg.DENOISE.SMOOTH_STEP,
+                wavelet= self.cfg.DENOISE.WAVELET, 
+                level=self.cfg.DENOISE.LEVEL,
+                channel_score_mode= self.cfg.FEATURE.CHANNEL_SCORE_MODE,
+        )
+            # ranked_feat is list[tuple[str, float]], feat_df is pd.DataFrame
+        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat)))
 
         # 绘制热力图
         logger.info("Draw heat map...")
-        draw_heatmap(norm_feat, self.editor.frameInFeatures)
+        draw_heatmap(feat_df, self.editor.frameInFeatures)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
