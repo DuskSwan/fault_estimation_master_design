@@ -1,61 +1,90 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFrame, QVBoxLayout, QDialog, QGridLayout
-from PyQt5.QtCore import Qt, QEvent
+import tempfile
+import matplotlib.pyplot as plt
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFrame, QVBoxLayout, QGridLayout
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5.QtCore import QEvent
+
+class CustomFigureCanvas(FigureCanvas):
+    def __init__(self, figure):
+        super().__init__(figure)
+
+class EnlargedWindow(QMainWindow):
+    def __init__(self, image_path):
+        super().__init__()
+
+        # 设置窗口标题并创建中央部件
+        self.setWindowTitle("Enlarged Plot")
+        central_widget = QFrame(self)
+        central_widget.setLayout(QGridLayout())
+        self.setCentralWidget(central_widget)
+
+        # 创建一个新的 Figure 和 FigureCanvas
+        new_figure = Figure(figsize=(24, 18))
+        new_canvas = FigureCanvas(new_figure)
+        central_widget.layout().addWidget(new_canvas, 0, 0)
+
+        # 从临时文件中读取并绘制在新的 figure 上
+        new_ax = new_figure.add_subplot(111)
+        new_ax.imshow(plt.imread(image_path))
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.setWindowTitle('PyQt5 Double Click Plot Example')
-        self.setGeometry(100, 100, 800, 600)
+        # 设置窗口标题和尺寸
+        self.setWindowTitle('Enlarged Plot Example')
+        self.setGeometry(100, 100, 1000, 800)
 
-        # 创建一个QFrame作为中央部件
+        # 创建一个 QFrame 并设置为中央部件
         self.frame = QFrame(self)
         self.frame.setLayout(QVBoxLayout())
         self.setCentralWidget(self.frame)
 
-        # 在QFrame中创建Matplotlib图形
-        self.figure = Figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.frame.layout().addWidget(self.canvas)
+        # 创建 Figure 和 CustomFigureCanvas 对象
+        self.figure1 = Figure()
+        self.canvas1 = CustomFigureCanvas(self.figure1)
+        self.frame.layout().addWidget(self.canvas1)
+
+        # 安装事件过滤器到 CustomFigureCanvas 上
+        self.canvas1.installEventFilter(self)
 
         # 在画布上绘制示例图形
-        self.ax = self.figure.add_subplot(111)
-        self.ax.hist([10, 20, 30, 40, 50, 60, 70, 80, 90], bins=10, color='blue', label='Histogram')
-        self.ax.legend()
+        self.plot_example(self.figure1)
 
-        # 为 FigureCanvas 设置鼠标双击事件过滤器
-        self.canvas.installEventFilter(self)
+        # 用于保持新窗口的引用
+        self.enlarged_window = None
 
     def eventFilter(self, source, event):
-        # 如果事件来源是 FigureCanvas 且事件类型是鼠标双击
-        if source == self.canvas and event.type() == QEvent.MouseButtonDblClick:
-            if event.button() == Qt.LeftButton:
-                self.show_in_new_window()
+        if event.type() == QEvent.MouseButtonDblClick and isinstance(source, CustomFigureCanvas):
+            self.show_in_new_window(source.figure)
             return True
         return super(MainWindow, self).eventFilter(source, event)
 
-    def show_in_new_window(self):
-        # 创建并打开一个新的对话框窗口，以显示较大的图
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Larger Plot")
-        dialog.setLayout(QGridLayout())
-
-        # 为对话框创建一个较大的画布，设置较大的 figsize
-        figure = Figure(figsize=(10, 8))  # 调整画布大小（单位：英寸）
-        canvas = FigureCanvas(figure)
-        dialog.layout().addWidget(canvas, 0, 0)
-
-        # 在新画布上重新绘制当前图形
+    def plot_example(self, figure):
+        """
+        绘制示例图
+        """
         ax = figure.add_subplot(111)
-        ax.hist([10, 20, 30, 40, 50, 60, 70, 80, 90], bins=10, color='blue', label='Histogram')
+        ax.plot([0, 1, 2, 3], [10, 20, 25, 30], marker='o', label='Line Plot')
+        ax.set_title('Original Plot')
+        ax.set_xlabel('X Axis')
+        ax.set_ylabel('Y Axis')
         ax.legend()
+        figure.canvas.draw()
 
-        # 显示新的对话框
-        dialog.resize(1000, 800)  # 调整新窗口的大小
-        dialog.exec_()
+    def show_in_new_window(self, figure):
+        """
+        在最大化的新窗口中显示复制的图形
+        """
+        # 保存原始 figure 到临时文件
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+            figure.savefig(temp_file.name, dpi=300)
+
+        # 打开一个最大化的新窗口并保持引用
+        self.enlarged_window = EnlargedWindow(temp_file.name)
+        self.enlarged_window.showMaximized()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

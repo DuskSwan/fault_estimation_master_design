@@ -17,19 +17,26 @@ from torch import save as tsave
 from torch import load as tload
 
 # draw
+import tempfile
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
 
 # GUI
-from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
-from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
-from PyQt5.QtCore import QThread #定义线程
+from PyQt5.QtWidgets import QApplication, QWidget #导入窗口类
+from PyQt5.QtWidgets import QFileDialog #导入文件对话框
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
+from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
+from PyQt5.QtWidgets import QMainWindow, QFrame # 打开新窗口
+from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
+from PyQt5.QtCore import QThread #定义线程
+from PyQt5.QtCore import QEvent, Qt #检测事件和键盘按键
 
 from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
+from GUI.OpenPlotFrameExample import EnlargedWindow #导入放大显示图形的窗口类
 
 # self-defined utils
 from config import cfg_GUI
@@ -179,29 +186,26 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
         
     frame.layout().addWidget(canvas)
 
-def draw_heatmap(df, frame):
+def draw_heatmap(df, canvas):
     '''
-    Draw a correlation heatmap of the given DataFrame on the specified frame.
+    Draw a correlation heatmap of the given DataFrame on the specified canvas.
 
     Parameters:
         df (pandas.DataFrame): The DataFrame containing the data.
-        frame (QFrame): The frame on which the heatmap will be drawn.
+        canvas (FigureCanvas): The canvas on which the heatmap will be drawn.
 
     Returns:
         None
     '''
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
-    figure = Figure()
-    canvas = FigureCanvas(figure)
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
 
+    # 在现有 figure 中添加一个新的子图
     ax = figure.add_subplot(111)
-    ax.clear()  # Clear the previous plot
 
+    # 计算相关性矩阵并绘制热力图
     corr = df.corr()
-    # 绘制热力图
     cax = ax.matshow(corr, cmap='coolwarm')
     figure.colorbar(cax)
 
@@ -215,9 +219,10 @@ def draw_heatmap(df, frame):
     # 设置x轴ticks出现在图片下方
     ax.xaxis.set_ticks_position('bottom')
     ax.xaxis.set_label_position('bottom')
-    # ax.tick_params(axis='x', bottom=True, labelbottom=True)
 
-    frame.layout().addWidget(canvas)
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
 
 #%% 定义复杂功能的线程
 
@@ -294,6 +299,7 @@ class PredictThread(QThread):
         errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
         self.signal_finish.emit([self.refence_errors, errors])
 
+
 #%% 重载窗口类
 
 class GUIWindow(QWidget): 
@@ -306,12 +312,22 @@ class GUIWindow(QWidget):
         super().__init__()
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
+
+        self.editor.frameInFeatures.setLayout(QVBoxLayout())
+            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入画布
+        self.canvasInFeatures = FigureCanvas(Figure())
+        self.editor.frameInFeatures.layout().addWidget(self.canvasInFeatures)
+            # 添加一个画布到layout中，这里记下来这个画布的名字以便后续更新
+        self.canvasInFeatures.installEventFilter(self)
+            # 安装事件过滤器到 FigureCanvas 上以便检测鼠标双击事件
+
         self.editor.frameInTraining.setLayout(QVBoxLayout()) 
-            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入图像，下同
         self.editor.frameInPrediction.setLayout(QVBoxLayout())
         self.editor.frameInDetection.setLayout(QVBoxLayout())
-        self.editor.frameInFeatures.setLayout(QVBoxLayout())
-        
+        self.canvasInTraining = FigureCanvas(Figure())
+        self.canvasInPrediction = FigureCanvas(Figure()) 
+        self.canvasInDetection = FigureCanvas(Figure()) 
+
         self.cfg = cfg_GUI
         self.model = None
         self.refence_errors = np.array([])
@@ -321,6 +337,30 @@ class GUIWindow(QWidget):
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         if(self.cfg.LOG.OUTPUT_TO_FILE):
             logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
+    
+    def eventFilter(self, source, event):
+        # 检查事件类型和事件来源是否为 FigureCanvas
+        if isinstance(source, FigureCanvas) \
+                and event.type() == QEvent.MouseButtonDblClick \
+                and event.button() == Qt.LeftButton:
+            logger.info("Double click detected on canvas")
+            self.show_in_new_window(source)
+            return True
+        # logger.info("Event not handled")
+        return super().eventFilter(source, event)
+    
+    def show_in_new_window(self, canvas):
+        """
+        在全屏的新窗口中显示复制的图形
+        """
+        # 保存原始 figure 到临时文件
+        figure = canvas.figure
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+            figure.savefig(temp_file.name, dpi=300)
+
+        # 打开一个最大化的新窗口并保持引用
+        self.enlarged_window = EnlargedWindow(temp_file.name)
+        self.enlarged_window.showMaximized()
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
@@ -439,7 +479,7 @@ class GUIWindow(QWidget):
 
         # 绘制热力图
         logger.info("Draw heat map...")
-        draw_heatmap(feat_df, self.editor.frameInFeatures)
+        draw_heatmap(feat_df, self.canvasInFeatures)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
