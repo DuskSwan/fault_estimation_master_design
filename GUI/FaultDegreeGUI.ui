@@ -20,7 +20,7 @@
       <enum>Qt::LeftToRight</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="PrepareTab">
       <attribute name="title">
@@ -151,7 +151,7 @@
       <attribute name="title">
        <string>模型训练</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="8,1,10">
+      <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="8,1,11">
        <item>
         <widget class="QWidget" name="widgetInTriaining" native="true">
          <layout class="QGridLayout" name="gridLayout_2">
@@ -307,7 +307,7 @@
       <attribute name="title">
        <string>故障诊断</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="10,1,10">
+      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="8,1,12">
        <item>
         <widget class="QWidget" name="widgetInPrediction" native="true">
          <layout class="QGridLayout" name="gridLayout_3">
@@ -503,7 +503,7 @@
       <attribute name="title">
        <string>故障检测</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="10,1,10">
+      <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="8,1,12">
        <item>
         <widget class="QWidget" name="widgetInDetection" native="true">
          <layout class="QGridLayout" name="gridLayout_4">

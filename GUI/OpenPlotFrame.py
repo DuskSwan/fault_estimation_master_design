@@ -27,7 +27,14 @@ class EnlargedWindow(QMainWindow):
 
         # 从临时文件中读取并绘制在新的 figure 上
         new_ax = new_figure.add_subplot(111)
+        new_ax.axis('off')  # 关闭坐标轴
         new_ax.imshow(plt.imread(image_path))
+        new_ax.set_xticks([])  # 关闭刻度
+        new_ax.set_yticks([])
+        new_ax.spines['top'].set_visible(False)  # 关闭边框
+        new_ax.spines['bottom'].set_visible(False)
+        new_ax.spines['left'].set_visible(False)
+        new_ax.spines['right'].set_visible(False)
 
 class MainWindow(QMainWindow):
     def __init__(self):

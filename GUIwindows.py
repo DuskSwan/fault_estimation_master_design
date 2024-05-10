@@ -36,7 +36,7 @@ from PyQt5.QtCore import QThread #定义线程
 from PyQt5.QtCore import QEvent, Qt #检测事件和键盘按键
 
 from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
-from GUI.OpenPlotFrameExample import EnlargedWindow #导入放大显示图形的窗口类
+from GUI.OpenPlotFrame import EnlargedWindow #导入放大显示图形的窗口类
 
 # self-defined utils
 from config import cfg_GUI
@@ -75,7 +75,8 @@ def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
 
     if is_train:
         ax.hist(arrays, bins=n_bin, color='blue', label='normal signal')
-        ax.set_title(cfg.TRAIN.NORMAL_PATH.split('/')[-1] + ' MAE distribution')
+        name = Path(cfg.TRAIN.NORMAL_PATH).stem
+        ax.set_title(name + ' MAE distribution')
     else:
         ax.hist(arrays[0], bins=n_bin, color='blue', label='normal signal')
         ax.hist(arrays[1], bins=18, color='green', label='unknown signal', alpha=0.75)
@@ -84,7 +85,8 @@ def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
         for i, (k, t) in enumerate(thresholds.items()):
             ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))
         ax.axvline(x=arrays[1].mean(), linestyle='--', color='black', label='indicator')
-        ax.set_title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
+        name = Path(cfg.INFERENCE.UNKWON_PATH).stem
+        ax.set_title(name + ' MAE distribution')
 
     ax.legend()
     # 强制刷新画布
@@ -364,11 +366,6 @@ class GUIWindow(QWidget):
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        # fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
-        # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        # logger.info("Normal signal imported: {}".format(fname))
-        # self.cfg.TRAIN.NORMAL_PATH = fname
-
         # open multiple files with the .csv extension
         file_paths, _ = QFileDialog.getOpenFileNames(self, "导入正常信号", "./", "Comma-Separated Values (*.csv)")
         # Check if any files were selected
@@ -500,6 +497,9 @@ class GUIWindow(QWidget):
         self.editor.comboBoxSelectFeaturesInPrediction.clear()
         self.editor.comboBoxSelectFeaturesInPrediction.addItems([i[0] for i in ranked_feat])
         self.editor.comboBoxSelectFeaturesInPrediction.selectItems([0])
+        self.editor.comboBoxSelectFeaturesInDetection.clear()
+        self.editor.comboBoxSelectFeaturesInDetection.addItems([i[0] for i in ranked_feat])
+        self.editor.comboBoxSelectFeaturesInDetection.selectItems([0])
 
     @pyqtSlot() # 训练LSTM模型
     def on_btnTraining_clicked(self):
