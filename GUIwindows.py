@@ -182,16 +182,9 @@ def update_ratio_to_frame(cfg, series: pd.Series, canvas, tit=''):
     figure.tight_layout()
     canvas.draw()
 
-def draw_heatmap(df, canvas):
+def draw_heatmap(corr, canvas):
     '''
-    Draw a correlation heatmap of the given DataFrame on the specified canvas.
-
-    Parameters:
-        df (pandas.DataFrame): The DataFrame containing the data.
-        canvas (FigureCanvas): The canvas on which the heatmap will be drawn.
-
-    Returns:
-        None
+    Draw a correlation heatmap of the given corr matrix on the specified canvas.
     '''
     # 清理之前的图形
     figure = canvas.figure
@@ -200,8 +193,7 @@ def draw_heatmap(df, canvas):
     # 在现有 figure 中添加一个新的子图
     ax = figure.add_subplot(111)
 
-    # 计算相关性矩阵并绘制热力图
-    corr = df.corr()
+    # 根据相关性矩阵并绘制热力图
     cax = ax.matshow(corr, cmap='coolwarm')
     figure.colorbar(cax)
 
@@ -219,6 +211,19 @@ def draw_heatmap(df, canvas):
     # 强制刷新画布
     figure.tight_layout()
     canvas.draw()
+
+def show_table_in_widget(df, widget):
+    # 在 QTableWidget 中显示 DataFrame
+    n = len(df)
+    m = len(df.columns)
+    widget.setRowCount(n)
+    widget.setColumnCount(m)
+    for row in range(n):
+        for col in range(m):
+            item = QTableWidgetItem(str(df.iloc[row, col]))
+            widget.setItem(row, col, item)
+    # 设置列宽度为内容适应
+    widget.resizeColumnsToContents()
 
 #%% 定义复杂功能的线程
 
@@ -476,19 +481,13 @@ class GUIWindow(QWidget):
 
         # 绘制热力图
         logger.info("Draw heat map...")
-        draw_heatmap(feat_df, self.canvasInFeatures)
+        corr = feat_df.corr()
+        draw_heatmap(corr, self.canvasInFeatures)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
         # 在 QTableWidget 中显示 DataFrame
-        self.editor.tableWidget.setRowCount(len(df))
-        self.editor.tableWidget.setColumnCount(len(df.columns))
-        for row in range(len(df)):
-            for col in range(len(df.columns)):
-                item = QTableWidgetItem(str(df.iloc[row, col]))
-                self.editor.tableWidget.setItem(row, col, item)
-        # 设置列宽度为内容适应
-        self.editor.tableWidget.resizeColumnsToContents()
+        show_table_in_widget(df, self.editor.DTWWidget)
 
         # 重设下拉多选框的选项
         self.editor.comboBoxSelectFeaturesInTraining.clear()
