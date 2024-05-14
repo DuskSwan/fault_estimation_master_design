@@ -18,7 +18,7 @@ from torch import load as tload
 
 # draw
 import tempfile
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
@@ -29,8 +29,8 @@ from PyQt5.QtWidgets import QFileDialog #导入文件对话框
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
-from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
-from PyQt5.QtWidgets import QMainWindow, QFrame # 打开新窗口
+# from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
+# from PyQt5.QtWidgets import QMainWindow, QFrame # 打开新窗口
 from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
 from PyQt5.QtCore import QThread #定义线程
 from PyQt5.QtCore import QEvent, Qt #检测事件和键盘按键
@@ -608,11 +608,13 @@ class GUIWindow(QWidget):
 
 #%% 开始运行
 
-app = QApplication(sys.argv)
-# app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
+def main():
+    app = QApplication(sys.argv)
+    # app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
+    w = GUIWindow()
+    w.show()
+    n = app.exec()
+    sys.exit(n)
 
-w = GUIWindow()
-w.show()
-
-n = app.exec()
-sys.exit(n)
+if __name__ == '__main__':
+    main()
