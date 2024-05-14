@@ -218,9 +218,14 @@ def show_table_in_widget(df, widget):
     m = len(df.columns)
     widget.setRowCount(n)
     widget.setColumnCount(m)
+    widget.setHorizontalHeaderLabels(df.columns)  # 设置列名
     for row in range(n):
         for col in range(m):
-            item = QTableWidgetItem(str(df.iloc[row, col]))
+            value = df.iloc[row, col]
+            if isinstance(value, float):
+                item = QTableWidgetItem(f"{value:.6f}")
+            else:
+                item = QTableWidgetItem(str(value))
             widget.setItem(row, col, item)
     # 设置列宽度为内容适应
     widget.resizeColumnsToContents()
@@ -483,6 +488,16 @@ class GUIWindow(QWidget):
         logger.info("Draw heat map...")
         corr = feat_df.corr()
         draw_heatmap(corr, self.canvasInFeatures)
+
+        # 找出相关性高的特征对并显示
+        logger.info("Find correlated features...")
+        corr_pairs = []
+        for i in range(len(corr.columns)):
+            for j in range(i+1, len(corr.columns)):
+                if abs(corr.iloc[i, j]) > 0.8:
+                    corr_pairs.append((corr.columns[i], corr.columns[j], corr.iloc[i, j])) 
+        df = pd.DataFrame(corr_pairs, columns=["feature1", "feature2", "correlation"])
+        show_table_in_widget(df, self.editor.CorrWidget)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])

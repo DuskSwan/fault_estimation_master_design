@@ -113,7 +113,7 @@
            </spacer>
           </item>
           <item>
-           <layout class="QGridLayout" name="gridLayout" rowstretch="7,1,5" columnstretch="9,1,9">
+           <layout class="QGridLayout" name="gridLayout" rowstretch="5,1,7" columnstretch="12,1,8">
             <item row="0" column="0">
              <widget class="QTableWidget" name="DTWWidget">
               <property name="maximumSize">
