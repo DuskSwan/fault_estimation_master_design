@@ -17,28 +17,32 @@ from torch import save as tsave
 from torch import load as tload
 
 # draw
+import tempfile
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-# import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, AutoDateLocator
-# import matplotlib
-# matplotlib.use('TKagg')
 
 # GUI
-from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
-from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
-from PyQt5.QtCore import QThread #定义线程
+from PyQt5.QtWidgets import QApplication, QWidget #导入窗口类
+from PyQt5.QtWidgets import QFileDialog #导入文件对话框
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
+from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
+from PyQt5.QtWidgets import QMainWindow, QFrame # 打开新窗口
+from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
+from PyQt5.QtCore import QThread #定义线程
+from PyQt5.QtCore import QEvent, Qt #检测事件和键盘按键
 
 from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
+from GUI.OpenPlotFrame import EnlargedWindow #导入放大显示图形的窗口类
 
 # self-defined utils
 from config import cfg_GUI
 
 from utils import set_random_seed, sort_list
-from utils.features import view_features_DTW
+from utils.features import view_features_DTW_with_n_normal
 from utils.threshold import calc_thresholds
 from utils.denoise import array_denoise
 from run.tools import set_train_model, raw_signal_to_errors
@@ -48,6 +52,7 @@ from run.tools import set_train_model, raw_signal_to_errors
 
 def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
     # 希望handle为真，如果假则会警告，为真则根据需要返回提示
+    # 返回handle的真值
     if not handle:
         QMessageBox.critical(window, "Warning", false_fb, QMessageBox.Ok)
         return False
@@ -58,24 +63,20 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
-def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
+def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
     n_bin = cfg.DRAW.HIST_BIN
     colors = cfg.DRAW.THRESHOLD_COLORS
 
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
-
-    figure = Figure()
-    canvas = FigureCanvas(figure)
-
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
     ax = figure.add_subplot(111)
     ax.clear()  # Clear the previous plot
 
     if is_train:
         ax.hist(arrays, bins=n_bin, color='blue', label='normal signal')
-        ax.set_title(cfg.TRAIN.NORMAL_PATH.split('/')[-1] + ' MAE distribution')
+        name = Path(cfg.TRAIN.NORMAL_PATH).stem
+        ax.set_title(name + ' MAE distribution')
     else:
         ax.hist(arrays[0], bins=n_bin, color='blue', label='normal signal')
         ax.hist(arrays[1], bins=18, color='green', label='unknown signal', alpha=0.75)
@@ -84,17 +85,20 @@ def hist_tied_to_frame(cfg, arrays, frame, is_train=False):
         for i, (k, t) in enumerate(thresholds.items()):
             ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))
         ax.axvline(x=arrays[1].mean(), linestyle='--', color='black', label='indicator')
-        ax.set_title(cfg.INFERENCE.UNKWON_PATH.split('/')[-1] + ' MAE distribution')
+        name = Path(cfg.INFERENCE.UNKWON_PATH).stem
+        ax.set_title(name + ' MAE distribution')
 
     ax.legend()
-    frame.layout().addWidget(canvas)
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
 
-def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
+def update_ratio_to_frame(cfg, series: pd.Series, canvas, tit=''):
     logger.info('Plot time series \n {}'.format(series))    
 
-    figure = Figure()
-    canvas = FigureCanvas(figure)
-
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
     ax = figure.add_subplot(111)
     ax.clear()  # Clear the previous plot
 
@@ -174,12 +178,47 @@ def update_ratio_to_frame(cfg, series: pd.Series, frame, tit=''):
     ax.tick_params(axis='x', labelrotation=45)
     ax.legend()
 
-    # Clear the previous canvas from the frame's layout
-    if frame.layout().count() == 1:
-        frame.layout().takeAt(0).widget().deleteLater()
-        logger.info('Previous canvas cleared')
-        
-    frame.layout().addWidget(canvas)
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
+
+def draw_heatmap(df, canvas):
+    '''
+    Draw a correlation heatmap of the given DataFrame on the specified canvas.
+
+    Parameters:
+        df (pandas.DataFrame): The DataFrame containing the data.
+        canvas (FigureCanvas): The canvas on which the heatmap will be drawn.
+
+    Returns:
+        None
+    '''
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
+
+    # 在现有 figure 中添加一个新的子图
+    ax = figure.add_subplot(111)
+
+    # 计算相关性矩阵并绘制热力图
+    corr = df.corr()
+    cax = ax.matshow(corr, cmap='coolwarm')
+    figure.colorbar(cax)
+
+    # 设置轴标签
+    ax.set_xticks(np.arange(len(corr.columns)))
+    ax.set_yticks(np.arange(len(corr.columns)))
+    ax.set_xticklabels(corr.columns, rotation=90)
+    ax.set_yticklabels(corr.columns)
+    ax.set_title('Correlation Heatmap of Features')
+
+    # 设置x轴ticks出现在图片下方
+    ax.xaxis.set_ticks_position('bottom')
+    ax.xaxis.set_label_position('bottom')
+
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
 
 #%% 定义复杂功能的线程
 
@@ -256,6 +295,7 @@ class PredictThread(QThread):
         errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
         self.signal_finish.emit([self.refence_errors, errors])
 
+
 #%% 重载窗口类
 
 class GUIWindow(QWidget): 
@@ -268,11 +308,28 @@ class GUIWindow(QWidget):
         super().__init__()
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
+
+        self.editor.frameInFeatures.setLayout(QVBoxLayout())
+            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入画布
+        self.canvasInFeatures = FigureCanvas(Figure())
+        self.editor.frameInFeatures.layout().addWidget(self.canvasInFeatures)
+            # 添加一个画布到layout中，这里记下来这个画布的名字以便后续更新
+        self.canvasInFeatures.installEventFilter(self)
+            # 安装事件过滤器到 FigureCanvas 上以便检测鼠标双击事件
+        # 对于其余画图的frame，也进行相同的操作
         self.editor.frameInTraining.setLayout(QVBoxLayout()) 
-            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入图像，下同
         self.editor.frameInPrediction.setLayout(QVBoxLayout())
         self.editor.frameInDetection.setLayout(QVBoxLayout())
-        
+        self.canvasInTraining = FigureCanvas(Figure())
+        self.canvasInPrediction = FigureCanvas(Figure()) 
+        self.canvasInDetection = FigureCanvas(Figure())
+        self.editor.frameInTraining.layout().addWidget(self.canvasInTraining)
+        self.editor.frameInPrediction.layout().addWidget(self.canvasInPrediction)
+        self.editor.frameInDetection.layout().addWidget(self.canvasInDetection)
+        self.canvasInTraining.installEventFilter(self)
+        self.canvasInPrediction.installEventFilter(self)
+        self.canvasInDetection.installEventFilter(self)
+
         self.cfg = cfg_GUI
         self.model = None
         self.refence_errors = np.array([])
@@ -283,12 +340,45 @@ class GUIWindow(QWidget):
         if(self.cfg.LOG.OUTPUT_TO_FILE):
             logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
     
+    def eventFilter(self, source, event):
+        # 检查事件类型和事件来源是否为 FigureCanvas
+        if isinstance(source, FigureCanvas) \
+                and event.type() == QEvent.MouseButtonDblClick \
+                and event.button() == Qt.LeftButton:
+            logger.info("Double click detected on canvas")
+            self.show_in_new_window(source)
+            return True
+        # logger.info("Event not handled")
+        return super().eventFilter(source, event)
+    
+    def show_in_new_window(self, canvas):
+        """
+        在全屏的新窗口中显示复制的图形
+        """
+        # 保存原始 figure 到临时文件
+        figure = canvas.figure
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+            figure.savefig(temp_file.name, dpi=300)
+
+        # 打开一个最大化的新窗口并保持引用
+        self.enlarged_window = EnlargedWindow(temp_file.name)
+        self.enlarged_window.showMaximized()
+    
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
-        fname,_ = QFileDialog.getOpenFileName(self, "导入正常信号","./", "Comma-Separated Values(*.csv)")
-        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
-        logger.info("Normal signal imported: {}".format(fname))
-        self.cfg.TRAIN.NORMAL_PATH = fname
+        # open multiple files with the .csv extension
+        file_paths, _ = QFileDialog.getOpenFileNames(self, "导入正常信号", "./", "Comma-Separated Values (*.csv)")
+        # Check if any files were selected
+        if not file_paths:
+            logger.info("未选择任何文件")
+            return
+        
+        self.cfg.FEATURE.NORMAL_PATHS = [] # set empty
+        for fname in file_paths:
+            # Check if the file has a .csv extension
+            if not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+            logger.info(f"Normal signal imported (in feature selection): {fname}")
+            self.cfg.FEATURE.NORMAL_PATHS.append(fname)
 
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
@@ -361,15 +451,32 @@ class GUIWindow(QWidget):
     
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
-        state = self.cfg.TRAIN.NORMAL_PATH and self.cfg.TRAIN.FAULT_PATH
+        # 检查是否导入了正常与故障信号
+        state = self.cfg.FEATURE.NORMAL_PATHS and self.cfg.TRAIN.FAULT_PATH
         if not checkAndWarn(self,state,
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
                             True): return
- 
+
+        # 计算DTW得分
         logger.info("Search propre features...")
-        ranked_feat = view_features_DTW(self.cfg) # list with (feature, DTW score)
-        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
+        ranked_feat, feat_df = view_features_DTW_with_n_normal(
+                normal_paths= self.cfg.FEATURE.NORMAL_PATHS,
+                fault_path= self.cfg.TRAIN.FAULT_PATH,
+                feat_max_length= self.cfg.FEATURE.MAX_LENGTH,
+                need_denoise= self.cfg.DENOISE.NEED,
+                denoise_method= self.cfg.DENOISE.METHOD,
+                smooth_step= self.cfg.DENOISE.SMOOTH_STEP,
+                wavelet= self.cfg.DENOISE.WAVELET, 
+                level=self.cfg.DENOISE.LEVEL,
+                channel_score_mode= self.cfg.FEATURE.CHANNEL_SCORE_MODE,
+        )
+            # ranked_feat is list[tuple[str, float]], feat_df is pd.DataFrame
+        logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat)))
+
+        # 绘制热力图
+        logger.info("Draw heat map...")
+        draw_heatmap(feat_df, self.canvasInFeatures)
 
         # 将排序后的列表转换为 Pandas DataFrame
         df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
@@ -390,6 +497,9 @@ class GUIWindow(QWidget):
         self.editor.comboBoxSelectFeaturesInPrediction.clear()
         self.editor.comboBoxSelectFeaturesInPrediction.addItems([i[0] for i in ranked_feat])
         self.editor.comboBoxSelectFeaturesInPrediction.selectItems([0])
+        self.editor.comboBoxSelectFeaturesInDetection.clear()
+        self.editor.comboBoxSelectFeaturesInDetection.addItems([i[0] for i in ranked_feat])
+        self.editor.comboBoxSelectFeaturesInDetection.selectItems([0])
 
     @pyqtSlot() # 训练LSTM模型
     def on_btnTraining_clicked(self):
@@ -424,7 +534,7 @@ class GUIWindow(QWidget):
         self.refence_errors = normal_errors
 
         # 绘制并显示
-        hist_tied_to_frame(self.cfg,normal_errors,self.editor.frameInTraining,is_train=True)
+        hist_tied_to_frame(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
  
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
@@ -465,7 +575,8 @@ class GUIWindow(QWidget):
     def PredictionDraw(self, errs: list[np.array, np.array]):
         # errs = [self.refence_errors, errors]
         hist_tied_to_frame(self.cfg, errs, 
-                           self.editor.frameInPrediction ,is_train=False)
+                           self.canvasInPrediction,
+                           is_train=False)
     
     @pyqtSlot() # 对全寿命数据进行故障检测
     def on_btnDetect_clicked(self):
@@ -493,7 +604,7 @@ class GUIWindow(QWidget):
     
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
-        update_ratio_to_frame(self.cfg, res_series, self.editor.frameInDetection)
+        update_ratio_to_frame(self.cfg, res_series, self.canvasInDetection)
 
 #%% 开始运行
 
