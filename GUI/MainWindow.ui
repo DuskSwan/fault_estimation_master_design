@@ -30,7 +30,7 @@
        <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
         <item>
          <widget class="QWidget" name="widgetInFeatures" native="true">
-          <layout class="QVBoxLayout" name="verticalLayout" stretch="3,1,20">
+          <layout class="QVBoxLayout" name="verticalLayout" stretch="4,1,30">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="10,1,10,1,10">
              <item>
@@ -114,7 +114,7 @@
             </spacer>
            </item>
            <item>
-            <layout class="QGridLayout" name="gridLayout" rowstretch="5,1,7" columnstretch="12,1,8">
+            <layout class="QGridLayout" name="gridLayout" rowstretch="5,1,7" columnstretch="10,1,15">
              <item row="0" column="0">
               <widget class="QTableWidget" name="DTWWidget">
                <property name="maximumSize">

@@ -22,6 +22,7 @@ import tempfile
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget # 导入窗口类
@@ -199,7 +200,10 @@ def draw_heatmap(corr, canvas):
 
     # 根据相关性矩阵并绘制热力图
     cax = ax.matshow(corr, cmap='coolwarm')
-    figure.colorbar(cax)
+    divider = make_axes_locatable(ax)
+    cbar_ax = divider.append_axes("right", size="5%", pad=0.1)    
+    figure.colorbar(cax, cax=cbar_ax) # 在指定的 Axes 上创建 color bar
+    # figure.colorbar(cax)
 
     # 设置轴标签
     ax.set_xticks(np.arange(len(corr.columns)))
@@ -365,6 +369,7 @@ class GUIWindow(QMainWindow):
         dialog = SetParametersDialog(self, self.cfg)
         if dialog.exec_():
             self.cfg = dialog.getValues()
+            logger.info("Parameters set: {}".format(self.cfg))
 
     def eventFilter(self, source, event):
         # 检查事件类型和事件来源是否为 FigureCanvas
@@ -460,7 +465,7 @@ class GUIWindow(QMainWindow):
     @pyqtSlot() #导入预测模型 for 故障诊断
     def on_btnImportModel_clicked(self):
         fname,ftype = QFileDialog.getOpenFileName(self, "导入预测模型","./", "PyTorch model(*.pth)")
-        logger.info("Model imported: name {}, type {}".format(fname, ftype))
+        # if fname: logger.info("Model imported: name {}, type {}".format(fname, ftype))
         if fname and not checkAndWarn(self,fname[-4:]=='.pth',false_fb="选中的文件并非.pth类型，请检查"): return
         if(fname): 
             logger.info("Model imported: {}".format(fname))

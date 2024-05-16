@@ -77,7 +77,7 @@ def modify_file(filename):
         # 指定窗口尺寸
         # <window name>.resize
         if 'MainWindow.resize' in lines[i]:
-            lines[i] = inde + 'MainWindow.resize(1440, 960)\n'
+            lines[i] = inde + 'MainWindow.resize(1960, 1280)\n'
 
     # 将修改后的内容写回新的文件名
     new_filename = filename.replace('.py', '_m.py')
