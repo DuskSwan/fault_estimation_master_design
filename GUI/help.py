@@ -75,8 +75,9 @@ def modify_file(filename):
         if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
         # 指定窗口尺寸
-        if 'FaultDiagnosis.resize' in lines[i]:
-            lines[i] = inde + 'FaultDiagnosis.resize(1440, 960)\n'
+        # <window name>.resize
+        if 'MainWindow.resize' in lines[i]:
+            lines[i] = inde + 'MainWindow.resize(1440, 960)\n'
 
     # 将修改后的内容写回新的文件名
     new_filename = filename.replace('.py', '_m.py')
@@ -84,4 +85,4 @@ def modify_file(filename):
         file.writelines(lines)
 
 # 使用函数
-modify_file('GUI/Ui_FaultDegreeGUI.py')
+modify_file('GUI/Ui_MainWindow.py')

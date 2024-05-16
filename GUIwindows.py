@@ -24,19 +24,23 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
 
 # GUI
-from PyQt5.QtWidgets import QApplication, QWidget #导入窗口类
-from PyQt5.QtWidgets import QFileDialog #导入文件对话框
+from PyQt5.QtWidgets import QApplication, QWidget # 导入窗口类
+from PyQt5.QtWidgets import QFileDialog # 导入文件对话框
 from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
+from PyQt5.QtWidgets import QAction # 导入菜单栏
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
 # from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
-# from PyQt5.QtWidgets import QMainWindow, QFrame # 打开新窗口
-from PyQt5.QtCore import pyqtSlot, pyqtSignal #定义信号事件
-from PyQt5.QtCore import QThread #定义线程
-from PyQt5.QtCore import QEvent, Qt #检测事件和键盘按键
+# from PyQt5.QtWidgets import QMenuBar # 菜单栏
+from PyQt5.QtWidgets import QMainWindow # 主窗口
+from PyQt5.QtCore import pyqtSlot, pyqtSignal # 定义信号事件
+from PyQt5.QtCore import QThread # 定义线程
+from PyQt5.QtCore import QEvent, Qt # 检测事件和键盘按键
 
-from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui #导入窗口编辑器类
-from GUI.OpenPlotFrame import EnlargedWindow #导入放大显示图形的窗口类
+# from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui # 导入窗口编辑器类
+from GUI.Ui_MainWindow_m import Ui_MainWindow as Ui # 导入窗口编辑器类
+from GUI.OpenPlotFrame import EnlargedWindow # 导入放大显示图形的窗口类
+from GUI.SettingMenu import SetParametersDialog # 导入设置参数的窗口类
 
 # self-defined utils
 from config import cfg_GUI
@@ -279,7 +283,6 @@ class DetectThread(QThread):
         logger.info('ratio dict: {}'.format(res))
         logger.info('Detection finished')
 
-
 class PredictThread(QThread):
     signal_finish = pyqtSignal(list)
     def __init__(self, cfg, model, refe_errs):
@@ -308,7 +311,7 @@ class PredictThread(QThread):
 
 #%% 重载窗口类
 
-class GUIWindow(QWidget): 
+class GUIWindow(QMainWindow): 
     '''
     该类用于创建GUI主页面，以及设置功能。
     该类是窗口的子类，比窗口拥有更多属性，比如self.ui这个窗口编辑器
@@ -340,6 +343,13 @@ class GUIWindow(QWidget):
         self.canvasInPrediction.installEventFilter(self)
         self.canvasInDetection.installEventFilter(self)
 
+        # Menu bar to set parameters
+        menu_bar = self.menuBar()
+        settings_menu = menu_bar.addMenu("Settings")
+        set_params_action = QAction("Set Parameters", self)
+        set_params_action.triggered.connect(self.set_parameters)
+        settings_menu.addAction(set_params_action)
+
         self.cfg = cfg_GUI
         self.model = None
         self.refence_errors = np.array([])
@@ -350,6 +360,12 @@ class GUIWindow(QWidget):
         if(self.cfg.LOG.OUTPUT_TO_FILE):
             logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
     
+    def set_parameters(self):
+        # 设置参数的事件函数
+        dialog = SetParametersDialog(self, self.cfg)
+        if dialog.exec_():
+            self.cfg = dialog.getValues()
+
     def eventFilter(self, source, event):
         # 检查事件类型和事件来源是否为 FigureCanvas
         if isinstance(source, FigureCanvas) \
