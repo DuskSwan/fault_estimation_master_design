@@ -300,13 +300,6 @@ class PredictThread(QThread):
             logger.info('Start to calculate normal signal MAE...')
             self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
         
-        # 读取模型的输入维数并检查
-        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
-        feature_n = len(self.cfg.FEATURE.USED_F)
-        state = (feature_n * data_tunnel == input_dim)
-        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
-
         # 计算未知信号MAE
         logger.info('Start to calculate unknown signal MAE...')
         errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False)
@@ -597,6 +590,12 @@ class GUIWindow(QMainWindow):
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 读取模型的输入维数并检查
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
+        state = (feature_n * data_tunnel == input_dim)
+        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
 
         logger.info("Set Prediction Thread...")
         self.predict_thread = PredictThread(self.cfg,
