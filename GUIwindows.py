@@ -348,11 +348,11 @@ class GUIWindow(QMainWindow):
         self.canvasInDetection.installEventFilter(self)
 
         # Menu bar to set parameters
-        menu_bar = self.menuBar()
-        settings_menu = menu_bar.addMenu("Settings")
-        set_params_action = QAction("Set Parameters", self)
-        set_params_action.triggered.connect(self.set_parameters)
-        settings_menu.addAction(set_params_action)
+        menu_bar = self.menuBar() # 创建菜单栏
+        settings_menu = menu_bar.addMenu("Settings") # 添加一个菜单
+        set_params_action = QAction("Set Parameters", self) # 添加一个动作
+        set_params_action.triggered.connect(self.set_parameters) # 动作绑定事件
+        settings_menu.addAction(set_params_action) # 将动作添加到菜单中
 
         self.cfg = cfg_GUI
         self.model = None
@@ -627,6 +627,9 @@ class GUIWindow(QMainWindow):
         pointed_features = self.editor.comboBoxSelectFeaturesInDetection.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 检查比例阈值是否正常
+        if not checkAndWarn(self,0 <= self.cfg.INFERENCE.MAE_ratio_threshold <= 1,
+                            false_fb="比例阈值应在0-1之间"): return
         
         logger.info("Set Detecion Thread...")
         self.detect_thread = DetectThread(self.cfg, 

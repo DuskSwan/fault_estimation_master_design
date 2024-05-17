@@ -11,6 +11,7 @@ class SetParametersDialog(QDialog):
             "epoch": "SOLVER.MAX_EPOCHS",
             "batch_size": "TRAIN.BATCH_SIZE",
             "learning_rate": "SOLVER.BASE_LR",
+            "ratio_threshold": "INFERENCE.MAE_ratio_threshold",
         }
         self.editLines = {}
         self.initUI()
