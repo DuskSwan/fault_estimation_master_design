@@ -609,7 +609,7 @@ class GUIWindow(QMainWindow):
         self.predict_thread.start()  # 启动线程
         logger.info("Thread finished") 
 
-    def PredictionDraw(self, errs: list[np.array, np.array]):
+    def PredictionDraw(self, errs):
         # errs = [self.refence_errors, errors]
         hist_tied_to_frame(self.cfg, errs, 
                            self.canvasInPrediction,

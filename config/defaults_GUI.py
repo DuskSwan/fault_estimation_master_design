@@ -5,7 +5,7 @@ from yacs.config import CfgNode as CN
 # -----------------------------------------------------------------------------
 
 _C = CN()
-_C.DEVICE = "cuda"
+_C.DEVICE = "cpu"
 _C.SEED = 0
 _C.DATA_TYPE = 'float'  # or double
 

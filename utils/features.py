@@ -188,7 +188,7 @@ RMSF = Rmsf
 RVF = Rvf
 
 # 功能函数
-def combine_dtw_score(list1: list[tuple[str, float]], list2: list[tuple[str, float]]) -> list[tuple[str, float]]:
+def combine_dtw_score(list1, list2):
     '''
     两个python字典a和b，将他们合并成c，相同的键则对应值相加，多出来的键值对直接加入c
     在该函数中，字典实际上用列表传递（便于排序），列表的每个元素是(键，值)对
@@ -209,7 +209,7 @@ def merge_and_add_dataframes(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFra
     combined = result.combine_first(df1).combine_first(df2)
     return combined
 
-def view_features_DTW_with_n_normal(normal_paths: list[str], fault_path: str, 
+def view_features_DTW_with_n_normal(normal_paths, fault_path: str, 
                                     feat_max_length = 1024000,
                                     need_denoise = False,
                                     denoise_method = 'smooth',
@@ -218,7 +218,7 @@ def view_features_DTW_with_n_normal(normal_paths: list[str], fault_path: str,
                                     level = 4,
                                     sublen = 2048,
                                     channel_score_mode = 'sum',
-                                    ) -> tuple[list[tuple[str, float]], pd.DataFrame]:
+                                    ):
     assert normal_paths, 'normal signal paths must be not empty when calculate DTW score'
     
     res_scores = []
@@ -252,7 +252,7 @@ def view_features_DTW_with_one_normal(normal_path: str, fault_path: str,
                                       level = 4,
                                       sublen = 2048,
                                       channel_score_mode = 'sum',
-                                    ) -> tuple[list[tuple[str, float]], pd.DataFrame]:
+                                    ):
     # 分别提取特征
     tpaths = [normal_path, fault_path]
     feat_with_classes = [] # 每个元素是一个类别的特征序列矩阵
@@ -296,7 +296,7 @@ def view_features_DTW_with_one_normal(normal_path: str, fault_path: str,
     return ranked_feat, feat_with_classes[0]
     
 
-def view_features_DTW(cfg) -> tuple[list[tuple[str, float]], pd.DataFrame]:
+def view_features_DTW(cfg):
     '''
     根据一个正常信号和一个故障信号来筛选特征
     这是该函数的使用cfg类传递参数的版本，我希望在utils工具中的函数是独立的，因此重写了不使用cfg版本的函数
