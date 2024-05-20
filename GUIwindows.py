@@ -495,7 +495,14 @@ class GUIWindow(QMainWindow):
 
         # 绘制热力图
         logger.info("Draw heat map...")
-        corr = feat_df.corr()
+        total_corr = feat_df.corr()
+        chn = len(feat_df.columns)//18
+        col = [item.split('_')[1] for item in total_corr.columns[:18]] # 从列名中提取特征名
+        corr_values = np.zeros((18, 18)) # 使用 NumPy 数组进行累加
+        for i in range(chn):
+            sub_corr = total_corr.iloc[i*18:(i+1)*18, i*18:(i+1)*18].values  # 每个通道的相关性，使用.values获取NumPy数组
+            corr_values += sub_corr
+        corr = pd.DataFrame(corr_values / chn, columns=col, index=col) # 计算平均相关性
         draw_heatmap(corr, self.canvasInFeatures)
 
         # 找出相关性高的特征对并显示

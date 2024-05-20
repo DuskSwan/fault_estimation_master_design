@@ -343,8 +343,6 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
             feature_dict.update(i_dict)
         df_dictionary = pd.DataFrame([feature_dict])
         feature_df = pd.concat([feature_df, df_dictionary], ignore_index=True)
-    # print(feature_df.columns)
-    # feature_df['class'] = y #加入标签一列
     
     if(output_type=='pd'): return feature_df
     elif(output_type=='np'): return feature_df.values
