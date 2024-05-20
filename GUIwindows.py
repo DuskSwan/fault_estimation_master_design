@@ -258,12 +258,7 @@ class DetectThread(QThread):
         cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
         logger.info('Full roll test data directory: {}'.format(cont))
         files = sort_list(list(cont.glob('*.csv')))
-        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
-        feature_n = len(self.cfg.FEATURE.USED_F)
-        state = (feature_n * data_channel == input_dim)
-        if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_channel}、特征数{feature_n}不匹配'): return
-
+        
         # 计算MAE比较阈值
         logger.info('Start to calculate threshold...')
         thresholds = calc_thresholds(self.refence_errors, method = self.cfg.FEATURE.USED_THRESHOLD)
@@ -511,6 +506,7 @@ class GUIWindow(QMainWindow):
                 if abs(corr.iloc[i, j]) > 0.8:
                     corr_pairs.append((corr.columns[i], corr.columns[j], corr.iloc[i, j])) 
         df = pd.DataFrame(corr_pairs, columns=["feature1", "feature2", "correlation"])
+        df.sort_values(by='correlation', ascending=False, inplace=True)
         show_table_in_widget(df, self.editor.CorrWidget)
 
         # 将排序后的列表转换为 Pandas DataFrame
@@ -629,6 +625,17 @@ class GUIWindow(QMainWindow):
         # 检查比例阈值是否正常
         if not checkAndWarn(self,0 <= self.cfg.INFERENCE.MAE_ratio_threshold <= 1,
                             false_fb="比例阈值应在0-1之间"): return
+        # 读取模型的输入维数并检查
+        cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
+        logger.info('Full roll test data directory: {}'.format(cont))
+        files = sort_list(list(cont.glob('*.csv')))
+        input_dim = self.model.lstm.input_size #模型的输入维数/通道数
+        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
+        feature_n = len(self.cfg.FEATURE.USED_F)
+        state = (feature_n * data_channel == input_dim)
+        if not checkAndWarn(self, state,
+                            false_fb=f'模型输入维数{input_dim}与数据通道数{data_channel}、特征数{feature_n}不匹配'): return
+
         
         logger.info("Set Detecion Thread...")
         self.detect_thread = DetectThread(self.cfg, 
