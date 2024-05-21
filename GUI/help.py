@@ -67,12 +67,17 @@ def modify_file(filename):
         if 'self.comboBoxSelectFeaturesInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInPrediction.addItems(comunes)\n')
+        # 检测 - 特征选择下拉框
+        if 'self.comboBoxSelectFeaturesInDetection = QtWidgets.QComboBox(self.widgetInDetection)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectFeaturesInDetection = CheckableComboBox(self.widgetInDetection)\n'
+            lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInDetection.addItems(comunes)\n')
         # 指定默认展示页
         if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
         # 指定窗口尺寸
-        if 'FaultDiagnosis.resize' in lines[i]:
-            lines[i] = inde + 'FaultDiagnosis.resize(1440, 960)\n'
+        # <window name>.resize
+        if 'MainWindow.resize' in lines[i]:
+            lines[i] = inde + 'MainWindow.resize(1960, 1280)\n'
 
     # 将修改后的内容写回新的文件名
     new_filename = filename.replace('.py', '_m.py')
@@ -80,4 +85,4 @@ def modify_file(filename):
         file.writelines(lines)
 
 # 使用函数
-modify_file('GUI/Ui_FaultDegreeGUI.py')
+modify_file('GUI/Ui_MainWindow.py')

@@ -78,3 +78,13 @@ def initiate_cfg(cfg,merge_file = ''):
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         logger.add(cfg.LOG.DIR + f'/{cfg.LOG.PREFIX}_{cur_time}.log', rotation='1 day', encoding='utf-8')
     else: logger.info("Output to console.")
+
+def sort_list(path_list):
+    try:
+        # 尝试将元素转换为整数进行排序
+        return sorted(path_list, key=lambda p: int(p.name.rstrip('.csv')))
+    except ValueError:
+        # 如果转换失败，按照字典序进行排序
+        return sorted(path_list, key=lambda p: p.name)
+    except Exception as e:
+        raise e

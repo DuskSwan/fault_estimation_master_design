@@ -9,3 +9,5 @@ test.py
 # exe file
 build
 dist
+*.spec
+test.py
