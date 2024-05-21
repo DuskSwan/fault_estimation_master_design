@@ -247,6 +247,7 @@ class DetectThread(QThread):
         self.cfg = cfg
         self.model = model
         self.refence_errors = refe_errs
+        self._is_running = True
     def run(self):   #固定函数，不可变，线程开始自动执行run函数
 
         # 检查是否已经计算了正常信号的MAE，没有计算则补上
@@ -267,6 +268,9 @@ class DetectThread(QThread):
         # 全寿命数据检测
         res = {}
         for file in files:
+            if not self._is_running: 
+                logger.info('Detection stopped')
+                return
             logger.info('Current file index: {}'.format(file.stem))
             unknown_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=False, file_path=file)
             logger.info('Unkwon signal: Max error {:.4f} , Min error {:.4f}, Mean error {:.4f}'
@@ -281,6 +285,9 @@ class DetectThread(QThread):
             self.signal_turn.emit(res)
         logger.info('ratio dict: {}'.format(res))
         logger.info('Detection finished')
+
+    def stop(self):
+        self._is_running = False  # 提供一个方法来改变运行状态
 
 class PredictThread(QThread):
     signal_finish = pyqtSignal(list)
@@ -607,7 +614,6 @@ class GUIWindow(QMainWindow):
         self.predict_thread.signal_finish.connect(self.PredictionDraw) #绑定信号函数
         logger.info("Start prediction thread...")
         self.predict_thread.start()  # 启动线程
-        logger.info("Thread finished") 
 
     def PredictionDraw(self, errs: list[np.array, np.array]):
         # errs = [self.refence_errors, errors]
@@ -651,8 +657,16 @@ class GUIWindow(QMainWindow):
         self.detect_thread.signal_turn.connect(self.DetectionTurnDraw) #绑定信号函数
         logger.info("Start detection thread...")
         self.detect_thread.start()  # 启动线程
-        logger.info("Thread finished") 
+        logger.info("Thread finished")
     
+    @pyqtSlot() # 停止检测按钮
+    def on_btnStopDetect_clicked(self):
+        if hasattr(self, 'detect_thread'):
+            self.detect_thread.stop()
+            logger.info("Detection stopped by user")
+        else:
+            logger.info("No detection thread to stop")
+
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
         update_ratio_to_frame(self.cfg, res_series, self.canvasInDetection)

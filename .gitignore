@@ -10,4 +10,3 @@ test.py
 build
 dist
 *.spec
-test.py
