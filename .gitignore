@@ -5,6 +5,7 @@
 log/
 output/
 data/datasets/BUCT/
+test.py
 # exe file
 build
 dist
