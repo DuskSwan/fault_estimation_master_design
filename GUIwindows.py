@@ -486,18 +486,23 @@ class GUIWindow(QMainWindow):
 
         # 计算DTW得分
         logger.info("Search propre features...")
-        ranked_feat, feat_df = view_features_DTW_with_n_normal(
-                normal_paths= self.cfg.FEATURE.NORMAL_PATHS,
-                fault_path= self.cfg.TRAIN.FAULT_PATH,
-                feat_max_length= self.cfg.FEATURE.MAX_LENGTH,
-                need_denoise= self.cfg.DENOISE.NEED,
-                denoise_method= self.cfg.DENOISE.METHOD,
-                smooth_step= self.cfg.DENOISE.SMOOTH_STEP,
-                wavelet= self.cfg.DENOISE.WAVELET, 
-                level=self.cfg.DENOISE.LEVEL,
-                channel_score_mode= self.cfg.FEATURE.CHANNEL_SCORE_MODE,
-        )
-            # ranked_feat is list[tuple[str, float]], feat_df is pd.DataFrame
+        try:
+            ranked_feat, feat_df = view_features_DTW_with_n_normal(
+                    normal_paths= self.cfg.FEATURE.NORMAL_PATHS,
+                    fault_path= self.cfg.TRAIN.FAULT_PATH,
+                    feat_max_length= self.cfg.FEATURE.MAX_LENGTH,
+                    need_denoise= self.cfg.DENOISE.NEED,
+                    denoise_method= self.cfg.DENOISE.METHOD,
+                    smooth_step= self.cfg.DENOISE.SMOOTH_STEP,
+                    wavelet= self.cfg.DENOISE.WAVELET, 
+                    level=self.cfg.DENOISE.LEVEL,
+                    channel_score_mode= self.cfg.FEATURE.CHANNEL_SCORE_MODE,
+            ) # ranked_feat is list[tuple[str, float]], feat_df is pd.DataFrame
+        except Exception as e:
+            logger.error(f"meet error {e} in view_features_DTW_with_n_normal")
+            checkAndWarn(self,False,false_fb="计算DTW得分时遇到错误，请检查控制台信息")
+            return 
+            
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat)))
 
         # 绘制热力图

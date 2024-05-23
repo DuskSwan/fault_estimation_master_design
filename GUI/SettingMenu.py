@@ -8,6 +8,7 @@ class SetParametersDialog(QDialog):
         self.param = {
             "m": "DESIGN.M",
             "p": "DESIGN.P",
+            "sublen": "DESIGN.SUBLEN",
             "epoch": "SOLVER.MAX_EPOCHS",
             "batch_size": "TRAIN.BATCH_SIZE",
             "learning_rate": "SOLVER.BASE_LR",

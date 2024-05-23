@@ -34,6 +34,7 @@ def sheet_cut(x, sublen = None, piece = 500, method = 0, show_para = False):
             sublen = n//piece
             if(show_para): print(f"未指定sublen，计算得{n}//{piece}={sublen}")
         else:
+            assert n>sublen, 'sublen({}) should less than n({})'.format(sublen,n)
             piece = n//sublen
             if(show_para): print(f"指定sublen={sublen}，n={n}，则piece={piece}")
         start_index = np.arange(0,n,sublen)
