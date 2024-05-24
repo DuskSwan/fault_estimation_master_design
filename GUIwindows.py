@@ -18,11 +18,14 @@ from torch import load as tload
 
 # draw
 import tempfile
-# import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+import matplotlib.pyplot as plt
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
+plt.rcParams['axes.unicode_minus'] = False  # 解决保存图像是负号 '-' 显示为方块的问题
 
 # GUI
 from PyQt5.QtWidgets import QApplication, QWidget # 导入窗口类
@@ -31,20 +34,17 @@ from PyQt5.QtWidgets import QMessageBox # 弹出提示窗口
 from PyQt5.QtWidgets import QAction # 导入菜单栏
 from PyQt5.QtWidgets import QTableWidgetItem # 展示表格所需的基本类
 from PyQt5.QtWidgets import QVBoxLayout # 绘图时需要添加布局
-# from PyQt5.QtWidgets import QDialog, QGridLayout # 在新窗口中放大显示图形
-# from PyQt5.QtWidgets import QMenuBar # 菜单栏
 from PyQt5.QtWidgets import QMainWindow # 主窗口
 from PyQt5.QtCore import pyqtSlot, pyqtSignal # 定义信号事件
 from PyQt5.QtCore import QThread # 定义线程
 from PyQt5.QtCore import QEvent, Qt # 检测事件和键盘按键
 
-# from GUI.Ui_FaultDegreeGUI_m import Ui_FaultDiagnosis as Ui # 导入窗口编辑器类
 from GUI.Ui_MainWindow_m import Ui_MainWindow as Ui # 导入窗口编辑器类
 from GUI.OpenPlotFrame import EnlargedWindow # 导入放大显示图形的窗口类
 from GUI.SettingMenu import SetParametersDialog # 导入设置参数的窗口类
 
 # self-defined utils
-from config import cfg_GUI
+from config import cfg_GUI, cfg_debug
 
 from utils import set_random_seed, sort_list
 from utils.features import view_features_DTW_with_n_normal
@@ -316,7 +316,7 @@ class GUIWindow(QMainWindow):
     该类是窗口的子类，比窗口拥有更多属性，比如self.ui这个窗口编辑器
     依赖自定义库GUI中定义的窗口Ui
     '''
-    def __init__(self):
+    def __init__(self, debug=False):
         super().__init__()
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
@@ -349,7 +349,7 @@ class GUIWindow(QMainWindow):
         set_params_action.triggered.connect(self.set_parameters) # 动作绑定事件
         settings_menu.addAction(set_params_action) # 将动作添加到菜单中
 
-        self.cfg = cfg_GUI
+        self.cfg = cfg_debug if debug else cfg_GUI
         self.model = None
         self.refence_errors = np.array([])
 
@@ -681,7 +681,7 @@ class GUIWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     # app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
-    w = GUIWindow()
+    w = GUIWindow(debug=True)
     w.show()
     n = app.exec()
     sys.exit(n)

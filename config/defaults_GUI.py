@@ -59,7 +59,7 @@ _C.TRAIN.BATCH_SIZE = 32
 _C.TRAIN.NORMAL_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\1.csv'
 _C.TRAIN.FAULT_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\123.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
-_C.TRAIN.NEED_CHRCKPOINT = False
+_C.TRAIN.NEED_CHECKPOINT = False
 _C.TRAIN.NEED_PLOT_LOSS = False
 
 
