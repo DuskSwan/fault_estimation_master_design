@@ -292,8 +292,10 @@ def view_features_DTW_with_one_normal(normal_path: str, fault_path: str,
     else:
         raise ValueError('unknown channel_score_mode '+channel_score_mode)
     ranked_feat = sorted(show_dict.items(),key=lambda x:x[1])[::-1] # 是列表，每个元素为(特征，DTW得分)
+        # ranked_feat是列表，每个元素为(特征，DTW得分)
 
     return ranked_feat, feat_with_classes[0]
+        # feat_with_classes[0]是一个数据表，每行是一个样本的特征，每列是一个特征
     
 
 def view_features_DTW(cfg):

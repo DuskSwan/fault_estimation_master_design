@@ -18,5 +18,11 @@ def make_optimizer(cfg, model):
             lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
             weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
         params += [{"params": [value], "lr": lr, "weight_decay": weight_decay}]
-    optimizer = getattr(torch.optim, cfg.SOLVER.OPTIMIZER_NAME)(params, momentum=cfg.SOLVER.MOMENTUM)
+    if cfg.SOLVER.OPTIMIZER_NAME == "SGD":
+        optimizer = torch.optim.SGD(params, momentum=cfg.SOLVER.MOMENTUM)
+    elif cfg.SOLVER.OPTIMIZER_NAME == "Adam":
+        optimizer = torch.optim.Adam(params)
+    else:
+        raise ValueError("SOLVER.OPTIMIZER_NAME: expected 'SGD' or 'Adam', but got '{}'"
+                         .format(cfg.SOLVER.OPTIMIZER_NAME))
     return optimizer

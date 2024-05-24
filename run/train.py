@@ -69,7 +69,7 @@ def main(extra_cfg_path = ''):
 
     # calculate features and rank
     if(cfg.FEATURE.NEED_VIEW):
-        ranked_feat = view_features_DTW(cfg)
+        ranked_feat,_ = view_features_DTW(cfg)
         logger.info("features ranked:\n{}".format('\n'.join(f"{k}: {v}" for k, v in ranked_feat))) 
 
     # train
@@ -77,4 +77,4 @@ def main(extra_cfg_path = ''):
     train(cfg)
 
 if __name__ == '__main__':
-    main('./config/CWRU_test.yml')
+    main()

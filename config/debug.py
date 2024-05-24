@@ -5,7 +5,7 @@ from yacs.config import CfgNode as CN
 # -----------------------------------------------------------------------------
 
 _C = CN()
-_C.DEVICE = "cpu"
+_C.DEVICE = "cuda"
 _C.SEED = 0
 _C.DATA_TYPE = 'float'  # or double
 
@@ -45,7 +45,7 @@ _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 _C.FEATURE = CN()
 _C.FEATURE.NEED_VIEW = True
 _C.FEATURE.MAX_LENGTH = 1024000 # max length of the raw signal used to calcuate features
-_C.FEATURE.USED_F = []
+_C.FEATURE.USED_F = ['KV']
 _C.FEATURE.USED_THRESHOLD  = ['Z']
 _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get sum of differernt channel
     # 'sum' or 'every'
@@ -59,8 +59,8 @@ _C.TRAIN.BATCH_SIZE = 32
 _C.TRAIN.NORMAL_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\1.csv'
 _C.TRAIN.FAULT_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\123.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
-_C.TRAIN.NEED_CHRCKPOINT = False
-_C.TRAIN.NEED_PLOT_LOSS = False
+_C.TRAIN.NEED_CHECKPOINT = False
+_C.TRAIN.NEED_PLOT_LOSS = True
 
 
 # -----------------------------------------------------------------------------

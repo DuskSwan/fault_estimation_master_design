@@ -83,6 +83,7 @@ def signal_to_XY(cfg, is_train=True, path = None):
     signal_cuts = sheet_cut(signal, subl, piece, method = 3, show_para = True)
         # signal_cuts是时间序列切片得到的样本集，是三维数组（单个样本是二维数组），每个样本计算一个向量作为特征
         # 3意味着这一步需要保证特征是连续提取的
+    assert cfg.FEATURE.USED_F, 'cfg.FEATURE.USED_F should not be empty'
     features = signal_to_features_tf(signal_cuts,feat_func_name_list = cfg.FEATURE.USED_F) 
         # 形状(piece,p_feature)
     logger.info('features shape: {}'.format(features.shape))
