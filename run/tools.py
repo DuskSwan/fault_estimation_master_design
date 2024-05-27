@@ -126,7 +126,7 @@ def set_train_model(cfg):
     # get solver
     optimizer = make_optimizer(cfg, model)
 
-    do_train(
+    train_losses,val_losses = do_train(
         cfg,
         model,
         train_loader,
@@ -135,7 +135,7 @@ def set_train_model(cfg):
         nn.MSELoss(reduction='mean'),
     )
 
-    return model
+    return model,train_losses,val_losses
 
 def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 

@@ -68,7 +68,7 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
-def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
+def hist_tied_to_canvas(cfg, arrays, canvas, is_train=False):
     n_bin = cfg.DRAW.HIST_BIN
     colors = cfg.DRAW.THRESHOLD_COLORS
 
@@ -80,8 +80,7 @@ def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
 
     if is_train:
         ax.hist(arrays, bins=n_bin, color='blue', label='normal signal')
-        name = Path(cfg.TRAIN.NORMAL_PATH).stem
-        ax.set_title(name + ' MAE distribution')
+        name = Path(cfg.TRAIN.NORMAL_PATH).name
     else:
         ax.hist(arrays[0], bins=n_bin, color='blue', label='normal signal')
         ax.hist(arrays[1], bins=18, color='green', label='unknown signal', alpha=0.75)
@@ -90,15 +89,15 @@ def hist_tied_to_frame(cfg, arrays, canvas, is_train=False):
         for i, (k, t) in enumerate(thresholds.items()):
             ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))
         ax.axvline(x=arrays[1].mean(), linestyle='--', color='black', label='indicator')
-        name = Path(cfg.INFERENCE.UNKWON_PATH).stem
-        ax.set_title(name + ' MAE distribution')
-
+        name = Path(cfg.INFERENCE.UNKWON_PATH).name
+    ax.set_title(name + ' MAE distribution')
     ax.legend()
+
     # 强制刷新画布
     figure.tight_layout()
     canvas.draw()
 
-def update_ratio_to_frame(cfg, series: pd.Series, canvas, tit=''):
+def update_ratio_to_canvas(cfg, series: pd.Series, canvas, tit=''):
     logger.info('Plot time series \n {}'.format(series))    
 
     # 清理之前的图形
@@ -220,6 +219,23 @@ def draw_heatmap(corr, canvas):
     figure.tight_layout()
     canvas.draw()
 
+def loss_to_canvas(losses, canvas):
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
+    ax = figure.add_subplot(111)
+    ax.clear()  # Clear the previous plot
+    
+    ax.plot(range(1, len(losses) + 1), losses, label='Training Loss')
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Loss')
+    ax.set_title('Training Loss over Epochs')
+    ax.legend()
+    
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
+
 def show_table_in_widget(df, widget):
     # 在 QTableWidget 中显示 DataFrame
     n = len(df)
@@ -321,33 +337,8 @@ class GUIWindow(QMainWindow):
         self.editor = Ui() #实例化一个窗口编辑器
         self.editor.setupUi(self) #用这个编辑器生成布局
 
-        self.editor.frameInFeatures.setLayout(QVBoxLayout())
-            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入画布
-        self.canvasInFeatures = FigureCanvas(Figure())
-        self.editor.frameInFeatures.layout().addWidget(self.canvasInFeatures)
-            # 添加一个画布到layout中，这里记下来这个画布的名字以便后续更新
-        self.canvasInFeatures.installEventFilter(self)
-            # 安装事件过滤器到 FigureCanvas 上以便检测鼠标双击事件
-        # 对于其余画图的frame，也进行相同的操作
-        self.editor.frameInTraining.setLayout(QVBoxLayout()) 
-        self.editor.frameInPrediction.setLayout(QVBoxLayout())
-        self.editor.frameInDetection.setLayout(QVBoxLayout())
-        self.canvasInTraining = FigureCanvas(Figure())
-        self.canvasInPrediction = FigureCanvas(Figure()) 
-        self.canvasInDetection = FigureCanvas(Figure())
-        self.editor.frameInTraining.layout().addWidget(self.canvasInTraining)
-        self.editor.frameInPrediction.layout().addWidget(self.canvasInPrediction)
-        self.editor.frameInDetection.layout().addWidget(self.canvasInDetection)
-        self.canvasInTraining.installEventFilter(self)
-        self.canvasInPrediction.installEventFilter(self)
-        self.canvasInDetection.installEventFilter(self)
-
-        # Menu bar to set parameters
-        menu_bar = self.menuBar() # 创建菜单栏
-        settings_menu = menu_bar.addMenu("Settings") # 添加一个菜单
-        set_params_action = QAction("Set Parameters", self) # 添加一个动作
-        set_params_action.triggered.connect(self.set_parameters) # 动作绑定事件
-        settings_menu.addAction(set_params_action) # 将动作添加到菜单中
+        self._canvases_init() # 初始化画布
+        self._menu_init() # 初始化菜单栏
 
         self.cfg = cfg_debug if debug else cfg_GUI
         self.model = None
@@ -358,7 +349,40 @@ class GUIWindow(QMainWindow):
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
         if(self.cfg.LOG.OUTPUT_TO_FILE):
             logger.add(self.cfg.LOG.DIR + f'/{self.cfg.LOG.PREFIX}_{cur_time}.log', encoding='utf-8')
-    
+
+    def _canvases_init(self):
+        # 初始化画布
+        name_list = [
+            "InFeatures",
+            "InTraining",
+            "InPrediction",
+            "InDetection",
+            "ShowLoss",
+        ]
+        for name in name_list:
+            exec(f"self.editor.frame{name}.setLayout(QVBoxLayout()) ")
+            exec(f"self.canvas{name} = FigureCanvas(Figure()) ")
+            exec(f"self.editor.frame{name}.layout().addWidget(self.canvas{name}) ")
+            exec(f"self.canvas{name}.installEventFilter(self) ")
+        '''
+        原本的写法：
+        self.editor.frameInFeatures.setLayout(QVBoxLayout())
+            # 添加一个layout，之后才能用frame.layout().addWidget(canvas)来加入画布
+        self.canvasInFeatures = FigureCanvas(Figure())
+        self.editor.frameInFeatures.layout().addWidget(self.canvasInFeatures)
+            # 添加一个画布到layout中，这里记下来这个画布的名字以便后续更新
+        self.canvasInFeatures.installEventFilter(self)
+            # 安装事件过滤器到 FigureCanvas 上以便检测鼠标双击事件
+        # 对于其余画图的frame，也进行相同的操作
+        '''
+    def _menu_init(self):
+        # Menu bar to set parameters
+        menu_bar = self.menuBar() # 创建菜单栏
+        settings_menu = menu_bar.addMenu("Settings") # 添加一个菜单
+        set_params_action = QAction("Set Parameters", self) # 添加一个动作
+        set_params_action.triggered.connect(self.set_parameters) # 动作绑定事件
+        settings_menu.addAction(set_params_action) # 将动作添加到菜单中
+
     def set_parameters(self):
         # 设置参数的事件函数
         dialog = SetParametersDialog(self, self.cfg)
@@ -569,7 +593,7 @@ class GUIWindow(QMainWindow):
         # 开始训练
         logger.info("Start training with config:{}".format(self.cfg))
         logger.info("feature(s) used: {}".format(', '.join(self.cfg.FEATURE.USED_F)))
-        self.model = set_train_model(self.cfg)
+        self.model,train_losses,_ = set_train_model(self.cfg)
 
         # 计算阈值
         logger.info('Start to calculate threshold and distribution...')
@@ -577,7 +601,8 @@ class GUIWindow(QMainWindow):
         self.refence_errors = normal_errors
 
         # 绘制并显示
-        hist_tied_to_frame(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
+        hist_tied_to_canvas(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
+        loss_to_canvas(train_losses,self.canvasShowLoss)
  
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
@@ -622,7 +647,7 @@ class GUIWindow(QMainWindow):
 
     def PredictionDraw(self, errs):
         # errs = [self.refence_errors, errors]
-        hist_tied_to_frame(self.cfg, errs, 
+        hist_tied_to_canvas(self.cfg, errs, 
                            self.canvasInPrediction,
                            is_train=False)
     
@@ -674,14 +699,14 @@ class GUIWindow(QMainWindow):
 
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
-        update_ratio_to_frame(self.cfg, res_series, self.canvasInDetection)
+        update_ratio_to_canvas(self.cfg, res_series, self.canvasInDetection)
 
 #%% 开始运行
 
 def main():
     app = QApplication(sys.argv)
     # app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
-    w = GUIWindow(debug=True)
+    w = GUIWindow(debug=False)
     w.show()
     n = app.exec()
     sys.exit(n)

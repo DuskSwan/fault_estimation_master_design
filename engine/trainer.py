@@ -94,3 +94,5 @@ def do_train(
         plt.legend()
         plt.grid(True)
         plt.show()
+        
+    return train_losses, val_losses
