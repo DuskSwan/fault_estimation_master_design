@@ -125,7 +125,6 @@ def update_ratio_to_canvas(cfg, series: pd.Series, canvas, tit=''):
         # 索引被假设为整数，直接使用
         x = pd.RangeIndex(start=0, stop=len(series))
     
-    # cont = Path(cfg.INFERENCE.TEST_CONTENT)
     y = series.values
     interval = len(x) // 10 if len(x) > 30 else 1
     xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
@@ -230,6 +229,7 @@ def loss_to_canvas(losses, canvas):
     ax.set_xlabel('Epochs')
     ax.set_ylabel('Loss')
     ax.set_title('Training Loss over Epochs')
+    ax.set_ylim(bottom=0)
     ax.legend()
     
     # 强制刷新画布
