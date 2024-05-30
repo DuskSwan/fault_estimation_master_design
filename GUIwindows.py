@@ -699,7 +699,8 @@ class GUIWindow(QMainWindow):
 
     def DetectionTurnDraw(self, res):
         res_series = pd.Series({k: v for k, v in res.items()})
-        update_ratio_to_canvas(self.cfg, res_series, self.canvasInDetection)
+        update_ratio_to_canvas(self.cfg, res_series, self.canvasInDetection, 
+                               tit = Path(self.cfg.INFERENCE.TEST_CONTENT).name)
 
 #%% 开始运行
 
