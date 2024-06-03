@@ -18,7 +18,7 @@ from torch import load as tload
 
 # draw
 import tempfile
-from matplotlib.figure import Figure
+from matplotlib.figure import Figure # 以exec()形式使用，因此需要导入
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.dates import DateFormatter, AutoDateLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -339,11 +339,10 @@ class GUIWindow(QMainWindow):
 
         self._canvases_init() # 初始化画布
         self._menu_init() # 初始化菜单栏
+        self._attrs_init() # 初始化属性
 
         self.cfg = cfg_debug if debug else cfg_GUI
-        self.model = None
-        self.refence_errors = np.array([])
-
+        
         logger.info("GUI window initialized")
         set_random_seed(self.cfg.SEED)
         cur_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
@@ -382,6 +381,11 @@ class GUIWindow(QMainWindow):
         set_params_action = QAction("Set Parameters", self) # 添加一个动作
         set_params_action.triggered.connect(self.set_parameters) # 动作绑定事件
         settings_menu.addAction(set_params_action) # 将动作添加到菜单中
+    def _attrs_init(self):
+        self.model = None
+        self.refence_errors = np.array([])
+        self.corr_pairs_df = pd.DataFrame()
+        self.dtw_df = pd.DataFrame()
 
     def set_parameters(self):
         # 设置参数的事件函数
@@ -548,14 +552,14 @@ class GUIWindow(QMainWindow):
             for j in range(i+1, len(corr.columns)):
                 if abs(corr.iloc[i, j]) > 0.8:
                     corr_pairs.append((corr.columns[i], corr.columns[j], corr.iloc[i, j])) 
-        df = pd.DataFrame(corr_pairs, columns=["feature1", "feature2", "correlation"])
-        df.sort_values(by='correlation', ascending=False, inplace=True)
-        show_table_in_widget(df, self.editor.CorrWidget)
+        self.corr_pairs_df = pd.DataFrame(corr_pairs, columns=["feature1", "feature2", "correlation"])
+        self.corr_pairs_df.sort_values(by='correlation', ascending=False, inplace=True)
+        show_table_in_widget(self.corr_pairs_df, self.editor.CorrWidget)
 
         # 将排序后的列表转换为 Pandas DataFrame
-        df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
+        self.dtw_df = pd.DataFrame(ranked_feat, columns=["feature", "DTW score"])
         # 在 QTableWidget 中显示 DataFrame
-        show_table_in_widget(df, self.editor.DTWWidget)
+        show_table_in_widget(self.dtw_df, self.editor.DTWWidget)
 
         # 重设下拉多选框的选项
         self.editor.comboBoxSelectFeaturesInTraining.clear()
@@ -567,6 +571,20 @@ class GUIWindow(QMainWindow):
         self.editor.comboBoxSelectFeaturesInDetection.clear()
         self.editor.comboBoxSelectFeaturesInDetection.addItems([i[0] for i in ranked_feat])
         self.editor.comboBoxSelectFeaturesInDetection.selectItems([0])
+
+    @pyqtSlot() # 保存DTW结果
+    def on_btnExportDTW_clicked(self):
+        if not checkAndWarn(self,not self.dtw_df.empty,false_fb="未计算DTW得分，请先计算"): return
+        file_path, _ = QFileDialog.getSaveFileName(self, "保存DTW结果", "DTW", "CSV Files (*.csv)")
+        if file_path:
+            self.dtw_df.to_csv(file_path, index=False)
+    
+    @pyqtSlot() # 保存相关性结果
+    def on_btnExportCorPairs_clicked(self):
+        if not checkAndWarn(self,not self.corr_pairs_df.empty,false_fb="未计算相关性，请先计算"): return
+        file_path, _ = QFileDialog.getSaveFileName(self, "保存相关性结果", "Correlation", "CSV Files (*.csv)")
+        if file_path:
+            self.corr_pairs_df.to_csv(file_path, index=False)
 
     @pyqtSlot() # 训练LSTM模型
     def on_btnTraining_clicked(self):
@@ -603,7 +621,7 @@ class GUIWindow(QMainWindow):
         # 绘制并显示
         hist_tied_to_canvas(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
         loss_to_canvas(train_losses,self.canvasShowLoss)
- 
+
     @pyqtSlot() # 保存LSTM模型
     def on_btnSaveModel_clicked(self):
         if not checkAndWarn(self,self.model,false_fb="模型不存在，请训练模型"): return
@@ -707,7 +725,7 @@ class GUIWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     # app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
-    w = GUIWindow(debug=False)
+    w = GUIWindow(debug=True)
     w.show()
     n = app.exec()
     sys.exit(n)
