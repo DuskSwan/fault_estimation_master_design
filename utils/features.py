@@ -218,6 +218,7 @@ def view_features_DTW_with_n_normal(normal_paths, fault_path: str,
                                     level = 4,
                                     sublen = 2048,
                                     channel_score_mode = 'sum',
+                                    channel_used = [0]
                                     ):
     assert normal_paths, 'normal signal paths must be not empty when calculate DTW score'
     
@@ -235,6 +236,7 @@ def view_features_DTW_with_n_normal(normal_paths, fault_path: str,
                                     level,
                                     sublen,
                                     channel_score_mode,
+                                    channel_used
                                 )
         res_scores = combine_dtw_score(res_scores, ranked_feat)
         sum_feat_df = merge_and_add_dataframes(feat_df, sum_feat_df)
@@ -252,6 +254,7 @@ def view_features_DTW_with_one_normal(normal_path: str, fault_path: str,
                                       level = 4,
                                       sublen = 2048,
                                       channel_score_mode = 'sum',
+                                      channel_used = [0,1]
                                     ):
     # 分别提取特征
     tpaths = [normal_path, fault_path]
@@ -259,6 +262,7 @@ def view_features_DTW_with_one_normal(normal_path: str, fault_path: str,
     for i in range(2): #分别对正常和故障
         data_path = tpaths[i]
         data = pd.read_csv(data_path).values #numpy数组
+        data = data[:,channel_used] # 选取部分通道
         n,_ = data.shape
         length = min(n, feat_max_length)
         data = data[:length] #减少所用的信号长度

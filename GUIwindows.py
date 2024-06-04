@@ -386,6 +386,8 @@ class GUIWindow(QMainWindow):
         self.refence_errors = np.array([])
         self.corr_pairs_df = pd.DataFrame()
         self.dtw_df = pd.DataFrame()
+        self.channel_n = None
+
 
     def set_parameters(self):
         # 设置参数的事件函数
@@ -433,6 +435,30 @@ class GUIWindow(QMainWindow):
             if not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
             logger.info(f"Normal signal imported (in feature selection): {fname}")
             self.cfg.FEATURE.NORMAL_PATHS.append(fname)
+        
+        # Get the number of channels and display it in the combo box
+        self.get_channel_check_and_show(file_paths[0], self.editor.comboBoxSelectChannelInFeatures)
+
+    def get_channel_check_and_show(self, csv_path, combo):
+        # 获取通道数, 检查与之前是否一致。 根据需要更新相应的多选下拉框
+        df = pd.read_csv(csv_path)
+        chn_n = df.shape[1]
+        
+        if self.channel_n is None:
+            self.channel_n = chn_n
+            combo.clear()
+            combo.addItems([f'通道{i}' for i in range(chn_n)])
+            combo.selectItems([i for i in range(chn_n)])
+        else:
+            if self.channel_n != chn_n:
+                logger.warning(f"通道数发生变化，之前为{self.channel_n}，现在为{chn_n}")
+                QMessageBox.warning(self, "提醒", f"注意，当前导入信号的通道数{chn_n}与过往{self.channel_n}不一致", QMessageBox.Ok)
+                self.channel_n = chn_n
+                combo.clear()
+                combo.addItems([f'通道{i}' for i in range(chn_n)])
+                combo.selectItems([i for i in range(chn_n)])
+            else:
+                logger.info(f"通道数未发生变化，为{chn_n}")
 
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
@@ -440,6 +466,7 @@ class GUIWindow(QMainWindow):
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Fault signal imported: {}".format(fname))
         self.cfg.TRAIN.FAULT_PATH = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInFeatures)
 
     @pyqtSlot() #导入正常信号 for 模型训练
     def on_btnImportNormalSignal_clicked(self):
@@ -511,6 +538,11 @@ class GUIWindow(QMainWindow):
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
                             True): return
+        # 检查是否选中了通道
+        used_channels = self.editor.comboBoxSelectChannelInFeatures.currentData()
+        if not checkAndWarn(self,used_channels,
+                            false_fb="未选择通道，请选择通道"): return
+        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels] # 从通道名中提取通道号
 
         # 计算DTW得分
         logger.info("Search propre features...")
@@ -525,6 +557,7 @@ class GUIWindow(QMainWindow):
                     wavelet= self.cfg.DENOISE.WAVELET, 
                     level=self.cfg.DENOISE.LEVEL,
                     channel_score_mode= self.cfg.FEATURE.CHANNEL_SCORE_MODE,
+                    channel_used= self.cfg.DATA.USED_CHANNELS,
             ) # ranked_feat is list[tuple[str, float]], feat_df is pd.DataFrame
         except Exception as e:
             logger.error(f"meet error {e} in view_features_DTW_with_n_normal")

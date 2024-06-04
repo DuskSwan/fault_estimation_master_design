@@ -137,3 +137,9 @@ _C.DENOISE.SHOW_METHOD = 'wavelet' # 'smooth' or 'wavelet'
 _C.DENOISE.SHOW_SMOOTH_STEP = 3
 _C.DENOISE.SHOW_WAVELET = 'db4'
 _C.DENOISE.SHOW_LEVEL = 4
+
+# -----------------------------------------------------------------------------
+# DATA
+# -----------------------------------------------------------------------------
+_C.DATA = CN()
+_C.DATA.USED_CHANNELS = []

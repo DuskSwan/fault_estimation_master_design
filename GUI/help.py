@@ -71,6 +71,18 @@ def modify_file(filename):
         if 'self.comboBoxSelectFeaturesInDetection = QtWidgets.QComboBox(self.widgetInDetection)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectFeaturesInDetection = CheckableComboBox(self.widgetInDetection)\n'
             lines.insert(i+1, inde + 'self.comboBoxSelectFeaturesInDetection.addItems(comunes)\n')
+        # 特征 - 通道选择下拉框
+        if 'self.comboBoxSelectChannelInFeatures = QtWidgets.QComboBox(self.widgetInFeatures)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectChannelInFeatures = CheckableComboBox(self.widgetInFeatures)\n'
+        # 训练 - 通道选择下拉框
+        if 'self.comboBoxSelectChannelInTraining = QtWidgets.QComboBox(self.widgetInTriaining)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectChannelInTraining = CheckableComboBox(self.widgetInTriaining)\n'
+        # 预测 - 通道选择下拉框
+        if 'self.comboBoxSelectChannelInPrediction = QtWidgets.QComboBox(self.widgetInPrediction)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectChannelInPrediction = CheckableComboBox(self.widgetInPrediction)\n'
+        # 检测 - 通道选择下拉框
+        if 'self.comboBoxSelectChannelInDetection = QtWidgets.QComboBox(self.widgetInDetection)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectChannelInDetection = CheckableComboBox(self.widgetInDetection)\n'
         # 指定默认展示页
         if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'

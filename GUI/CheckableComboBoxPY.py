@@ -139,6 +139,8 @@ comunes = ['RMS','SRA', 'KV', 'SV', 'PPV',
          ]
 combo = CheckableComboBox()
 combo.addItems(comunes)
+combo.selectItems([0]) # 选中第一个项
+res = combo.currentData() # 获取选中项的数据列表
 '''
 
 # -*- coding: utf-8 -*-
