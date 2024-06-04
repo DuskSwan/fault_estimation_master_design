@@ -337,6 +337,7 @@ def signal_to_features_tf(sample_list, output_type='np',feat_func_name_list = No
     """
     sample_list是时间序列切片得到的样本集，是三维数组（单个样本是二维数组），每个样本计算一个向量作为特征
     output_type指定输出类型的数组（np）还是数据表（pd）
+    feat_func_name_list是特征函数名字(str)的列表，可以指定特征函数
     输出特征组成的时间序列，为二维数组，每行是一个样本的特征，每列是一个特征
     """
     feature_df = pd.DataFrame([])

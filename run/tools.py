@@ -66,6 +66,9 @@ def signal_to_XY(cfg, is_train=True, path = None):
     else: data_path = cfg.INFERENCE.UNKWON_PATH
 
     signal = pd.read_csv(data_path).values #读成numpy数组
+    assert cfg.DATA.USED_CHANNELS, 'cfg.DATA.USED_CHANNELS should not be empty, check chanmels selected'
+    assert max(cfg.DATA.USED_CHANNELS) < signal.shape[1], 'cfg.DATA.USED_CHANNELS should be less than signal channels'
+    signal = signal[:,cfg.DATA.USED_CHANNELS] #只取需要的通道
     n,_ = signal.shape # 1958912
     piece = cfg.DESIGN.PIECE
     subl = cfg.DESIGN.SUBLEN

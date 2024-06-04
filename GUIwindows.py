@@ -449,6 +449,7 @@ class GUIWindow(QMainWindow):
             combo.clear()
             combo.addItems([f'通道{i}' for i in range(chn_n)])
             combo.selectItems([i for i in range(chn_n)])
+            logger.info(f"通道数更新为{chn_n}")
         else:
             if self.channel_n != chn_n:
                 logger.warning(f"通道数发生变化，之前为{self.channel_n}，现在为{chn_n}")
@@ -477,6 +478,7 @@ class GUIWindow(QMainWindow):
                          false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请无视该警告")
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInTraining)
 
     @pyqtSlot() #导入正常信号 for 新数据预测
     def on_btnImportInferentSignal_clicked(self):
@@ -487,6 +489,7 @@ class GUIWindow(QMainWindow):
                          false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInPrediction)
 
     @pyqtSlot() #导入未知信号 for 新数据预测
     def on_btnImportUnknownSignal_clicked(self):
@@ -494,6 +497,7 @@ class GUIWindow(QMainWindow):
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal imported: {}".format(fname))
         self.cfg.INFERENCE.UNKWON_PATH = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInPrediction)
     
     @pyqtSlot() #导入正常信号 for 故障检测
     def on_btnImportInferentSignal_Dete_clicked(self):
@@ -504,6 +508,7 @@ class GUIWindow(QMainWindow):
                          false_fb="导入的正常信号与过往导入的正常信号不一致，若坚持使用不一致的数据，请关闭该警告窗口")
         logger.info("Normal signal imported: {}".format(fname))
         self.cfg.TRAIN.NORMAL_PATH = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInDetection)
     
     @pyqtSlot() #导入未知信号集 for 故障检测
     def on_btnImportFullTest_clicked(self):
@@ -511,6 +516,7 @@ class GUIWindow(QMainWindow):
         # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal directory imported: {}".format(fname))
         self.cfg.INFERENCE.TEST_CONTENT = fname
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInDetection)
 
     @pyqtSlot() #导入预测模型 for 故障诊断
     def on_btnImportModel_clicked(self):
@@ -641,6 +647,11 @@ class GUIWindow(QMainWindow):
             self.cfg.DESIGN.PIECE = self.cfg.DESIGN.FPIECE * self.cfg.DESIGN.FSUBLEN
             logger.warning(f"已重设fpiece为{self.cfg.DESIGN.FPIECE}，piece为{self.cfg.DESIGN.PIECE}")
         
+        # 检查是否选中了通道
+        used_channels = self.editor.comboBoxSelectChannelInTraining.currentData()
+        if not checkAndWarn(self,used_channels, false_fb="未选择通道，请选择通道"): return
+        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels] # 从通道名中提取通道号
+
         # 开始训练
         logger.info("Start training with config:{}".format(self.cfg))
         logger.info("feature(s) used: {}".format(', '.join(self.cfg.FEATURE.USED_F)))
