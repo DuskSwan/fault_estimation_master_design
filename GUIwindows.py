@@ -271,7 +271,7 @@ class DetectThread(QThread):
             logger.info('Start to calculate normal signal MAE...')
             self.refence_errors = raw_signal_to_errors(self.cfg, self.model, is_normal=True)
 
-        # 读取模型的输入维数并检查
+        # 获取全寿命数据
         cont = Path(self.cfg.INFERENCE.TEST_CONTENT)
         logger.info('Full roll test data directory: {}'.format(cont))
         files = sort_list(list(cont.glob('*.csv')))
@@ -386,7 +386,7 @@ class GUIWindow(QMainWindow):
         self.refence_errors = np.array([])
         self.corr_pairs_df = pd.DataFrame()
         self.dtw_df = pd.DataFrame()
-        self.channel_n = None
+        self.channel_n = None # 当前信号的总通道数
 
 
     def set_parameters(self):
@@ -440,26 +440,24 @@ class GUIWindow(QMainWindow):
         self.get_channel_check_and_show(file_paths[0], self.editor.comboBoxSelectChannelInFeatures)
 
     def get_channel_check_and_show(self, csv_path, combo):
+        if not csv_path: return
         # 获取通道数, 检查与之前是否一致。 根据需要更新相应的多选下拉框
         df = pd.read_csv(csv_path)
         chn_n = df.shape[1]
         
         if self.channel_n is None:
             self.channel_n = chn_n
-            combo.clear()
-            combo.addItems([f'通道{i}' for i in range(chn_n)])
-            combo.selectItems([i for i in range(chn_n)])
             logger.info(f"通道数更新为{chn_n}")
         else:
             if self.channel_n != chn_n:
                 logger.warning(f"通道数发生变化，之前为{self.channel_n}，现在为{chn_n}")
                 QMessageBox.warning(self, "提醒", f"注意，当前导入信号的通道数{chn_n}与过往{self.channel_n}不一致", QMessageBox.Ok)
                 self.channel_n = chn_n
-                combo.clear()
-                combo.addItems([f'通道{i}' for i in range(chn_n)])
-                combo.selectItems([i for i in range(chn_n)])
             else:
                 logger.info(f"通道数未发生变化，为{chn_n}")
+        combo.clear()
+        combo.addItems([f'通道{i}' for i in range(chn_n)])
+        combo.selectItems([i for i in range(chn_n)])
 
     @pyqtSlot() #导入故障信号 for 特征筛选
     def on_btnImportFaultSignalInSelection_clicked(self):
@@ -516,7 +514,8 @@ class GUIWindow(QMainWindow):
         # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal directory imported: {}".format(fname))
         self.cfg.INFERENCE.TEST_CONTENT = fname
-        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInDetection)
+        files = list(Path(fname).glob('*.csv'))
+        self.get_channel_check_and_show(files[0], self.editor.comboBoxSelectChannelInDetection)
 
     @pyqtSlot() #导入预测模型 for 故障诊断
     def on_btnImportModel_clicked(self):
@@ -549,6 +548,10 @@ class GUIWindow(QMainWindow):
         if not checkAndWarn(self,used_channels,
                             false_fb="未选择通道，请选择通道"): return
         self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels] # 从通道名中提取通道号
+        # 将其余页面的通道选择框更新
+        self.get_channel_check_and_show(self.cfg.FEATURE.NORMAL_PATHS[0], self.editor.comboBoxSelectChannelInTraining)
+        self.get_channel_check_and_show(self.cfg.FEATURE.NORMAL_PATHS[0], self.editor.comboBoxSelectChannelInPrediction)
+        self.get_channel_check_and_show(self.cfg.FEATURE.NORMAL_PATHS[0], self.editor.comboBoxSelectChannelInDetection)
 
         # 计算DTW得分
         logger.info("Search propre features...")
@@ -692,9 +695,14 @@ class GUIWindow(QMainWindow):
         pointed_features = self.editor.comboBoxSelectFeaturesInPrediction.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 检查是否选中通道
+        used_channels = self.editor.comboBoxSelectChannelInPrediction.currentData()
+        if not checkAndWarn(self,used_channels, false_fb="未选择通道，请选择通道"): return
+        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels]
         # 读取模型的输入维数并检查
         input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        # data_tunnel = pd.read_csv(self.cfg.INFERENCE.UNKWON_PATH).shape[1] #数据表列数
+        data_tunnel = len(self.cfg.DATA.USED_CHANNELS)
         feature_n = len(self.cfg.FEATURE.USED_F)
         state = (feature_n * data_tunnel == input_dim)
         if not checkAndWarn(self,state,false_fb=f'模型输入维数{input_dim}与数据通道数{data_tunnel}、特征数{feature_n}不匹配'): return
@@ -727,6 +735,10 @@ class GUIWindow(QMainWindow):
         pointed_features = self.editor.comboBoxSelectFeaturesInDetection.currentData()
         if pointed_features: self.cfg.FEATURE.USED_F = pointed_features
         if not checkAndWarn(self,self.cfg.FEATURE.USED_F,false_fb="未选中任何特征"): return
+        # 检查是否选中通道
+        used_channels = self.editor.comboBoxSelectChannelInDetection.currentData()
+        if not checkAndWarn(self,used_channels, false_fb="未选择通道，请选择通道"): return
+        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels]
         # 检查比例阈值是否正常
         if not checkAndWarn(self,0 <= self.cfg.INFERENCE.MAE_ratio_threshold <= 1,
                             false_fb="比例阈值应在0-1之间"): return
@@ -735,7 +747,8 @@ class GUIWindow(QMainWindow):
         logger.info('Full roll test data directory: {}'.format(cont))
         files = sort_list(list(cont.glob('*.csv')))
         input_dim = self.model.lstm.input_size #模型的输入维数/通道数
-        data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
+        # data_channel = pd.read_csv(files[0]).shape[1] #数据表列数
+        data_channel = len(self.cfg.DATA.USED_CHANNELS)
         feature_n = len(self.cfg.FEATURE.USED_F)
         state = (feature_n * data_channel == input_dim)
         if not checkAndWarn(self, state,
@@ -769,7 +782,7 @@ class GUIWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     # app.setQuitOnLastWindowClosed(True) #添加这行才能在spyder正常退出
-    w = GUIWindow(debug=True)
+    w = GUIWindow(debug=False)
     w.show()
     n = app.exec()
     sys.exit(n)

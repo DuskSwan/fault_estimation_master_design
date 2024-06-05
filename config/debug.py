@@ -20,7 +20,7 @@ _C.OUTPUT.MODEL_NAME = "model.pth"
 # MODEL
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
-_C.MODEL.NAME = 'LAN' # 'LSTM' or 'LAN'
+_C.MODEL.NAME = 'LSTM' # 'LSTM' or 'LAN'
 _C.MODEL.LSTM_HIDDEN = 10
 _C.MODEL.LINE_HIDDEN = 16
 _C.MODEL.USED_LAYERS = 1
@@ -60,7 +60,7 @@ _C.TRAIN.NORMAL_PATH = r'D:\Development\Datasets\南航IDES研究室故障模拟
 _C.TRAIN.FAULT_PATH = r'D:\Development\Datasets\南航IDES研究室故障模拟数据（转子系统）\2020年-转子不对中故障（含套齿联轴器的转子试验器）\2020年10月5号的不对中试验研究数据\csv\2020年10月5日-5-10毫米不对中-升速至6000rpm.csv'
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHECKPOINT = False
-_C.TRAIN.NEED_PLOT_LOSS = True
+_C.TRAIN.NEED_PLOT_LOSS = False
 
 
 # -----------------------------------------------------------------------------

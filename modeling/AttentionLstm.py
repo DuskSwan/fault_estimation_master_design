@@ -132,7 +132,7 @@ class Transformer(nn.Module):
 class LSTMAttentionNet(nn.Module):
     def __init__(self, input_size, seq_len, hidden_size, output_size, output_len,
                  num_layers=1,):
-        super(LSTMAttentionNet, self).__init__()
+        super().__init__()
         self.output_len = output_len
         self.output_size = output_size
         self.transformer = Transformer(input_size, 
