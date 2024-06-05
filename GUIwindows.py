@@ -451,7 +451,7 @@ class GUIWindow(QMainWindow):
         else:
             if self.channel_n != chn_n:
                 logger.warning(f"通道数发生变化，之前为{self.channel_n}，现在为{chn_n}")
-                QMessageBox.warning(self, "提醒", f"注意，当前导入信号的通道数{chn_n}与过往{self.channel_n}不一致", QMessageBox.Ok)
+                QMessageBox.warning(self, "Warning", f"注意，当前导入信号的通道数({chn_n})与过往({self.channel_n})不一致", QMessageBox.Ok)
                 self.channel_n = chn_n
             else:
                 logger.info(f"通道数未发生变化，为{chn_n}")
@@ -537,17 +537,17 @@ class GUIWindow(QMainWindow):
     
     @pyqtSlot() # 计算DTW并展示
     def on_btnCalculateDTW_clicked(self):
+        # 检查是否选中了通道
+        used_channels = self.editor.comboBoxSelectChannelInFeatures.currentData()
+        if not checkAndWarn(self,used_channels,
+                            false_fb="未选择通道，请选择通道"): return
+        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels] # 从通道名中提取通道号
         # 检查是否导入了正常与故障信号
         state = self.cfg.FEATURE.NORMAL_PATHS and self.cfg.TRAIN.FAULT_PATH
         if not checkAndWarn(self,state,
                             "数据导入成功，开始计算",
                             "数据缺失，请导入正常与故障信号",
                             True): return
-        # 检查是否选中了通道
-        used_channels = self.editor.comboBoxSelectChannelInFeatures.currentData()
-        if not checkAndWarn(self,used_channels,
-                            false_fb="未选择通道，请选择通道"): return
-        self.cfg.DATA.USED_CHANNELS = [int(i[-1]) for i in used_channels] # 从通道名中提取通道号
         # 将其余页面的通道选择框更新
         self.get_channel_check_and_show(self.cfg.FEATURE.NORMAL_PATHS[0], self.editor.comboBoxSelectChannelInTraining)
         self.get_channel_check_and_show(self.cfg.FEATURE.NORMAL_PATHS[0], self.editor.comboBoxSelectChannelInPrediction)
@@ -619,7 +619,8 @@ class GUIWindow(QMainWindow):
         if not checkAndWarn(self,not self.dtw_df.empty,false_fb="未计算DTW得分，请先计算"): return
         file_path, _ = QFileDialog.getSaveFileName(self, "保存DTW结果", "DTW", "CSV Files (*.csv)")
         if file_path:
-            self.dtw_df.to_csv(file_path, index=False)
+            no_tanked_dtw_df = self.dtw_df.sort_values(by='feature', ascending=True)
+            no_tanked_dtw_df.to_csv(file_path, index=False)
     
     @pyqtSlot() # 保存相关性结果
     def on_btnExportCorPairs_clicked(self):
@@ -628,7 +629,7 @@ class GUIWindow(QMainWindow):
         if file_path:
             self.corr_pairs_df.to_csv(file_path, index=False)
 
-    @pyqtSlot() # 训练LSTM模型
+    @pyqtSlot() # 训练模型
     def on_btnTraining_clicked(self):
         # 检查每个项是否被选中，如果被选中则添加到selected_items中
         items = []
@@ -669,10 +670,10 @@ class GUIWindow(QMainWindow):
         hist_tied_to_canvas(self.cfg,normal_errors,self.canvasInTraining,is_train=True)
         loss_to_canvas(train_losses,self.canvasShowLoss)
 
-    @pyqtSlot() # 保存LSTM模型
+    @pyqtSlot() # 保存模型
     def on_btnSaveModel_clicked(self):
         if not checkAndWarn(self,self.model,false_fb="模型不存在，请训练模型"): return
-        file_path, _ = QFileDialog.getSaveFileName(self, "保存模型", "LSTM", "Model Files (*.pth)")
+        file_path, _ = QFileDialog.getSaveFileName(self, "保存模型", "model", "Model Files (*.pth)")
         if file_path:
             # 检查路径是否存在中文
             if not checkAndWarn(self,not_contains_chinese(file_path),

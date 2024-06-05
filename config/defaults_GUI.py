@@ -49,15 +49,15 @@ _C.FEATURE.USED_F = []
 _C.FEATURE.USED_THRESHOLD  = ['Z']
 _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get sum of differernt channel
     # 'sum' or 'every'
-_C.FEATURE.NORMAL_PATHS = [r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\1.csv']
+_C.FEATURE.NORMAL_PATHS = [r'']
 
 # -----------------------------------------------------------------------------
 # TRAIN
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
-_C.TRAIN.NORMAL_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\1.csv'
-_C.TRAIN.FAULT_PATH = r'D:\GithubRepos\fault_estimation_master_design\data\datasets\XJTU-SY\Bearing1_1\123.csv'
+_C.TRAIN.NORMAL_PATH = r''
+_C.TRAIN.FAULT_PATH = r''
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHECKPOINT = False
 _C.TRAIN.NEED_PLOT_LOSS = False
@@ -69,8 +69,8 @@ _C.TRAIN.NEED_PLOT_LOSS = False
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
 _C.INFERENCE.UNKWON_PATH = ''
-_C.INFERENCE.MODEL_PATH = 'output/xjtu_lstm.pth'
-_C.INFERENCE.TEST_CONTENT = r'data\datasets\XJTU-SY\Bearing1_1'
+_C.INFERENCE.MODEL_PATH = ''
+_C.INFERENCE.TEST_CONTENT = r''
 _C.INFERENCE.MAE_ratio_threshold = 0.5
 
 # -----------------------------------------------------------------------------
