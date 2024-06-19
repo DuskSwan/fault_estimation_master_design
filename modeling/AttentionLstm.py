@@ -135,6 +135,7 @@ class LSTMAttentionNet(nn.Module):
         super().__init__()
         self.output_len = output_len
         self.output_size = output_size
+        self.layernorm = nn.LayerNorm(input_size)
         self.transformer = Transformer(input_size, 
                                        depth=1, heads=8, 
                                        dim_head=64, 
@@ -148,6 +149,8 @@ class LSTMAttentionNet(nn.Module):
         # x: [batch_size, seq_len, input_size] 
 
         x = self.transformer(x) 
+            # (batch_size, seq_len, input_size) -> (batch_size, seq_len, input_size)
+        x = self.layernorm(x)
             # (batch_size, seq_len, input_size) -> (batch_size, seq_len, input_size)
         lstm_out, _ = self.lstm(x)  # LSTM层输出
             # (batch_size, seq_len, input_size) -> (batch_size, seq_len, hidden_size)

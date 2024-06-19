@@ -69,6 +69,10 @@ def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
 
 def hist_tied_to_canvas(cfg, arrays, canvas, is_train=False):
+    '''
+    arrays: 1D array or 2D array, if 2D array, the first row is normal signal, the second row is unknown signal
+    is_train: bool, if True, only plot normal signal, else plot both normal and unknown signal
+    '''
     n_bin = cfg.DRAW.HIST_BIN
     colors = cfg.DRAW.THRESHOLD_COLORS
 
@@ -87,8 +91,8 @@ def hist_tied_to_canvas(cfg, arrays, canvas, is_train=False):
         thresholds = calc_thresholds(arrays[0], method=cfg.FEATURE.USED_THRESHOLD)
         assert len(thresholds) <= len(colors), 'thresholds more than colors, checkout config'
         for i, (k, t) in enumerate(thresholds.items()):
-            ax.axvline(x=t, linestyle='--', color=colors[i], label='threshold({})'.format(k))
-        ax.axvline(x=arrays[1].mean(), linestyle='--', color='black', label='indicator')
+            ax.axvline(x=t, linestyle='--', color=colors[i], linewidth=3, label='threshold({})'.format(k))
+        ax.axvline(x=arrays[1].mean(), linestyle='--', linewidth=3, color='black', label='indicator')
         name = Path(cfg.INFERENCE.UNKWON_PATH).name
     ax.set_title(name + ' MAE distribution')
     ax.legend()
