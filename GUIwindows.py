@@ -12,7 +12,6 @@ from loguru import logger
 # data
 import numpy as np
 import pandas as pd
-# import torch.nn as nn
 from torch import save as tsave
 from torch import load as tload
 
@@ -67,6 +66,13 @@ def checkAndWarn(window,handle,true_fb='',false_fb='',need_true_fb=False):
 
 def not_contains_chinese(path):
     return not re.search(r'[\u4e00-\u9fff]', path)
+
+def files_sort_key(file):
+    name = file.stem
+    try:
+        return int(name)
+    except ValueError:
+        return name
 
 def hist_tied_to_canvas(cfg, arrays, canvas, is_train=False):
     '''
@@ -258,6 +264,50 @@ def show_table_in_widget(df, widget):
     # 设置列宽度为内容适应
     widget.resizeColumnsToContents()
 
+def view_signal_in_canvas(array, canvas, title='Signal',ticks_dict=None):  
+    # 清理之前的图形
+    figure = canvas.figure
+    figure.clear()
+    ax = figure.add_subplot(111)
+    ax.clear()  # Clear the previous plot
+
+    # 检查样本点数目，防止OverflowError
+    max_samples = float('inf') 
+    n_samples = array.shape[0]
+    if n_samples > max_samples:
+        logger.warning(f'Too many samples to plot, only plot the first {max_samples} samples')
+        array = array[:max_samples]
+        if ticks_dict:
+            ticks_dict = {k: v for k, v in ticks_dict.items() if k < max_samples}
+        n_samples = max_samples
+    logger.info(f'Plotting {n_samples} samples')
+
+    # 遍历 array 的每一列
+    for i, column in enumerate(array.T):
+        ax.plot(column, label='通道'+str(i), alpha=0.7)
+
+    ax.set_title(title)
+    ax.set_xlabel('Index')
+    ax.set_ylabel('Value')
+    ax.legend()
+    if ticks_dict:
+        logger.info('Set xticks to file names')
+        keys = list(ticks_dict.keys())
+        values = list(ticks_dict.values())
+
+        # 如果元素超过10个，从中等比例选择10个
+        if len(keys) > 10:
+            indices = np.linspace(0, len(keys) - 1, 10, dtype=int)
+            keys = [keys[i] for i in indices]
+            values = [values[i] for i in indices]
+    
+        ax.set_xticks(keys)  # 设置刻度位置
+        ax.set_xticklabels(values)  # 设置刻度标签为文件名
+
+    # 强制刷新画布
+    figure.tight_layout()
+    canvas.draw()
+
 #%% 定义复杂功能的线程
 
 class DetectThread(QThread):
@@ -361,6 +411,7 @@ class GUIWindow(QMainWindow):
             "InPrediction",
             "InDetection",
             "ShowLoss",
+            "InView",
         ]
         for name in name_list:
             exec(f"self.editor.frame{name}.setLayout(QVBoxLayout()) ")
@@ -418,11 +469,14 @@ class GUIWindow(QMainWindow):
         # 保存原始 figure 到临时文件
         figure = canvas.figure
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
-            figure.savefig(temp_file.name, dpi=300)
+            figure.savefig(temp_file.name, dpi=600)
 
         # 打开一个最大化的新窗口并保持引用
         self.enlarged_window = EnlargedWindow(temp_file.name)
         self.enlarged_window.showMaximized()
+
+        # 关闭临时文件
+        Path(temp_file.name).unlink()
     
     @pyqtSlot() #导入正常信号 for 特征筛选
     def on_btnImportNormalSignalInSelection_clicked(self):
@@ -515,7 +569,6 @@ class GUIWindow(QMainWindow):
     @pyqtSlot() #导入未知信号集 for 故障检测
     def on_btnImportFullTest_clicked(self):
         fname = QFileDialog.getExistingDirectory(self, "导入未知信号集","./")
-        # if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Unknown signal directory imported: {}".format(fname))
         self.cfg.INFERENCE.TEST_CONTENT = fname
         files = list(Path(fname).glob('*.csv'))
@@ -781,6 +834,52 @@ class GUIWindow(QMainWindow):
         res_series = pd.Series({k: v for k, v in res.items()})
         update_ratio_to_canvas(self.cfg, res_series, self.canvasInDetection, 
                                tit = Path(self.cfg.INFERENCE.TEST_CONTENT).name)
+    
+    @pyqtSlot() # 展示单信号文件按钮
+    def on_btnViewSingleFile_clicked(self):
+        fname,_ = QFileDialog.getOpenFileName(self, "导入信号文件","./", "Comma-Separated Values(*.csv)")
+        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        logger.info("Signal for view imported: {}".format(fname))
+        # 读取信号
+        fname = Path(fname)
+        data = pd.read_csv(fname).values #numpy数组
+        # 绘图
+        try:
+            view_signal_in_canvas(data,self.canvasInView, 
+                                title=fname.name)
+        except Exception as e:
+            logger.error(f"meet error {e} in view_signal_in_canvas")
+            checkAndWarn(self,False,false_fb="绘制信号时遇到错误，请检查控制台信息")
+
+    @pyqtSlot() # 展示信号组按钮
+    def on_btnViewFiles_clicked(self):
+        fname = QFileDialog.getExistingDirectory(self, "导入未知信号集","./")
+        if not fname: return # 未选中文件
+        fname = Path(fname)
+        logger.info("Signal directory imported: {}".format(fname))
+        files = list(fname.glob('*.csv'))
+        # 对文件按照名字进行排序
+        files.sort(key=files_sort_key)
+        # 读取第一个文件来获取列数
+        first_file = pd.read_csv(files[0]).values
+        col_n = first_file.shape[1]
+        # 读取信号
+        full_signal = np.empty((0, col_n))
+        ticks_dict = {}
+        for file in files:
+            arr = pd.read_csv(file).values
+            assert col_n == arr.shape[1], "信号通道数不一致"
+            ticks_dict[len(full_signal)] = file.name
+            full_signal = np.concatenate((full_signal, arr), axis=0)
+
+        # 绘图
+        try:
+            view_signal_in_canvas(full_signal,self.canvasInView, 
+                                title=fname.name, ticks_dict=ticks_dict)
+        except Exception as e:
+            logger.error(f"meet error {e} in view_signal_in_canvas")
+            checkAndWarn(self,False,false_fb="绘制信号时遇到错误，请检查控制台信息")
+
 
 #%% 开始运行
 
