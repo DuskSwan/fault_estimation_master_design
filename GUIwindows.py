@@ -264,7 +264,7 @@ def show_table_in_widget(df, widget):
     # 设置列宽度为内容适应
     widget.resizeColumnsToContents()
 
-def view_signal_in_canvas(array, canvas, title='Signal',ticks_dict=None):  
+def view_signal_in_canvas(array, canvas, range=(0,1000), title='Signal',ticks_dict=None):  
     # 清理之前的图形
     figure = canvas.figure
     figure.clear()
@@ -283,12 +283,14 @@ def view_signal_in_canvas(array, canvas, title='Signal',ticks_dict=None):
     logger.info(f'Plotting {n_samples} samples')
 
     # 遍历 array 的每一列
+    x = np.arange(range[0], range[1])
     for i, column in enumerate(array.T):
-        ax.plot(column, label='通道'+str(i), alpha=0.7)
+        ax.plot(x, column, label='通道'+str(i), alpha=0.7)
 
     ax.set_title(title)
     ax.set_xlabel('Index')
     ax.set_ylabel('Value')
+    ax.tick_params(axis='x', labelrotation=30)
     ax.legend()
     if ticks_dict:
         logger.info('Set xticks to file names')
@@ -442,6 +444,14 @@ class GUIWindow(QMainWindow):
         self.corr_pairs_df = pd.DataFrame()
         self.dtw_df = pd.DataFrame()
         self.channel_n = None # 当前信号的总通道数
+        self.signal_view_dict = {
+            'signal': None,
+                # array, 信号数据，shape=(n_samples, n_channels)
+            'name': None,
+                # str, 信号名称
+            'ticks_dict': None,
+                # 用于画图时设置x轴刻度，键为索引，值为文件名
+        } # View模块所要绘制的信号以及其它信息
 
 
     def set_parameters(self):
@@ -835,24 +845,26 @@ class GUIWindow(QMainWindow):
         update_ratio_to_canvas(self.cfg, res_series, self.canvasInDetection, 
                                tit = Path(self.cfg.INFERENCE.TEST_CONTENT).name)
     
-    @pyqtSlot() # 展示单信号文件按钮
-    def on_btnViewSingleFile_clicked(self):
+    @pyqtSlot() # 导入单信号文件按钮 for view
+    def on_btnImportSingleFileInView_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入信号文件","./", "Comma-Separated Values(*.csv)")
         if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Signal for view imported: {}".format(fname))
         # 读取信号
         fname = Path(fname)
-        data = pd.read_csv(fname).values #numpy数组
-        # 绘图
-        try:
-            view_signal_in_canvas(data,self.canvasInView, 
-                                title=fname.name)
-        except Exception as e:
-            logger.error(f"meet error {e} in view_signal_in_canvas")
-            checkAndWarn(self,False,false_fb="绘制信号时遇到错误，请检查控制台信息")
+        self.signal_view_dict['signal'] = pd.read_csv(fname).values #numpy数组
+        self.signal_view_dict['name'] = fname.name
+        self.signal_view_dict['ticks_dict'] = None
+        # 更新信息
+        self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInView)
+        df = pd.read_csv(fname)
+        n_sample = df.shape[0]
+        self.editor.lineEditStartDraw.setText('0')
+        self.editor.lineEditEndDraw.setText(f'{n_sample}')
 
-    @pyqtSlot() # 展示信号组按钮
-    def on_btnViewFiles_clicked(self):
+
+    @pyqtSlot() # 导入信号组目录按钮 for view
+    def on_btnImportFilesInview_clicked(self):
         fname = QFileDialog.getExistingDirectory(self, "导入未知信号集","./")
         if not fname: return # 未选中文件
         fname = Path(fname)
@@ -871,15 +883,40 @@ class GUIWindow(QMainWindow):
             assert col_n == arr.shape[1], "信号通道数不一致"
             ticks_dict[len(full_signal)] = file.name
             full_signal = np.concatenate((full_signal, arr), axis=0)
+        # 更新信息
+        self.signal_view_dict['signal'] = full_signal
+        self.signal_view_dict['name'] = fname.name
+        self.signal_view_dict['ticks_dict'] = ticks_dict
+        self.get_channel_check_and_show(files[0], self.editor.comboBoxSelectChannelInView)
+        n_sample = full_signal.shape[0]
+        self.editor.lineEditStartDraw.setText('0')
+        self.editor.lineEditEndDraw.setText(f'{n_sample}')
 
-        # 绘图
+    @pyqtSlot() # 绘制信号按钮
+    def on_btnViewDraw_clicked(self):
+        # 检查是否导入了信号
+        if not checkAndWarn(self,self.signal_view_dict['signal'] is not None, false_fb="未导入信号"): return
+        # 检查设置的信号范围
+        start = int(self.editor.lineEditStartDraw.text())
+        end = int(self.editor.lineEditEndDraw.text())
+        if not checkAndWarn(self,0 <= start < end <= self.signal_view_dict['signal'].shape[0], 
+                            false_fb="绘图范围错误，请检查"): return
+        # 检查是否选中通道
+        used_channels = self.editor.comboBoxSelectChannelInView.currentData()
+        if not checkAndWarn(self,used_channels, false_fb="未选择通道，请选择通道"): return
+        used_channels = [int(i[-1]) for i in used_channels]
+        # 筛选范围内的标签
+        ticks_dict = {k: v for k, v in self.signal_view_dict['ticks_dict'].items() if start <= k < end}
+
         try:
-            view_signal_in_canvas(full_signal,self.canvasInView, 
-                                title=fname.name, ticks_dict=ticks_dict)
+            view_signal_in_canvas(self.signal_view_dict['signal'][start:end, used_channels],
+                                  self.canvasInView, 
+                                  range=(start, end),
+                                  title=self.signal_view_dict['name'],
+                                  ticks_dict=ticks_dict)
         except Exception as e:
             logger.error(f"meet error {e} in view_signal_in_canvas")
             checkAndWarn(self,False,false_fb="绘制信号时遇到错误，请检查控制台信息")
-
 
 #%% 开始运行
 

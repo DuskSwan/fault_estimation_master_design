@@ -83,6 +83,10 @@ def modify_file(filename):
         # 检测 - 通道选择下拉框
         if 'self.comboBoxSelectChannelInDetection = QtWidgets.QComboBox(self.widgetInDetection)' in lines[i]:
             lines[i] = inde + 'self.comboBoxSelectChannelInDetection = CheckableComboBox(self.widgetInDetection)\n'
+        # 绘图 - 通道选择下拉框
+        if 'self.comboBoxSelectChannelInView = QtWidgets.QComboBox(self.widgetInView)' in lines[i]:
+            lines[i] = inde + 'self.comboBoxSelectChannelInView = CheckableComboBox(self.widgetInView)\n'
+        
         # 指定默认展示页
         if 'self.tabWidget.setCurrentIndex' in lines[i]:
             lines[i] = inde + 'self.tabWidget.setCurrentIndex(1)\n'
