@@ -264,7 +264,8 @@ def show_table_in_widget(df, widget):
     # 设置列宽度为内容适应
     widget.resizeColumnsToContents()
 
-def view_signal_in_canvas(array, canvas, range=(0,1000), title='Signal',ticks_dict=None):  
+def view_signal_in_canvas(array, canvas, cols, limits=(0,1000),
+                          title='Signal',ticks_dict=None):  
     # 清理之前的图形
     figure = canvas.figure
     figure.clear()
@@ -283,9 +284,12 @@ def view_signal_in_canvas(array, canvas, range=(0,1000), title='Signal',ticks_di
     logger.info(f'Plotting {n_samples} samples')
 
     # 遍历 array 的每一列
-    x = np.arange(range[0], range[1])
-    for i, column in enumerate(array.T):
-        ax.plot(x, column, label='通道'+str(i), alpha=0.7)
+    array = array[limits[0]:limits[1]] # 只取指定范围的数据
+    x = np.arange(limits[0], limits[1])
+    # for i, column in enumerate(array.T):
+    #     ax.plot(x, column, label='通道'+str(i), alpha=0.7)
+    for i in cols:
+        ax.plot(x, array[:, i], label=f'通道{i}', alpha=0.7)
 
     ax.set_title(title)
     ax.set_xlabel('Index')
@@ -906,12 +910,16 @@ class GUIWindow(QMainWindow):
         if not checkAndWarn(self,used_channels, false_fb="未选择通道，请选择通道"): return
         used_channels = [int(i[-1]) for i in used_channels]
         # 筛选范围内的标签
-        ticks_dict = {k: v for k, v in self.signal_view_dict['ticks_dict'].items() if start <= k < end}
+        if self.signal_view_dict['ticks_dict']:
+            ticks_dict = {k: v for k, v in self.signal_view_dict['ticks_dict'].items() if start <= k < end}
+        else:
+            ticks_dict = None
 
         try:
-            view_signal_in_canvas(self.signal_view_dict['signal'][start:end, used_channels],
+            view_signal_in_canvas(self.signal_view_dict['signal'],
                                   self.canvasInView, 
-                                  range=(start, end),
+                                  cols=used_channels,
+                                  limits=(start, end),
                                   title=self.signal_view_dict['name'],
                                   ticks_dict=ticks_dict)
         except Exception as e:
