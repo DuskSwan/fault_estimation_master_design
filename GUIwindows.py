@@ -286,8 +286,6 @@ def view_signal_in_canvas(array, canvas, cols, limits=(0,1000),
     # 遍历 array 的每一列
     array = array[limits[0]:limits[1]] # 只取指定范围的数据
     x = np.arange(limits[0], limits[1])
-    # for i, column in enumerate(array.T):
-    #     ax.plot(x, column, label='通道'+str(i), alpha=0.7)
     for i in cols:
         ax.plot(x, array[:, i], label=f'通道{i}', alpha=0.7)
 
