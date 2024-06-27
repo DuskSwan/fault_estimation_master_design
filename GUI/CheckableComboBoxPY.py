@@ -5,7 +5,10 @@ from PyQt5.QtGui import QFontMetrics, QPalette
 from PyQt5.QtCore import QEvent, Qt
 from PyQt5.Qt import QStandardItem
 
+from PyQt5.QtCore import pyqtSignal
+
 class CheckableComboBox(QComboBox):
+    selectionChanged = pyqtSignal(list)
 
     # Subclass Delegate to increase item height
     class Delegate(QStyledItemDelegate):
@@ -94,6 +97,9 @@ class CheckableComboBox(QComboBox):
         elidedText = metrics.elidedText(text, Qt.ElideRight, self.lineEdit().width())
         self.lineEdit().setText(elidedText)
 
+        # Emit selectionChanged signal
+        self.selectionChanged.emit(texts)
+
     def addItem(self, text, data=None):
         item = QStandardItem()
         item.setText(text)
@@ -140,7 +146,7 @@ comunes = ['RMS','SRA', 'KV', 'SV', 'PPV',
 combo = CheckableComboBox()
 combo.addItems(comunes)
 combo.selectItems([0]) # 选中第一个项
-res = combo.currentData() # 获取选中项的数据列表
+res = combo.currentData() # 获取选中项的数据列表，格式为字符串列表
 '''
 
 # -*- coding: utf-8 -*-

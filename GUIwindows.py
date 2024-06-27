@@ -304,6 +304,10 @@ def view_signal_in_canvas(array, canvas, cols, limits=(0,1000),
             indices = np.linspace(0, len(keys) - 1, 10, dtype=int)
             keys = [keys[i] for i in indices]
             values = [values[i] for i in indices]
+        
+        # 在每个下标处绘制虚线标记
+        for k in keys[1:]:
+            ax.axvline(x=k, linestyle='--', color='red', linewidth=1)
     
         ax.set_xticks(keys)  # 设置刻度位置
         ax.set_xticklabels(values)  # 设置刻度标签为文件名
@@ -399,6 +403,8 @@ class GUIWindow(QMainWindow):
         self._menu_init() # 初始化菜单栏
         self._attrs_init() # 初始化属性
 
+        self.editor.comboBoxSelectFilesInView.selectionChanged.connect(self.on_comboBoxSelectFilesInView_selected)
+
         self.cfg = cfg_debug if debug else cfg_GUI
         
         logger.info("GUI window initialized")
@@ -447,6 +453,10 @@ class GUIWindow(QMainWindow):
         self.dtw_df = pd.DataFrame()
         self.channel_n = None # 当前信号的总通道数
         self.signal_view_dict = {
+            'single': True,
+                # bool, 是否只显示单个信号
+            'directory': None,
+                # str, 显示多个信号时的目录
             'signal': None,
                 # array, 信号数据，shape=(n_samples, n_channels)
             'name': None,
@@ -857,6 +867,7 @@ class GUIWindow(QMainWindow):
         self.signal_view_dict['signal'] = pd.read_csv(fname).values #numpy数组
         self.signal_view_dict['name'] = fname.name
         self.signal_view_dict['ticks_dict'] = None
+        self.signal_view_dict['single'] = True
         # 更新信息
         self.get_channel_check_and_show(fname, self.editor.comboBoxSelectChannelInView)
         df = pd.read_csv(fname)
@@ -872,6 +883,22 @@ class GUIWindow(QMainWindow):
         fname = Path(fname)
         logger.info("Signal directory imported: {}".format(fname))
         files = list(fname.glob('*.csv'))
+        files.sort(key=files_sort_key)
+        # 记录信息
+        self.signal_view_dict['directory'] = fname
+        self.signal_view_dict['single'] = False
+        # 设置多选框内容
+        self.editor.comboBoxSelectFilesInView.clear()
+        self.editor.comboBoxSelectFilesInView.addItems([f.name for f in files])
+    
+    @pyqtSlot(list) # 选择文件多选框的槽函数
+    def on_comboBoxSelectFilesInView_selected(self, items):
+        if not items: return
+        if self.signal_view_dict['single']: return
+        # 读取选中的文件
+        fname = self.signal_view_dict['directory']
+        files = [fname / i for i in items]
+        logger.info("Files selected: {}".format(files))
         # 对文件按照名字进行排序
         files.sort(key=files_sort_key)
         # 读取第一个文件来获取列数
@@ -887,7 +914,6 @@ class GUIWindow(QMainWindow):
             full_signal = np.concatenate((full_signal, arr), axis=0)
         # 更新信息
         self.signal_view_dict['signal'] = full_signal
-        self.signal_view_dict['name'] = fname.name
         self.signal_view_dict['ticks_dict'] = ticks_dict
         self.get_channel_check_and_show(files[0], self.editor.comboBoxSelectChannelInView)
         n_sample = full_signal.shape[0]
