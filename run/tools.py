@@ -9,6 +9,7 @@ import torch.nn as nn
 
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, AutoDateLocator
+import matplotlib.dates as mdates
 
 sys.path.append('.')
 from utils import  sheet_cut
@@ -140,6 +141,16 @@ def set_train_model(cfg):
 
     return model,train_losses,val_losses
 
+from datetime import datetime
+
+def date_format(date_str):
+    # Convert the string to a datetime object
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+    # Format the datetime object as "date-month-year hour:min:second"
+    formatted_date = date_obj.strftime("%d-%m-%Y %H:%M:%S")
+    return formatted_date
+    
+
 def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 
     logger.info('Start to plot time series \n {}'.format(series))
@@ -157,7 +168,7 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     if is_timestamp:
         # 使用日期格式化
         x = temp_index
-        plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d"))
+        plt.gca().xaxis.set_major_formatter(DateFormatter("%d-%m-%Y"))
         plt.gca().xaxis.set_major_locator(AutoDateLocator())
     else:
         # 索引被假设为整数，直接使用
@@ -166,17 +177,22 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
     cont = Path(cfg.INFERENCE.TEST_CONTENT)
     y = series.values
     interval = len(x) // 10 if len(x) >=50 else 1
-    xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%Y-%m-%d")
+    xticks = x[::interval] if not is_timestamp else x[::interval].strftime("%d-%m-%Y")
     
     import matplotlib
     matplotlib.use('TkAgg')
-    plt.figure(figsize=(12,10))
+    plt.figure(figsize=(18,15))
 
     if(cfg.DENOISE.SHOW_TYPE == 'original only'):
         plt.plot(x, y)
         idx = np.argmax(y > cfg.INFERENCE.MAE_ratio_threshold)
         plt.scatter(x[idx], y[idx], c='r', label='MAE ratio > threshold')
-        plt.text(x[idx], y[idx], f'({x[idx]})', ha='right', color='r')
+        if is_timestamp:
+            date = str(x[idx])
+            scat_text = f'({date_format(date)})'
+        else:
+            scat_text = f'({idx})'
+        plt.text(x[idx], y[idx], scat_text, ha='right', color='r')
     elif(cfg.DENOISE.SHOW_TYPE == 'denoised only'):
         denoised_y = array_denoise(y, 
                                    method=cfg.DENOISE.SHOW_METHOD, 
@@ -187,8 +203,12 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
         plt.plot(x, denoised_y)
         idx = np.argmax(denoised_y > cfg.INFERENCE.MAE_ratio_threshold)
         plt.scatter(x[idx], denoised_y[idx], c='r', label='MAE ratio > threshold')
-        plt.text(x[idx], denoised_y[idx], f'({x[idx]})', color='r',
-                 ha='right')
+        if is_timestamp:
+            date = str(x[idx])
+            scat_text = f'({date_format(date)})'
+        else:
+            scat_text = f'({idx})'
+        plt.text(x[idx], denoised_y[idx], scat_text, ha='right', color='r')
     elif(cfg.DENOISE.SHOW_TYPE == 'both'):
         plt.plot(x, y, label='original')
         denoised_y = array_denoise(y, 
@@ -214,13 +234,16 @@ def plot_time_series(cfg, series: pd.Series, suffix='ErrRatio'):
 
     # plt.ylim(0, 1)
     plt.xlabel('Time' if is_timestamp else 'Index')
-    plt.xticks(xticks,rotation=45)
+    # plt.xticks(xticks,rotation=45)
     plt.title(cont.stem + ' ratio of elements greater than threshold')  # 假设cont是一个Path对象
     plt.legend()
 
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+
     save_path = f'output/{cont.stem}_{suffix}.png'
     plt.savefig(save_path)
-    plt.show()
+    # plt.show()
 
     logger.info(f'Plot saved at {save_path}')
     return save_path
