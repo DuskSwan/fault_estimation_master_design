@@ -60,8 +60,8 @@ def calc_threshold_based_on_Z(samples, boundary = 3.5):
     median = np.median(samples)
     MAD = np.median(np.abs(samples - median))
 
-    # Mi = 0.6475 * (xi- mean) / MAD >< boundary
-    # => xi- mean >< boundary * MAD / 0.6475
-    # => xi >< boundary * MAD / 0.6475 + mean
+    # Mi = 0.6475 * (xi- mean) / MAD <-> boundary
+    # => xi- mean <-> boundary * MAD / 0.6475
+    # => xi <-> boundary * MAD / 0.6475 + mean
     t = boundary * MAD / 0.6475 + median
     return t

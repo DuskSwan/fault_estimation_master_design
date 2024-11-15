@@ -5,7 +5,7 @@ from yacs.config import CfgNode as CN
 # -----------------------------------------------------------------------------
 
 _C = CN()
-_C.DEVICE = "cuda"
+_C.DEVICE = "cpu"
 _C.SEED = 0
 _C.DATA_TYPE = 'float'  # or double
 
@@ -45,7 +45,7 @@ _C.DESIGN.PIECE = _C.DESIGN.FPIECE * (_C.DESIGN.M + _C.DESIGN.P)
 _C.FEATURE = CN()
 _C.FEATURE.NEED_VIEW = True
 _C.FEATURE.MAX_LENGTH = 1024000 # max length of the raw signal used to calcuate features
-_C.FEATURE.USED_F = ['KF']
+_C.FEATURE.USED_F = ['Mean']
 _C.FEATURE.USED_THRESHOLD  = ['Z']
 _C.FEATURE.CHANNEL_SCORE_MODE = 'sum' # calculate DTW with each channel or get sum of differernt channel
     # 'sum' or 'every'
@@ -56,8 +56,8 @@ _C.FEATURE.NORMAL_PATHS = [r'D:\GithubRepos\fault_estimation_master_design\data\
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.BATCH_SIZE = 32
-_C.TRAIN.NORMAL_PATH = r'D:\Development\Datasets\南航IDES研究室故障模拟数据（转子系统）\2020年-转子不对中故障（含套齿联轴器的转子试验器）\2020年10月5号的不对中试验研究数据\csv\2020年10月5日-1-相对对中-升速至6000rpm.csv'
-_C.TRAIN.FAULT_PATH = r'D:\Development\Datasets\南航IDES研究室故障模拟数据（转子系统）\2020年-转子不对中故障（含套齿联轴器的转子试验器）\2020年10月5号的不对中试验研究数据\csv\2020年10月5日-5-10毫米不对中-升速至6000rpm.csv'
+_C.TRAIN.NORMAL_PATH = r'data\datasets\CWRU\97.csv'
+_C.TRAIN.FAULT_PATH = r''
 _C.TRAIN.CHECKPOINT_PERIOD = 10
 _C.TRAIN.NEED_CHECKPOINT = False
 _C.TRAIN.NEED_PLOT_LOSS = False
@@ -68,9 +68,9 @@ _C.TRAIN.NEED_PLOT_LOSS = False
 # -----------------------------------------------------------------------------
 _C.INFERENCE = CN()
 _C.INFERENCE.BATCH_SIZE = 1
-_C.INFERENCE.UNKWON_PATH = ''
-_C.INFERENCE.MODEL_PATH = 'output/xjtu_lstm.pth'
-_C.INFERENCE.TEST_CONTENT = r'data\datasets\XJTU-SY\Bearing1_1'
+_C.INFERENCE.UNKWON_PATH = 'data\datasets\CWRU\97.csv'
+_C.INFERENCE.MODEL_PATH = ''
+_C.INFERENCE.TEST_CONTENT = r''
 _C.INFERENCE.MAE_ratio_threshold = 0.5
 
 # -----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ _C.DATALOADER.NUM_WORKERS = 0
 _C.SOLVER = CN()
 _C.SOLVER.OPTIMIZER_NAME = "Adam" # "SGD" or "Adam
 
-_C.SOLVER.MAX_EPOCHS = 400
+_C.SOLVER.MAX_EPOCHS = 50
 
 _C.SOLVER.BASE_LR = 0.0001
 _C.SOLVER.BIAS_LR_FACTOR = 2
@@ -142,4 +142,4 @@ _C.DENOISE.SHOW_LEVEL = 4
 # DATA
 # -----------------------------------------------------------------------------
 _C.DATA = CN()
-_C.DATA.USED_CHANNELS = []
+_C.DATA.USED_CHANNELS = [0,1]
