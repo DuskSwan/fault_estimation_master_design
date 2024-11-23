@@ -29,7 +29,7 @@ def sort_list(path_list):
     except Exception as e:
         raise e
 
-def main(extra_cfg_path = '', only_draw_from_file = False):
+def main(extra_cfg_path = ''):
 
     set_random_seed(cfg.SEED)
     initiate_cfg(cfg, extra_cfg_path)
@@ -45,24 +45,33 @@ def main(extra_cfg_path = '', only_draw_from_file = False):
     logger.info('Start to calculate unknown signal MAE...')
     X,Y = signal_to_XY(cfg, is_train=False)
     test_loader = make_data_loader(cfg, X,Y, is_train=False)
-    X0,Y0 = next(iter(test_loader))
+    y_true_all = []
+    y_pred_all = []
+    
     model.eval()
-    prediction = model(X0)
-    y_true = Y0.detach().numpy().flatten()
-    y_pred = prediction.detach().numpy().flatten()
+    for X0, Y0 in test_loader:
+        prediction = model(X0)
+        y_true_all.extend(Y0.detach().numpy().flatten())
+        y_pred_all.extend(prediction.detach().numpy().flatten())
+
+    y_true_all = np.array(y_true_all)
+    y_pred_all = np.array(y_pred_all)
 
     # 计算 WAPE
-    absolute_errors = np.abs(y_true - y_pred)
+    absolute_errors = np.abs(y_true_all - y_pred_all)
     sum_absolute_errors = np.sum(absolute_errors)
-    sum_true_values = np.sum(np.abs(y_true))
+    sum_true_values = np.sum(np.abs(y_true_all))
     wape = (sum_absolute_errors / sum_true_values) * 100
 
     print(f"WAPE: {wape}%")
 
+    y_true = Y0.detach().numpy().flatten()
+    y_pred = prediction.detach().numpy().flatten()
+    errors = np.abs(y_true - y_pred)
     t = range(len(y_true))
     plt.plot(t, y_true, label='True')
     plt.plot(t, y_pred, label='Pred')
-    plt.plot(t, absolute_errors, label='Error')
+    plt.plot(t, errors, label='Error')
     plt.legend()
     plt.title('True, Pred, Error with WAPE: {:.2f}%'.format(wape))
     plt.show()
@@ -71,5 +80,5 @@ def main(extra_cfg_path = '', only_draw_from_file = False):
     
 
 if __name__ == '__main__':
-    main()
+    main('./config/XJTU_test.yml')
     

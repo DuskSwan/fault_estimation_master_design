@@ -2,28 +2,29 @@ DESIGN:
   FPIECE: 100 # num of pieces drawed from feature series
 
 FEATURE:
-  USED_F: ['MF']
+  USED_F: ['KV']
   USED_THRESHOLD: ['Z']
 
 DENOISE:
+  NEED: False
   SHOW_TYPE: 'denoised only'
   SHOW_METHOD: 'wavelet'
   SHOW_WAVELET: 'db4'
   SHOW_LEVEL: 4
 
 TRAIN:
-  NORMAL_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_4bearing\2003.10.22.12.06.24.csv'
-  FAULT_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_4bearing\2003.11.25.23.39.56.csv'
+  NORMAL_PATH: 'D:\development\datasets\CincinnatiIMS\output\1st_test_4bearing\2003.10.22.12.06.24.csv'
+  FAULT_PATH: 'D:\development\datasets\CincinnatiIMS\output\1st_test_4bearing\2003.11.25.23.39.56.csv'
   
 INFERENCE:
-  UNKWON_PATH: 'D:\development\dataset\CincinnatiIMS\output\1st_test_4bearing\2003.11.25.23.39.56.csv'
+  UNKWON_PATH: 'D:\development\datasets\CincinnatiIMS\output\1st_test_4bearing\2003.10.22.12.06.24.csv'
   MODEL_PATH: 'output/ims_lstm.pth'
-  TEST_CONTENT: 'D:\development\dataset\CincinnatiIMS\output\1st_test_4bearing'
+  TEST_CONTENT: 'D:\development\datasets\CincinnatiIMS\output\1st_test_4bearing'
 
 OUTPUT:
   MODEL_DIR: "output"
   MODEL_NAME: "ims_lstm.pth"
 
 LOG:
-  OUTPUT_TO_FILE: True
+  OUTPUT_TO_FILE: False
   PREFIX: "IMS_test"

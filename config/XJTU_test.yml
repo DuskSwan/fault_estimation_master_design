@@ -1,6 +1,6 @@
 FEATURE:
-  USED_F: ['PPV']
-  USED_THRESHOLD: ['log','gause','Z','percentile','boxplot']
+  USED_F: ['Rms']
+  USED_THRESHOLD: ['Z']
 
 DENOISE:
   NEED: False
@@ -11,11 +11,12 @@ DENOISE:
   SHOW_TYPE: 'denoised only'
 
 TRAIN:
-  NORMAL_PATH: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2\1.csv'
+  NORMAL_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2\1.csv'
   
 INFERENCE:
+  UNKWON_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2\1.csv'
   MODEL_PATH: 'output/xjtu_lstm.pth'
-  TEST_CONTENT: 'D:\development\dataset\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2'
+  TEST_CONTENT: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2'
 
 LOG:
   OUTPUT_TO_FILE: True
