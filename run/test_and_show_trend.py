@@ -12,12 +12,9 @@ sys.path.append('.')
 from config import cfg_debug as cfg
 
 from run.train import train
-from run.tools import signal_to_XY, plot_time_series, save_arraylike
+from run.tools import signal_to_XY
 from utils import set_random_seed,initiate_cfg
 from data import make_data_loader
-from engine.inference import inference
-
-from utils.threshold import calc_thresholds
 
 def sort_list(path_list):
     try:
