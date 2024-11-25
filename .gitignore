@@ -4,7 +4,7 @@
 # my ignore
 log/
 output/
-data/datasets/BUCT/
+data/datasets/
 test.py
 # exe file
 build
