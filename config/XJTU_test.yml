@@ -1,5 +1,5 @@
 FEATURE:
-  USED_F: ['Rms']
+  USED_F: ['KV']
   USED_THRESHOLD: ['Z']
 
 DENOISE:
@@ -11,13 +11,16 @@ DENOISE:
   SHOW_TYPE: 'denoised only'
 
 TRAIN:
-  NORMAL_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2\1.csv'
+  NORMAL_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1\1.csv'
   
 INFERENCE:
-  UNKWON_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2\1.csv'
+  UNKWON_PATH: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1\2.csv'
   MODEL_PATH: 'output/xjtu_lstm.pth'
-  TEST_CONTENT: 'D:\development\datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_2'
+  TEST_CONTENT: ''
 
 LOG:
   OUTPUT_TO_FILE: True
   PREFIX: "XJTU_test" 
+
+SOLVER:
+  MAX_EPOCHS: 50

@@ -1,6 +1,7 @@
 # encoding: utf-8
 import numpy as np
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 def inject_fault(normal_signal, inject_time, fz=3000, type='Gause', fault_level_param=1):
     '''
@@ -63,8 +64,18 @@ def generate_fault_signal_content(normal_signal, inject_time, save_path, file_le
     print(f'Total time of signal: {total_time:.2f}, each file time: {file_time:.2f}')
     print(f'Fault index: {fault_index}, fault time: {fault_index / kwargs["fz"]:.2f}, fault emerge in file {fault_index // file_len}')
 
+    fig = plt.figure()
+    plt.plot(normal_signal, alpha=0.5, label='Normal signal')
+    plt.plot(fault_signal, alpha=0.5, label='Fault signal')
+    plt.axvline(fault_index, color='r', linestyle='--', label='Fault emerge')
+    plt.legend()
+    plt.savefig(save_path / 'signal.png')
+    plt.close(fig)
+
+
 def test():
-    import matplotlib.pyplot as plt
+    # 用sin函数模拟正常信号，注入高斯噪声
+    
     normal_signal = np.sin(np.linspace(0, 100, 1000)) + np.random.normal(0, 0.1, 1000)
     inject_time = 5
     fz = 100
@@ -78,6 +89,7 @@ def test():
     generate_fault_signal_content(normal_signal, inject_time, save_path, file_len, fz=fz, type='Gause', fault_level_param=1)
 
 def generate_fault_signal():
+    # 生成正常信号，注入故障，保存到文件夹中
     total_time = 10*60*60 # 10 hours
     inject_time = 7*60*60 # 7 hours
     fz = 2048

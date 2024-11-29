@@ -3,6 +3,7 @@
 import sys
 from loguru import logger
 import numpy as np
+from pathlib import Path
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -70,7 +71,11 @@ def main(extra_cfg_path = ''):
     plt.plot(t, y_pred, label='Pred')
     plt.plot(t, errors, label='Error')
     plt.legend()
-    plt.title('True, Pred, Error with WAPE: {:.2f}%'.format(wape))
+    file_path = Path(cfg.INFERENCE.UNKWON_PATH)
+    signal_name = f"{file_path.parent.name}/{file_path.name}"
+    feat = '[' +','.join(cfg.FEATURE.USED_F) + ']'
+    title_txt = f'{signal_name} prediction result with feature {feat}, WAPE: {wape:.2f}%'
+    plt.title(title_txt)
     plt.show()
 
 

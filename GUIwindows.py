@@ -592,9 +592,12 @@ class GUIWindow(QMainWindow):
     def on_btnImportFullTest_clicked(self):
         fname = QFileDialog.getExistingDirectory(self, "导入未知信号集","./")
         logger.info("Unknown signal directory imported: {}".format(fname))
-        self.cfg.INFERENCE.TEST_CONTENT = fname
-        files = list(Path(fname).glob('*.csv'))
-        self.get_channel_check_and_show(files[0], self.editor.comboBoxSelectChannelInDetection)
+        if fname:
+            self.cfg.INFERENCE.TEST_CONTENT = fname
+            files = list(Path(fname).glob('*.csv'))
+            self.get_channel_check_and_show(files[0], self.editor.comboBoxSelectChannelInDetection)
+        else:
+            logger.warning("未选择任何文件夹")
 
     @pyqtSlot() #导入预测模型 for 故障诊断
     def on_btnImportModel_clicked(self):
