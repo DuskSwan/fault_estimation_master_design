@@ -34,34 +34,49 @@ def XJTU_inject(signal_cont, file_nums, inject_time, type, p):
     generate_fault_signal_content(normal_signal, inject_time, save_path, file_len, fz=fz, type=type, fault_level_param=p)
 
 params=[
+    # {
+    #     'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1',
+    #     'file_nums': 61,
+    #     'inject_time': 30,
+    #     'type': 'Gause',
+    #     'p': 1
+    # },
+    # {
+    #     'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_1',
+    #     'file_nums': 2136,
+    #     'inject_time': 1000,
+    #     'type': 'Gause',
+    #     'p': 1
+    # },
+    # {
+    #     'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_3',
+    #     'file_nums': 305,
+    #     'inject_time': 200,
+    #     'type': 'Gause',
+    #     'p': 1
+    # },
+    # {
+    #     'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_4',
+    #     'file_nums': 915,
+    #     'inject_time': 600,
+    #     'type': 'Gause',
+    #     'p': 1
+    # },
     {
-        'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\35Hz12kN\Bearing1_1',
-        'file_nums': 61,
-        'inject_time': 30,
+        'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\37.5Hz11kN\Bearing2_1',
+        'file_nums': 366,
+        'inject_time': 150,
         'type': 'Gause',
         'p': 1
     },
-    {
-        'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_1',
-        'file_nums': 2136,
-        'inject_time': 1000,
-        'type': 'Gause',
-        'p': 1
-    },
-    {
-        'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_3',
-        'file_nums': 305,
-        'inject_time': 200,
-        'type': 'Gause',
-        'p': 1
-    },
-    {
-        'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\40Hz10kN\Bearing3_4',
-        'file_nums': 915,
-        'inject_time': 600,
-        'type': 'Gause',
-        'p': 1
-    }
+    # {
+    #     'signal_cont': r'D:\Development\Datasets\XJTU-SY_Bearing_Datasets\XJTU-SY_Bearing_Datasets\37.5Hz11kN\Bearing2_3',
+    #     'file_nums': 91,
+    #     'inject_time': 5,
+    #     'type': 'Gause',
+    #     'p': 3
+    # },
+    
 ]
 
 if __name__ == '__main__':

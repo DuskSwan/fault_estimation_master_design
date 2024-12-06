@@ -863,7 +863,7 @@ class GUIWindow(QMainWindow):
     @pyqtSlot() # 导入单信号文件按钮 for view
     def on_btnImportSingleFileInView_clicked(self):
         fname,_ = QFileDialog.getOpenFileName(self, "导入信号文件","./", "Comma-Separated Values(*.csv)")
-        if fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
+        if not fname and not checkAndWarn(self,fname[-4:]=='.csv',false_fb="选中的文件并非.csv类型，请检查"): return
         logger.info("Signal for view imported: {}".format(fname))
         # 读取信号
         fname = Path(fname)
