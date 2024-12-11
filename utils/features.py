@@ -191,7 +191,7 @@ RVF = Rvf
 def combine_dtw_score(list1, list2):
     '''
     两个python字典a和b，将他们合并成c，相同的键则对应值相加，多出来的键值对直接加入c
-    在该函数中，字典实际上用列表传递（便于排序），列表的每个元素是(键，值)对
+    在该函数中，字典实际上用列表传递（便于排序），列表的每个元素是(键，值)对，也即输入与输出都是list[tuple[str, float]]
     '''
     a,b = map(dict, (list1,list2))
     combined_counter = Counter(a) + Counter(b)
