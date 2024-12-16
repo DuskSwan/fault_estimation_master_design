@@ -7,6 +7,8 @@ from . import sheet_cut
 from .similarity import TimeSeriesSimilarity
 from .denoise import array_denoise
 
+EPSILON = 1e-10 # 防止除零错误
+
 # 时域/统计量
 def origin(signal): #原始值
     return signal[-1]
@@ -48,19 +50,19 @@ def t12(signal): # t12
 def ShapeFactor(signal): # 形状因子 t13
     m=np.max(np.abs(signal))
     s=np.mean(signal**2) ** 0.5
-    return m/s**0.5
+    return m/(s**0.5 + EPSILON)
 def t14(signal): #t14
     return np.max(signal)/np.abs(np.mean(signal))
 def Kurtosis(signal): # 峭度/峰度 t15
     N=len(signal)
     s=np.std(signal)
     t=(signal-np.mean(signal))**4
-    return np.sum(t)/(N * s**4)
+    return np.sum(t)/(N * s**4 + EPSILON)
 def Skewness(signal): # 偏斜度/偏态 t16
     N=len(signal)
     s=np.std(signal)
     t=(signal-np.mean(signal))**3
-    return np.sum(t)/(N * s**3)
+    return np.sum(t)/(N * s**3 + EPSILON)
 def KurtosisFactor(signal): # 波峰因子/峰值因子 t17
     return Kurtosis(signal)/Ms(signal)**2
 def ImpulseFactor(signal): # 脉冲因子 t18
